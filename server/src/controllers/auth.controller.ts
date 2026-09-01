@@ -2,7 +2,17 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
-import { db, UserDoc } from '../database/db.js';
+import { db, UserDoc, UserRole } from '../database/db.js';
+
+function resolveRoleFromDiscord(discordRoles: string[]): UserRole {
+  if (ENV.ROLE_ID_ADMIN && discordRoles.includes(ENV.ROLE_ID_ADMIN)) {
+    return 'ADMIN';
+  }
+  if (ENV.ROLE_ID_GM && discordRoles.includes(ENV.ROLE_ID_GM)) {
+    return 'GM';
+  }
+  return 'PILOT';
+}
 
 function createToken(user: UserDoc): string {
   return jwt.sign(
@@ -27,7 +37,7 @@ export const AuthController = {
       });
     }
 
-    const scope = encodeURIComponent('identify email');
+    const scope = encodeURIComponent('identify email guilds.members.read');
     const redirectUri = encodeURIComponent(ENV.DISCORD_REDIRECT_URI);
     const authUrl = `https://discord.com/oauth2/authorize?client_id=${ENV.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
 
@@ -87,26 +97,59 @@ export const AuthController = {
         ? `https://cdn.discordapp.com/avatars/${discordId}/${discordUser.avatar}.png`
         : `https://cdn.discordapp.com/embed/avatars/${parseInt(discordUser.discriminator || '0', 10) % 5}.png`;
 
+      // Passo B.2: Consulta os cargos e apelido do operador no servidor da guilda
+      let discordRoles: string[] = [];
+      let nickname: string | undefined;
+
+      if (ENV.DISCORD_GUILD_ID) {
+        try {
+          const memberResponse = await axios.get(
+            `https://discord.com/api/v10/users/@me/guilds/${ENV.DISCORD_GUILD_ID}/member`,
+            {
+              headers: { Authorization: `Bearer ${access_token}` }
+            }
+          );
+          discordRoles = memberResponse.data.roles || [];
+          nickname = memberResponse.data.nick || undefined;
+          console.log(`[+] Cargos do operador @${discordUser.username} na guilda (${ENV.DISCORD_GUILD_ID}):`, discordRoles);
+        } catch (err: any) {
+          console.warn(`[!] Não foi possível ler cargos no servidor ${ENV.DISCORD_GUILD_ID}:`, err.response?.data?.message || err.message);
+        }
+      }
+
       // Passo C: Localiza ou cadastra o usuário no banco de dados NoSQL
+      const computedRole = resolveRoleFromDiscord(discordRoles);
       let user = db.users.findByDiscordId(discordId);
 
       if (!user) {
-        // Primeiro acesso: cadastra como PILOT padrão
+        // Primeiro acesso: cadastra com a role mapeada dos cargos do Discord
         user = db.users.create({
           discord_id: discordId,
           name: name,
           username: discordUser.username,
+          nickname: nickname,
           email: discordUser.email,
           avatar: avatarUrl,
-          role: 'PILOT'
+          discord_roles: discordRoles,
+          role: computedRole
         });
-        console.log(`[+] Novo operador cadastrado via Discord: @${user.username} (ID: ${user.discord_id})`);
+        console.log(`[+] Novo operador cadastrado via Discord: @${user.username} [${user.role}] (ID: ${user.discord_id})`);
       } else {
-        // Atualiza avatar e nome caso tenham mudado no Discord
+        // Atualiza avatar, nome, cargos e sincroniza role do Discord
+        let nextRole = user.role;
+        if (computedRole === 'ADMIN' || computedRole === 'GM') {
+          nextRole = computedRole;
+        } else if (user.role !== 'PENDING_GM') {
+          nextRole = computedRole;
+        }
+
         user = db.users.update(user._id, {
           name: name,
           username: discordUser.username,
-          avatar: avatarUrl
+          nickname: nickname,
+          avatar: avatarUrl,
+          discord_roles: discordRoles,
+          role: nextRole
         })!;
         console.log(`[+] Operador reconectado via Discord: @${user.username} [${user.role}]`);
       }

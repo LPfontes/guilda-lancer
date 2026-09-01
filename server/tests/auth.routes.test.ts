@@ -20,7 +20,7 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
     expect(res.body.auth_url).toBeDefined();
     expect(res.body.auth_url).toContain('https://discord.com/oauth2/authorize');
     expect(res.body.auth_url).toContain(ENV.DISCORD_CLIENT_ID);
-    expect(res.body.auth_url).toContain('scope=identify%20email');
+    expect(res.body.auth_url).toContain('scope=identify%20email%20guilds.members.read');
   });
 
   it('GET /api/auth/discord/callback - should redirect with error if Discord reports error', async () => {
@@ -39,25 +39,32 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
     const fakeDiscordId = `discord_user_${Date.now()}`;
     const fakeCode = 'valid_discord_oauth_code_123';
 
-    // Mock axios post (token exchange) and get (profile query)
+    // Mock axios post (token exchange) and get (profile query & guild member query)
     const postSpy = vi.spyOn(axios, 'post').mockResolvedValueOnce({
       data: {
         access_token: 'mock_discord_access_token_xyz',
         token_type: 'Bearer',
         expires_in: 604800,
-        scope: 'identify email'
+        scope: 'identify email guilds.members.read'
       }
     });
 
-    const getSpy = vi.spyOn(axios, 'get').mockResolvedValueOnce({
-      data: {
-        id: fakeDiscordId,
-        username: 'lancer_pilot_01',
-        global_name: 'Pilot Maverick',
-        avatar: 'mock_avatar_hash_123',
-        email: 'maverick@lancer.net'
-      }
-    });
+    const getSpy = vi.spyOn(axios, 'get')
+      .mockResolvedValueOnce({
+        data: {
+          id: fakeDiscordId,
+          username: 'lancer_pilot_01',
+          global_name: 'Pilot Maverick',
+          avatar: 'mock_avatar_hash_123',
+          email: 'maverick@lancer.net'
+        }
+      })
+      .mockResolvedValueOnce({
+        data: {
+          roles: ['role_mestre_123', 'role_lancer_456'],
+          nick: 'Maverick | LL2'
+        }
+      });
 
     const res = await request(app).get(`/api/auth/discord/callback?code=${fakeCode}`);
 

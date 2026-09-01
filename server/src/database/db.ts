@@ -9,9 +9,11 @@ export interface UserDoc {
   discord_id: string;
   name: string;
   username: string;
+  nickname?: string;
   email?: string;
   avatar?: string;
   role: UserRole;
+  discord_roles?: string[];
   created_at: string;
   updated_at: string;
 }
