@@ -1,12 +1,21 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { app } from '../src/app.js';
 import { ENV } from '../src/config/env.js';
-import { db } from '../src/database/db.js';
+import { connectMongoDB, disconnectMongoDB, UserModel } from '../src/database/db.js';
 
-describe('Discord OAuth2 & Auth Routes Endpoints', () => {
+describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
+  beforeAll(async () => {
+    await connectMongoDB();
+  });
+
+  afterAll(async () => {
+    await UserModel.deleteMany({ discord_id: { $regex: /^discord_test_/ } });
+    await disconnectMongoDB();
+  });
+
   it('GET /api/health - should return status ONLINE with discord_auth enabled', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
@@ -35,8 +44,8 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
     expect(res.headers.location).toContain('/auth/callback?error=NO_CODE_PROVIDED');
   });
 
-  it('GET /api/auth/discord/callback - should successfully exchange code, create user and redirect with token', async () => {
-    const fakeDiscordId = `discord_user_${Date.now()}`;
+  it('GET /api/auth/discord/callback - should successfully exchange code, create user in MongoDB and redirect with token', async () => {
+    const fakeDiscordId = `discord_test_${Date.now()}`;
     const fakeCode = 'valid_discord_oauth_code_123';
 
     // Mock axios post (token exchange) and get (profile query & guild member query)
@@ -61,8 +70,8 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
       })
       .mockResolvedValueOnce({
         data: {
-          roles: ['role_mestre_123', 'role_lancer_456'],
-          nick: 'Maverick | LL2'
+          roles: [ENV.ROLE_ID_ADMIN], // Has Avaliador role
+          nick: 'Maverick | Avaliador'
         }
       });
 
@@ -73,11 +82,12 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
     expect(res.status).toBe(302);
     expect(res.headers.location).toContain('/auth/callback?token=');
 
-    // Verify user was registered in DB
-    const createdUser = db.users.findByDiscordId(fakeDiscordId);
+    // Verify user was registered in MongoDB Atlas with ADMIN role
+    const createdUser = await UserModel.findOne({ discord_id: fakeDiscordId });
     expect(createdUser).toBeDefined();
     expect(createdUser?.name).toBe('Pilot Maverick');
-    expect(createdUser?.role).toBe('PILOT');
+    expect(createdUser?.role).toBe('ADMIN');
+    expect(createdUser?.nickname).toBe('Maverick | Avaliador');
 
     // Restore mocks
     postSpy.mockRestore();
@@ -89,16 +99,16 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
     expect(res.status).toBe(401);
   });
 
-  it('GET /api/auth/me - should return user profile when authenticated with JWT', async () => {
-    const user = db.users.create({
-      discord_id: `me_test_${Date.now()}`,
-      name: 'Operador Logado',
-      username: 'logged_op',
+  it('GET /api/auth/me - should return user profile from MongoDB when authenticated with JWT', async () => {
+    const user = await UserModel.create({
+      discord_id: `discord_test_me_${Date.now()}`,
+      name: 'Operador Logado Atlas',
+      username: 'logged_op_atlas',
       role: 'PILOT'
     });
 
     const token = jwt.sign(
-      { userId: user._id, discord_id: user.discord_id, name: user.name, role: user.role },
+      { userId: user._id.toString(), discord_id: user.discord_id, name: user.name, role: user.role },
       ENV.JWT_SECRET
     );
 
@@ -107,8 +117,8 @@ describe('Discord OAuth2 & Auth Routes Endpoints', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.user._id).toBe(user._id);
-    expect(res.body.user.username).toBe('logged_op');
+    expect(res.body.user._id).toBe(user._id.toString());
+    expect(res.body.user.username).toBe('logged_op_atlas');
   });
 
   it('POST /api/auth/logout - should clear cookie and return success message', async () => {

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
-import { db, UserDoc, UserRole } from '../database/db.js';
+import { UserModel, PilotModel, IUser, UserRole } from '../database/db.js';
 
 function resolveRoleFromDiscord(discordRoles: string[]): UserRole {
   if (ENV.ROLE_ID_ADMIN && discordRoles.includes(ENV.ROLE_ID_ADMIN)) {
@@ -14,10 +14,10 @@ function resolveRoleFromDiscord(discordRoles: string[]): UserRole {
   return 'PILOT';
 }
 
-function createToken(user: UserDoc): string {
+function createToken(user: IUser): string {
   return jwt.sign(
     {
-      userId: user._id,
+      userId: user._id.toString(),
       discord_id: user.discord_id,
       name: user.name,
       role: user.role
@@ -117,13 +117,13 @@ export const AuthController = {
         }
       }
 
-      // Passo C: Localiza ou cadastra o usuário no banco de dados NoSQL
+      // Passo C: Localiza ou cadastra o usuário no MongoDB Atlas
       const computedRole = resolveRoleFromDiscord(discordRoles);
-      let user = db.users.findByDiscordId(discordId);
+      let user = await UserModel.findOne({ discord_id: discordId });
 
       if (!user) {
         // Primeiro acesso: cadastra com a role mapeada dos cargos do Discord
-        user = db.users.create({
+        user = await UserModel.create({
           discord_id: discordId,
           name: name,
           username: discordUser.username,
@@ -133,7 +133,7 @@ export const AuthController = {
           discord_roles: discordRoles,
           role: computedRole
         });
-        console.log(`[+] Novo operador cadastrado via Discord: @${user.username} [${user.role}] (ID: ${user.discord_id})`);
+        console.log(`[+] Novo operador cadastrado no MongoDB Atlas: @${user.username} [${user.role}] (ID: ${user.discord_id})`);
       } else {
         // Atualiza avatar, nome, cargos e sincroniza role do Discord
         let nextRole = user.role;
@@ -143,19 +143,23 @@ export const AuthController = {
           nextRole = computedRole;
         }
 
-        user = db.users.update(user._id, {
-          name: name,
-          username: discordUser.username,
-          nickname: nickname,
-          avatar: avatarUrl,
-          discord_roles: discordRoles,
-          role: nextRole
-        })!;
-        console.log(`[+] Operador reconectado via Discord: @${user.username} [${user.role}]`);
+        user = await UserModel.findByIdAndUpdate(
+          user._id,
+          {
+            name: name,
+            username: discordUser.username,
+            nickname: nickname,
+            avatar: avatarUrl,
+            discord_roles: discordRoles,
+            role: nextRole
+          },
+          { returnDocument: 'after' }
+        );
+        console.log(`[+] Operador sincronizado no MongoDB Atlas: @${user?.username} [${user?.role}]`);
       }
 
       // Passo D: Gera o JWT de sessão da aplicação
-      const token = createToken(user);
+      const token = createToken(user!);
 
       // Define cookie seguro
       res.cookie('omninet_token', token, {
@@ -179,7 +183,7 @@ export const AuthController = {
       return res.status(401).json({ error: 'UNAUTHORIZED' });
     }
 
-    const pilot = db.pilots.findByUserId(req.user._id);
+    const pilot = await PilotModel.findOne({ user_id: req.user._id });
 
     return res.json({
       user: req.user,

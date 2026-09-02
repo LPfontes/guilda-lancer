@@ -15,16 +15,18 @@ export const ENV = {
   ROLE_ID_ADMIN: process.env.ROLE_ID_ADMIN || '1526745220660596846',
   ROLE_ID_GM: process.env.ROLE_ID_GM || '1442915487897096212',
   ROLE_ID_PILOT: process.env.ROLE_ID_PILOT || '1526729461888716951',
+  MONGODB_URI: process.env.MONGODB_URI,
   JWT_SECRET: process.env.JWT_SECRET || 'chave_secreta_super_segura_omninet',
   NODE_ENV: process.env.NODE_ENV || 'development'
 };
 
-// Validate critical Discord OAuth2 environment variables
+// Validate critical environment variables
 export function validateEnv() {
   const missing: string[] = [];
   if (!ENV.DISCORD_CLIENT_ID) missing.push('DISCORD_CLIENT_ID');
   if (!ENV.DISCORD_CLIENT_SECRET) missing.push('DISCORD_CLIENT_SECRET');
   if (!ENV.DISCORD_REDIRECT_URI) missing.push('DISCORD_REDIRECT_URI');
+  if (!ENV.MONGODB_URI) missing.push('MONGODB_URI');
 
   if (missing.length > 0) {
     console.warn(`[!] AVISO: As seguintes variáveis do Discord OAuth2 estão ausentes: ${missing.join(', ')}`);

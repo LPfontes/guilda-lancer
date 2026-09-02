@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
-import { db, UserRole, UserDoc } from '../database/db.js';
+import { UserModel, IUser, UserRole } from '../database/db.js';
 
 export interface AuthenticatedUserPayload {
   userId: string;
@@ -13,12 +13,12 @@ export interface AuthenticatedUserPayload {
 declare global {
   namespace Express {
     interface Request {
-      user?: UserDoc;
+      user?: IUser;
     }
   }
 }
 
-export function authenticateJWT(req: Request, res: Response, next: NextFunction) {
+export async function authenticateJWT(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   const cookieToken = req.cookies?.omninet_token;
 
@@ -39,7 +39,7 @@ export function authenticateJWT(req: Request, res: Response, next: NextFunction)
 
   try {
     const decoded = jwt.verify(token, ENV.JWT_SECRET) as AuthenticatedUserPayload;
-    const user = db.users.findById(decoded.userId);
+    const user = await UserModel.findById(decoded.userId);
 
     if (!user) {
       return res.status(401).json({

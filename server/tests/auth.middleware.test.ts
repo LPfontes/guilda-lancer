@@ -1,18 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../src/config/env.js';
-import { db } from '../src/database/db.js';
+import { connectMongoDB, disconnectMongoDB, UserModel } from '../src/database/db.js';
 import { authenticateJWT, requireRole } from '../src/middlewares/auth.middleware.js';
 
-describe('Auth & RBAC Middlewares', () => {
+describe('Auth & RBAC Middlewares with MongoDB', () => {
   const testApp = express();
   testApp.use(cookieParser());
   testApp.use(express.json());
 
-  // Dummy protected endpoints for testing
+  // Protected endpoints for testing
   testApp.get('/test/protected', authenticateJWT, (req, res) => {
     res.json({ message: 'OK', user: req.user });
   });
@@ -23,6 +23,15 @@ describe('Auth & RBAC Middlewares', () => {
 
   testApp.get('/test/admin-only', authenticateJWT, requireRole(['ADMIN']), (req, res) => {
     res.json({ message: 'ADMIN_ACCESS_GRANTED' });
+  });
+
+  beforeAll(async () => {
+    await connectMongoDB();
+  });
+
+  afterAll(async () => {
+    await UserModel.deleteMany({ discord_id: { $regex: /^rbac_test_/ } });
+    await disconnectMongoDB();
   });
 
   it('should return 401 UNAUTHORIZED when no token is provided', async () => {
@@ -40,15 +49,15 @@ describe('Auth & RBAC Middlewares', () => {
   });
 
   it('should allow access when a valid JWT token is provided', async () => {
-    const user = db.users.create({
-      discord_id: `auth_test_${Date.now()}`,
+    const user = await UserModel.create({
+      discord_id: `rbac_test_jwt_${Date.now()}`,
       name: 'Piloto Teste JWT',
       username: 'pilot_jwt',
       role: 'PILOT'
     });
 
     const token = jwt.sign(
-      { userId: user._id, discord_id: user.discord_id, name: user.name, role: user.role },
+      { userId: user._id.toString(), discord_id: user.discord_id, name: user.name, role: user.role },
       ENV.JWT_SECRET
     );
 
@@ -58,19 +67,19 @@ describe('Auth & RBAC Middlewares', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('OK');
-    expect(res.body.user._id).toBe(user._id);
+    expect(res.body.user._id).toBe(user._id.toString());
   });
 
   it('should block PILOT from accessing GM or ADMIN only routes (403 Forbidden)', async () => {
-    const pilotUser = db.users.create({
-      discord_id: `pilot_rbac_${Date.now()}`,
+    const pilotUser = await UserModel.create({
+      discord_id: `rbac_test_pilot_${Date.now()}`,
       name: 'Piloto Sem Permissao',
       username: 'pilot_noperm',
       role: 'PILOT'
     });
 
     const token = jwt.sign(
-      { userId: pilotUser._id, discord_id: pilotUser.discord_id, name: pilotUser.name, role: pilotUser.role },
+      { userId: pilotUser._id.toString(), discord_id: pilotUser.discord_id, name: pilotUser.name, role: pilotUser.role },
       ENV.JWT_SECRET
     );
 
@@ -88,15 +97,15 @@ describe('Auth & RBAC Middlewares', () => {
   });
 
   it('should allow GM to access GM routes, but block from ADMIN only routes', async () => {
-    const gmUser = db.users.create({
-      discord_id: `gm_rbac_${Date.now()}`,
+    const gmUser = await UserModel.create({
+      discord_id: `rbac_test_gm_${Date.now()}`,
       name: 'Mestre da Sessão',
       username: 'gm_tester',
       role: 'GM'
     });
 
     const token = jwt.sign(
-      { userId: gmUser._id, discord_id: gmUser.discord_id, name: gmUser.name, role: gmUser.role },
+      { userId: gmUser._id.toString(), discord_id: gmUser.discord_id, name: gmUser.name, role: gmUser.role },
       ENV.JWT_SECRET
     );
 
@@ -114,15 +123,15 @@ describe('Auth & RBAC Middlewares', () => {
   });
 
   it('should allow ADMIN to access both GM and ADMIN routes', async () => {
-    const adminUser = db.users.create({
-      discord_id: `admin_rbac_${Date.now()}`,
+    const adminUser = await UserModel.create({
+      discord_id: `rbac_test_admin_${Date.now()}`,
       name: 'Comando Global',
       username: 'admin_tester',
       role: 'ADMIN'
     });
 
     const token = jwt.sign(
-      { userId: adminUser._id, discord_id: adminUser.discord_id, name: adminUser.name, role: adminUser.role },
+      { userId: adminUser._id.toString(), discord_id: adminUser.discord_id, name: adminUser.name, role: adminUser.role },
       ENV.JWT_SECRET
     );
 
