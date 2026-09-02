@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { ENV } from './config/env.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { pilotRoutes } from './routes/pilot.routes.js';
+import { missionRoutes } from './routes/mission.routes.js';
 
 export const app = express();
 
@@ -28,6 +29,7 @@ if (ENV.NODE_ENV !== 'test') {
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pilots', pilotRoutes);
+app.use('/api/missions', missionRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
