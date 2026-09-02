@@ -105,7 +105,7 @@ class OmninetApp {
           </h1>
           
           <p class="auth-subtitle">
-            Autentique sua credencial de operador para acessar o hangar de mechs, importar fichas do COMP/CON e visualizar missões.
+            Autentique sua credencial de operador para acessar o hangar de mechas, importar fichas do COMP/CON e visualizar missões.
           </p>
 
           <div class="auth-btn-wrapper">

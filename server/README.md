@@ -174,7 +174,7 @@ npm start
    - Integração com a API Gateway oficial da Massif Press na AWS e download seguro de arquivos JSON via CloudFront S3.
    - Aceita códigos formatados com ou sem traços (ex: `C1NO-1KI6-K32A` ou `C1NO1KI6K32A`) e URLs do app.
 3. **Resolução de Imagens e Tokens**:
-   - Extrai automaticamente URLs do CloudFront para retrato do piloto (`cloud_portrait`), arte customizada de mechs e arte oficial de chassis (`frameData.image_url`).
+   - Extrai automaticamente URLs do CloudFront para retrato do piloto (`cloud_portrait`), arte customizada de mechas e arte oficial de chassis (`frameData.image_url`).
 4. **Motor de Regras do LANCER**:
    - **Determinação (Grit)**: $\lceil LL / 2 \rceil$.
    - **Atributos HASE**: Casco, Agilidade, Sistemas e Engenharia validados contra o teto de $LL \times 2$ (máx. 6 por atributo).
