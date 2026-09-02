@@ -16,6 +16,8 @@ export interface ParsedCompconData {
   mechs: IPilotMech[];
   active_mech_name: string;
   active_mech_frame: string;
+  active_mech_image?: string;
+  portrait?: string;
   share_code?: string;
   raw_data: any;
   validation_warnings: string[];
@@ -92,6 +94,16 @@ export class CompconService {
     // 1. Callsign e Nome
     const callsign = (p.callsign || p.callSign || p.name || 'SEM_INDICATIVO').toString().trim().toUpperCase();
     const name = (p.name || p.real_name || p.realName || '').toString().trim();
+
+    // 1b. Imagem/Retrato do Piloto (cloud_portrait do COMP/CON S3 ou portrait local/base64)
+    const portrait = (
+      p.cloud_portrait ||
+      p.img?.cloud_portrait ||
+      p.img?.avatar?.image?.src ||
+      p.portrait ||
+      p.img?.portrait ||
+      ''
+    ).toString().trim();
 
     // 2. License Level (LL)
     let license_level = 0;
@@ -184,6 +196,7 @@ export class CompconService {
     const mechs: IPilotMech[] = [];
     let active_mech_name = '';
     let active_mech_frame = '';
+    let active_mech_image = '';
     const activeMechId = p.state?.active_mech_id || p.active_mech_id || p.activeMechId;
 
     const rawMechs = Array.isArray(p.mechs)
@@ -197,6 +210,7 @@ export class CompconService {
         const mId = m.id || `mech_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
         const mName = (m.name || 'GMS Everest Padrão').toString();
         const mFrame = (m.frameData?.name || m.frame || m.frame_id || 'GMS Standard Pattern I Everest').toString();
+        const mImage = (m.cloud_portrait || m.img?.cloud_portrait || m.frameData?.image_url || m.portrait || '').toString().trim();
         const isTargetActive = activeMechId ? m.id === activeMechId : Boolean(m.active || m.is_active);
         const isActive = isTargetActive || (rawMechs.length === 1);
 
@@ -220,6 +234,7 @@ export class CompconService {
         if (isActive && !active_mech_name) {
           active_mech_name = mName;
           active_mech_frame = mFrame;
+          active_mech_image = mImage;
         }
       }
     }
@@ -227,6 +242,7 @@ export class CompconService {
     if (mechs.length > 0 && !active_mech_name) {
       active_mech_name = mechs[0].name;
       active_mech_frame = mechs[0].frame;
+      active_mech_image = (rawMechs[0]?.cloud_portrait || rawMechs[0]?.frameData?.image_url || '').toString().trim();
       mechs[0].active = true;
     }
 
@@ -280,6 +296,8 @@ export class CompconService {
       mechs,
       active_mech_name: active_mech_name || 'GMS Everest Padrão',
       active_mech_frame: active_mech_frame || 'GMS Standard Pattern I Everest',
+      active_mech_image,
+      portrait,
       share_code: detectedShareCode,
       raw_data: data,
       validation_warnings: warnings,

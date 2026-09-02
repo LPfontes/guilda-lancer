@@ -45,6 +45,8 @@ export interface IPilot extends Document {
   mechs: IPilotMech[];
   active_mech_name?: string;
   active_mech_frame?: string;
+  active_mech_image?: string;
+  portrait?: string;
   is_active: boolean;
   status: PilotStatus;
   share_code?: string;
@@ -173,6 +175,14 @@ const PilotSchema = new Schema<IPilot>(
       default: ''
     },
     active_mech_frame: {
+      type: String,
+      default: ''
+    },
+    active_mech_image: {
+      type: String,
+      default: ''
+    },
+    portrait: {
       type: String,
       default: ''
     },

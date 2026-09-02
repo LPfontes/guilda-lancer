@@ -33,6 +33,8 @@ export const PilotController = {
       mechs = [],
       active_mech_name = '',
       active_mech_frame = '',
+      active_mech_image = '',
+      portrait = '',
       set_active
     } = req.body;
 
@@ -71,6 +73,8 @@ export const PilotController = {
       mechs,
       active_mech_name: active_mech_name || (mechs[0]?.name ?? 'GMS Everest Padrão'),
       active_mech_frame: active_mech_frame || (mechs[0]?.frame ?? 'GMS Standard Pattern I Everest'),
+      active_mech_image: active_mech_image || (mechs[0]?.cloud_portrait || mechs[0]?.frameData?.image_url || ''),
+      portrait: portrait || '',
       is_active: shouldBeActive,
       status: 'PENDING_APPROVAL'
     });
@@ -156,6 +160,8 @@ export const PilotController = {
         mechs: parsed.mechs,
         active_mech_name: parsed.active_mech_name,
         active_mech_frame: parsed.active_mech_frame,
+        active_mech_image: parsed.active_mech_image || '',
+        portrait: parsed.portrait || '',
         is_active: shouldBeActive,
         share_code: parsed.share_code || share_code || '',
         compcon_raw: parsed.raw_data,
@@ -512,7 +518,8 @@ export const PilotController = {
 
     const allowedFields = [
       'callsign', 'name', 'license_level', 'grit', 'hull', 'agility', 'systems', 'engineering',
-      'heat_dice', 'talents', 'skills', 'licenses', 'mechs', 'active_mech_name', 'active_mech_frame'
+      'heat_dice', 'talents', 'skills', 'licenses', 'mechs', 'active_mech_name', 'active_mech_frame',
+      'active_mech_image', 'portrait'
     ];
 
     let hasCombatChanges = false;
