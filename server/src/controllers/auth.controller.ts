@@ -183,11 +183,13 @@ export const AuthController = {
       return res.status(401).json({ error: 'UNAUTHORIZED' });
     }
 
-    const pilot = await PilotModel.findOne({ user_id: req.user._id });
+    const pilots = await PilotModel.find({ user_id: req.user._id }).sort({ is_active: -1, updatedAt: -1 });
+    const activePilot = pilots.find((p) => p.is_active) || pilots[0] || null;
 
     return res.json({
       user: req.user,
-      pilot: pilot || null
+      pilots,
+      pilot: activePilot
     });
   },
 

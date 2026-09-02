@@ -56,8 +56,26 @@ const UserSchema = new Schema<IUser>(
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Relação 1 Usuário -> N Pilotos (Virtual Populate)
+UserSchema.virtual('pilots', {
+  ref: 'Pilot',
+  localField: '_id',
+  foreignField: 'user_id'
+});
+
+// Limpeza em cascata: quando um usuário for removido, exclui seus pilotos órfãos
+UserSchema.pre('findOneAndDelete', async function () {
+  const doc = await this.model.findOne(this.getQuery());
+  if (doc) {
+    const PilotModel = mongoose.models.Pilot || mongoose.model('Pilot');
+    await PilotModel.deleteMany({ user_id: doc._id });
+  }
+});
 
 export const UserModel = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
