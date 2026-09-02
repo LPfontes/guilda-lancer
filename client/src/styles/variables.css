@@ -1,0 +1,52 @@
+:root {
+  /* Color Palette - Deep Omninet Space */
+  --bg-primary: #090b10;
+  --bg-secondary: #111520;
+  --bg-tertiary: #181e2e;
+  --bg-card: rgba(17, 21, 32, 0.85);
+  --bg-card-hover: rgba(24, 30, 46, 0.95);
+  --bg-glass: rgba(17, 21, 32, 0.7);
+
+  /* Borders & Glow */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(120, 192, 145, 0.35);
+  --border-lancer: rgba(128, 41, 50, 0.5);
+
+  /* Primary Accent - Crimson (#802932) & Mint Terminal (#78C091) */
+  --accent-crimson: #802932;
+  --accent-crimson-hover: #96323c;
+  --accent-crimson-glow: rgba(128, 41, 50, 0.4);
+  --accent-mint: #78C091;
+  --accent-mint-hover: #8ad0a3;
+  --accent-mint-glow: rgba(120, 192, 145, 0.3);
+
+  /* Typography Colors */
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --text-mint: #78C091;
+  --text-crimson: #c04652;
+
+  /* Status Colors */
+  --status-approved: #10b981;
+  --status-pending: #f59e0b;
+  --status-rejected: #ef4444;
+  --status-active: #00f0ff;
+  --status-completed: #3b82f6;
+
+  /* Typography Families */
+  --font-display: 'Orbitron', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout & Spacing */
+  --header-height: 68px;
+  --max-width: 1400px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}

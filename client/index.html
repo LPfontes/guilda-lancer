@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guilda LANCER // Terminal Omninet</title>
+    <meta name="description" content="Terminal de operações da Guilda LANCER: Hangar de pilotos integrado ao COMP/CON e Quadro de Missões." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/variables.css" />
+    <link rel="stylesheet" href="/src/styles/global.css" />
+  </head>
+  <body>
+    <div id="app" class="omninet-terminal">
+      <!-- Background Terminal Stream Canvas & Scanline Texture -->
+      <canvas id="terminal-stream-bg" class="terminal-bg-canvas" aria-hidden="true"></canvas>
+      <div class="terminal-scanlines" aria-hidden="true"></div>
+
+      <!-- Top Navigation Header -->
+      <header id="main-header" class="terminal-header"></header>
+
+      <!-- Main Dynamic Content Area -->
+      <main id="main-content" class="terminal-viewport" role="main"></main>
+
+      <!-- Global Modal Container -->
+      <div id="modal-root" class="modal-overlay hidden" role="dialog" aria-hidden="true"></div>
+
+      <!-- Toast Notifications -->
+      <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
