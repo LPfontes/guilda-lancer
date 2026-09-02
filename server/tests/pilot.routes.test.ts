@@ -267,4 +267,111 @@ describe('Pilot Management Routes (/api/pilots)', () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('REASON_REQUIRED');
   });
+
+  it('POST /api/pilots - should manually create a new pilot for the authenticated user', async () => {
+    vi.spyOn(UserModel, 'findById').mockResolvedValueOnce({
+      _id: mockUserId,
+      username: 'pilot_user',
+      role: 'PILOT'
+    } as any);
+
+    vi.spyOn(PilotModel, 'countDocuments').mockResolvedValueOnce(0 as any);
+    vi.spyOn(PilotModel, 'updateMany').mockResolvedValueOnce({} as any);
+
+    const manualPilot = {
+      _id: new mongoose.Types.ObjectId(),
+      user_id: mockUserId,
+      callsign: 'SENTINEL',
+      name: 'Arthur Pendelton',
+      license_level: 0,
+      grit: 0,
+      hull: 0,
+      agility: 0,
+      systems: 0,
+      engineering: 0,
+      heat_dice: '1d6',
+      is_active: true,
+      status: 'PENDING_APPROVAL'
+    };
+
+    vi.spyOn(PilotModel, 'create').mockResolvedValueOnce(manualPilot as any);
+
+    const res = await request(app)
+      .post('/api/pilots')
+      .set('Authorization', `Bearer ${pilotToken}`)
+      .send({
+        callsign: 'Sentinel',
+        name: 'Arthur Pendelton',
+        license_level: 0
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.pilot.callsign).toBe('SENTINEL');
+    expect(res.body.pilot.is_active).toBe(true);
+  });
+
+  it('PUT /api/pilots/:id - should update existing pilot fields and recalculate grit', async () => {
+    vi.spyOn(UserModel, 'findById').mockResolvedValueOnce({
+      _id: mockUserId,
+      username: 'pilot_user',
+      role: 'PILOT'
+    } as any);
+
+    const pilotId = new mongoose.Types.ObjectId();
+    const existingPilot = {
+      _id: pilotId,
+      user_id: mockUserId,
+      callsign: 'SENTINEL',
+      license_level: 0,
+      grit: 0,
+      hull: 0,
+      status: 'APPROVED',
+      active_mission_id: null,
+      save: vi.fn().mockResolvedValue(true)
+    };
+
+    vi.spyOn(PilotModel, 'findById').mockResolvedValueOnce(existingPilot as any);
+
+    const res = await request(app)
+      .put(`/api/pilots/${pilotId}`)
+      .set('Authorization', `Bearer ${pilotToken}`)
+      .send({
+        license_level: 2,
+        hull: 2
+      });
+
+    expect(res.status).toBe(200);
+    expect(existingPilot.license_level).toBe(2);
+    expect(existingPilot.grit).toBe(1); // ceil(2 / 2)
+    expect(existingPilot.status).toBe('PENDING_APPROVAL'); // combat changes reset to pending
+    expect(existingPilot.save).toHaveBeenCalled();
+  });
+
+  it('DELETE /api/pilots/:id - should remove pilot from user hangar', async () => {
+    vi.spyOn(UserModel, 'findById').mockResolvedValueOnce({
+      _id: mockUserId,
+      username: 'pilot_user',
+      role: 'PILOT'
+    } as any);
+
+    const pilotId = new mongoose.Types.ObjectId();
+    const existingPilot = {
+      _id: pilotId,
+      user_id: mockUserId,
+      callsign: 'SENTINEL',
+      is_active: false,
+      active_mission_id: null
+    };
+
+    vi.spyOn(PilotModel, 'findById').mockResolvedValueOnce(existingPilot as any);
+    vi.spyOn(PilotModel, 'findByIdAndDelete').mockResolvedValueOnce(existingPilot as any);
+
+    const res = await request(app)
+      .delete(`/api/pilots/${pilotId}`)
+      .set('Authorization', `Bearer ${pilotToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toContain('removida do hangar');
+  });
 });
+

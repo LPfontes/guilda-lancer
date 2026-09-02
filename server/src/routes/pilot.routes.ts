@@ -4,23 +4,45 @@ import { authenticateJWT, requireRole } from '../middlewares/auth.middleware.js'
 
 export const pilotRoutes = Router();
 
-// 1. Preview da ficha (não requer gravação)
+// ==========================================
+// 1. UTILIDADES & PREVIEW (SEM PERSISTÊNCIA)
+// ==========================================
 pilotRoutes.post('/preview', PilotController.previewPilot);
 
-// 2. Fichas do próprio operador autenticado (Hangar)
+// ==========================================
+// 2. HANGAR DO OPERADOR AUTENTICADO
+// ==========================================
 pilotRoutes.get('/me', authenticateJWT, PilotController.getMyPilot);
-pilotRoutes.post('/submit', authenticateJWT, PilotController.submitPilot);
 pilotRoutes.delete('/me', authenticateJWT, PilotController.deleteMyPilot);
-pilotRoutes.delete('/:id', authenticateJWT, PilotController.deleteMyPilot);
-pilotRoutes.post('/:id/activate', authenticateJWT, PilotController.setActivePilot);
 
-// 3. Listagem geral de pilotos (com filtros)
+// ==========================================
+// 3. CRUD RESTful COMPLETO DE PILOTOS
+// ==========================================
+// CREATE: Criação manual de piloto ou importação COMP/CON
+pilotRoutes.post('/', authenticateJWT, PilotController.createPilot);
+pilotRoutes.post('/submit', authenticateJWT, PilotController.submitPilot);
+pilotRoutes.post('/import', authenticateJWT, PilotController.submitPilot);
+
+// READ: Listagem geral com filtros (status, LL, busca, paginação)
 pilotRoutes.get('/', authenticateJWT, PilotController.listPilots);
 
-// 4. Detalhes de um piloto específico
+// READ: Detalhes completos de um piloto por ID
 pilotRoutes.get('/:id', authenticateJWT, PilotController.getPilotById);
 
-// 5. Avaliação da ficha (Avaliadores / Admins e GMs)
+// UPDATE: Atualização completa (PUT) ou parcial (PATCH) dos dados do piloto
+pilotRoutes.put('/:id', authenticateJWT, PilotController.updatePilot);
+pilotRoutes.patch('/:id', authenticateJWT, PilotController.updatePilot);
+
+// DELETE: Exclusão de um piloto por ID
+pilotRoutes.delete('/:id', authenticateJWT, PilotController.deleteMyPilot);
+
+// ==========================================
+// 4. AÇÕES ESPECIAIS (ATIVAÇÃO & AVALIAÇÃO)
+// ==========================================
+// Ativar piloto no hangar do operador
+pilotRoutes.post('/:id/activate', authenticateJWT, PilotController.setActivePilot);
+
+// Avaliação da ficha por Avaliadores / Admins e GMs
 pilotRoutes.post(
   '/:id/review',
   authenticateJWT,

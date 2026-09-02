@@ -5,7 +5,85 @@ import { CompconService } from '../services/compcon.service.js';
 
 export const PilotController = {
   /**
-   * 1. Submissão ou atualização da ficha de piloto via COMP/CON (Share Code ou JSON exportado).
+   * 1. Criar novo piloto manualmente ou via importação COMP/CON (POST /api/pilots).
+   */
+  async createPilot(req: Request, res: Response) {
+    if (!req.user) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: '[!] Autenticação obrigatória.' });
+    }
+
+    // Se vier com share_code ou dados do COMP/CON, delega para submitPilot
+    if (req.body.share_code || req.body.compcon_data || req.body.compcon_json || req.body.compcon_raw) {
+      return PilotController.submitPilot(req, res);
+    }
+
+    const {
+      callsign,
+      name = '',
+      license_level = 0,
+      grit,
+      hull = 0,
+      agility = 0,
+      systems = 0,
+      engineering = 0,
+      heat_dice = '1d6',
+      talents = [],
+      skills = [],
+      licenses = [],
+      mechs = [],
+      active_mech_name = '',
+      active_mech_frame = '',
+      set_active
+    } = req.body;
+
+    if (!callsign || !callsign.trim()) {
+      return res.status(400).json({
+        error: 'CALLSIGN_REQUIRED',
+        message: '[!] O indicativo de chamada (callsign) é obrigatório para cadastrar um piloto.'
+      });
+    }
+
+    const ll = Math.max(0, Math.min(12, Number(license_level) || 0));
+    const expectedGrit = Math.ceil(ll / 2);
+    const calculatedGrit = typeof grit === 'number' ? grit : expectedGrit;
+
+    const totalUserPilots = await PilotModel.countDocuments({ user_id: req.user._id });
+    const shouldBeActive = set_active === true || totalUserPilots === 0;
+
+    if (shouldBeActive) {
+      await PilotModel.updateMany({ user_id: req.user._id }, { is_active: false });
+    }
+
+    const pilot = await PilotModel.create({
+      user_id: req.user._id,
+      callsign: callsign.trim().toUpperCase(),
+      name: name.trim(),
+      license_level: ll,
+      grit: calculatedGrit,
+      hull: Number(hull) || 0,
+      agility: Number(agility) || 0,
+      systems: Number(systems) || 0,
+      engineering: Number(engineering) || 0,
+      heat_dice: heat_dice || '1d6',
+      talents,
+      skills,
+      licenses,
+      mechs,
+      active_mech_name: active_mech_name || (mechs[0]?.name ?? 'GMS Everest Padrão'),
+      active_mech_frame: active_mech_frame || (mechs[0]?.frame ?? 'GMS Standard Pattern I Everest'),
+      is_active: shouldBeActive,
+      status: 'PENDING_APPROVAL'
+    });
+
+    return res.status(201).json({
+      message: `[+] Piloto "${pilot.callsign}" cadastrado com sucesso no seu hangar.`,
+      pilot,
+      tactical_summary: CompconService.generateTacticalSummary(pilot)
+    });
+  },
+
+  /**
+   * 2. Submissão ou atualização da ficha de piloto via COMP/CON (Share Code ou JSON exportado).
    */
   async submitPilot(req: Request, res: Response) {
     if (!req.user) {
@@ -390,7 +468,91 @@ export const PilotController = {
   },
 
   /**
-   * 8. Exclusão/Reset de uma ficha de piloto do hangar do operador.
+   * 8. Atualizar dados de um piloto existente (PUT /api/pilots/:id ou PATCH /api/pilots/:id).
+   */
+  async updatePilot(req: Request, res: Response) {
+    if (!req.user) {
+      return res.status(401).json({ error: 'UNAUTHORIZED' });
+    }
+
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'INVALID_ID', message: '[!] ID de piloto inválido.' });
+    }
+
+    const pilot = await PilotModel.findById(id);
+    if (!pilot) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: '[!] Piloto não encontrado no registro da guilda.' });
+    }
+
+    // Permissão: apenas o operador dono ou um ADMIN pode atualizar a ficha
+    const isOwner = pilot.user_id.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: '[!] Você não possui autorização para atualizar a ficha de outro operador.'
+      });
+    }
+
+    // Se o piloto estiver em missão ativa, bloqueia alteração
+    if (pilot.active_mission_id) {
+      return res.status(400).json({
+        error: 'PILOT_IN_ACTIVE_MISSION',
+        message: '[!] Não é permitido alterar a ficha de um piloto em serviço ativo numa missão.'
+      });
+    }
+
+    // Se passou dados do COMP/CON para reimportar sobre este piloto
+    if (req.body.compcon_data || req.body.compcon_json || req.body.compcon_raw || req.body.share_code) {
+      req.body.pilot_id = id;
+      return PilotController.submitPilot(req, res);
+    }
+
+    const allowedFields = [
+      'callsign', 'name', 'license_level', 'grit', 'hull', 'agility', 'systems', 'engineering',
+      'heat_dice', 'talents', 'skills', 'licenses', 'mechs', 'active_mech_name', 'active_mech_frame'
+    ];
+
+    let hasCombatChanges = false;
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        if (field === 'callsign') {
+          pilot.callsign = req.body.callsign.toString().trim().toUpperCase();
+        } else {
+          (pilot as any)[field] = req.body[field];
+        }
+        if (['license_level', 'hull', 'agility', 'systems', 'engineering', 'talents', 'skills', 'mechs'].includes(field)) {
+          hasCombatChanges = true;
+        }
+      }
+    }
+
+    // Recalcula grit se o license_level foi alterado
+    if (req.body.license_level !== undefined && req.body.grit === undefined) {
+      pilot.grit = Math.ceil(pilot.license_level / 2);
+    }
+
+    // Se houve alteração substancial de combate e não for admin, reenvia para fila de aprovação
+    if (hasCombatChanges && !isAdmin) {
+      pilot.status = 'PENDING_APPROVAL';
+      pilot.rejection_reason = null;
+      pilot.reviewed_by = null;
+      pilot.reviewed_at = null;
+    }
+
+    await pilot.save();
+
+    return res.json({
+      message: `[+] Ficha do piloto "${pilot.callsign}" atualizada com sucesso.`,
+      pilot,
+      tactical_summary: CompconService.generateTacticalSummary(pilot)
+    });
+  },
+
+  /**
+   * 9. Exclusão de uma ficha de piloto do hangar (DELETE /api/pilots/:id ou /api/pilots/me).
    */
   async deleteMyPilot(req: Request, res: Response) {
     if (!req.user) {
@@ -398,16 +560,28 @@ export const PilotController = {
     }
 
     const { id } = req.params;
-    let query: any = { user_id: req.user._id };
+    let pilot: any = null;
 
     if (id && mongoose.isValidObjectId(id)) {
-      query._id = id;
-    } else {
-      // Se não especificou ID, busca o piloto ativo ou o mais recente
-      query.is_active = true;
-    }
+      pilot = await PilotModel.findById(id);
+      if (!pilot) {
+        return res.status(404).json({ error: 'NOT_FOUND', message: '[!] Nenhuma ficha encontrada para exclusão.' });
+      }
 
-    const pilot = await PilotModel.findOne(query);
+      const isOwner = pilot.user_id.toString() === req.user._id.toString();
+      const isAdmin = req.user.role === 'ADMIN';
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          error: 'FORBIDDEN',
+          message: '[!] Você não possui permissão para excluir o piloto de outro operador.'
+        });
+      }
+    } else {
+      // Se não especificou ID, busca o piloto ativo do usuário
+      pilot = await PilotModel.findOne({ user_id: req.user._id, is_active: true })
+        || await PilotModel.findOne({ user_id: req.user._id }).sort({ updatedAt: -1 });
+    }
 
     if (!pilot) {
       return res.status(404).json({ error: 'NOT_FOUND', message: '[!] Nenhuma ficha encontrada para exclusão.' });
@@ -421,11 +595,12 @@ export const PilotController = {
     }
 
     const wasActive = pilot.is_active;
+    const pilotUserId = pilot.user_id;
     await PilotModel.findByIdAndDelete(pilot._id);
 
     // Se o piloto excluído era o ativo, ativa outro piloto do hangar
     if (wasActive) {
-      const remainingPilot = await PilotModel.findOne({ user_id: req.user._id }).sort({ updatedAt: -1 });
+      const remainingPilot = await PilotModel.findOne({ user_id: pilotUserId }).sort({ updatedAt: -1 });
       if (remainingPilot) {
         remainingPilot.is_active = true;
         await remainingPilot.save();
