@@ -1,9 +1,10 @@
 import { authService } from '../services/auth.service.js';
 import { IAuthSession } from '../types/user.types.js';
+import { getCompconIcon } from './compcon-icons.js';
 
 /**
- * Componente do Cabeçalho Tático Superior (Terminal Header).
- * Atualiza-se dinamicamente conforme a sessão do operador.
+ * Componente do Cabeçalho Superior (Terminal Header).
+ * Estilo utilitário, industrial e minimalista com ícones oficiais do COMP/CON.
  */
 export class HeaderComponent {
   private container: HTMLElement | null = null;
@@ -38,20 +39,20 @@ export class HeaderComponent {
           user
             ? `
           <nav class="header-nav" aria-label="Navegação Principal">
-            <a href="#/hangar" id="nav-hangar" class="btn btn-secondary header-nav-btn">
-              <span class="nav-icon">⬡</span>
+            <a href="#/hangar" id="nav-hangar" class="header-nav-link">
+              ${getCompconIcon('hangar', 'compcon-icon')}
               <span>HANGAR</span>
-              <span class="nav-count-badge">${pilots.length}</span>
+              <span class="header-nav-badge">${pilots.length}</span>
             </a>
-            <a href="#/missions" id="nav-missions" class="btn btn-secondary header-nav-btn">
-              <span class="nav-icon">◈</span>
+            <a href="#/missions" id="nav-missions" class="header-nav-link">
+              ${getCompconIcon('missions', 'compcon-icon')}
               <span>MISSÕES</span>
             </a>
             ${
               user.role === 'GM' || user.role === 'ADMIN'
                 ? `
-              <a href="#/review" id="nav-review" class="btn btn-secondary header-nav-btn header-nav-special">
-                <span class="nav-icon">▲</span>
+              <a href="#/review" id="nav-review" class="header-nav-link header-nav-link-gm">
+                ${getCompconIcon('review', 'compcon-icon')}
                 <span>AVALIAÇÕES</span>
               </a>
             `
@@ -67,43 +68,30 @@ export class HeaderComponent {
         ${
           user
             ? `
-          <div class="header-operator-card">
-            ${
-              user.avatar
-                ? `<img class="header-avatar" src="${user.avatar}" alt="Avatar de ${user.username}" />`
-                : `<div class="header-avatar-placeholder">${user.username.charAt(0).toUpperCase()}</div>`
-            }
-            <div class="header-user-info">
-              <div class="header-callsign">
-                ${pilot ? `[${pilot.callsign}]` : `@${user.username}`}
-              </div>
-              <div class="header-tags">
-                <span class="role-badge role-${user.role.toLowerCase()}">${user.role}</span>
-                ${
-                  pilot?.active_mech_frame
-                    ? `<span class="mech-frame-tag" title="${pilot.active_mech_name || 'Mech'}">${pilot.active_mech_frame}</span>`
-                    : ''
-                }
-              </div>
-            </div>
+          <div class="header-operator-info">
+            ${getCompconIcon('pilot', 'compcon-icon header-operator-icon')}
+            <span class="header-operator-name">
+              ${pilot ? pilot.callsign : `@${user.username}`}
+            </span>
+            <span class="header-role-badge role-${user.role.toLowerCase()}">${user.role}</span>
           </div>
 
-          <button id="btn-logout" class="btn btn-logout" title="Encerrar sessão no terminal">
-            <span class="btn-logout-icon">⏻</span>
+          <button id="btn-logout" class="header-logout-btn" title="Encerrar sessão">
+            <i class="mdi mdi-logout-variant"></i>
             <span>SAIR</span>
           </button>
         `
             : `
-          <div class="header-locked-badge">
-            <span class="signal-dot"></span>
-            <span>TERMINAL BLOQUEADO // ACESSO RESTRITO</span>
+          <div class="header-locked-indicator">
+            <i class="mdi mdi-lock-outline"></i>
+            <span>ACESSO RESTRITO</span>
           </div>
         `
         }
       </div>
     `;
 
-    // Event listeners
+    // Event listener
     const logoutBtn = this.container.querySelector('#btn-logout');
     logoutBtn?.addEventListener('click', async () => {
       await authService.logout();
