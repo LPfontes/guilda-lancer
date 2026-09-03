@@ -197,5 +197,49 @@ export const AuthController = {
   logout(req: Request, res: Response) {
     res.clearCookie('omninet_token');
     return res.json({ message: '[+] Sessão de terminal encerrada.' });
+  },
+
+  // 5. Autenticação simulada para desenvolvimento local
+  async devLogin(req: Request, res: Response) {
+    if (ENV.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'FORBIDDEN_IN_PRODUCTION', message: 'Dev login desabilitado em produção.' });
+    }
+
+    const { role = 'PILOT', username } = req.body || {};
+    const validRoles: UserRole[] = ['PILOT', 'GM', 'ADMIN'];
+    const chosenRole: UserRole = validRoles.includes(role) ? role : 'PILOT';
+    const chosenUsername = username || `operador_${chosenRole.toLowerCase()}`;
+    const discordId = `dev_${chosenRole.toLowerCase()}_${Date.now().toString().slice(-4)}`;
+
+    let user = await UserModel.findOne({ username: chosenUsername });
+    if (!user) {
+      user = await UserModel.create({
+        discord_id: discordId,
+        username: chosenUsername,
+        name: `Operador [${chosenRole}]`,
+        role: chosenRole,
+        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+        discord_roles: []
+      });
+      console.log(`[+] Usuário Dev criado: @${user.username} [${user.role}]`);
+    } else if (user.role !== chosenRole) {
+      user.role = chosenRole;
+      await user.save();
+    }
+
+    const token = createToken(user);
+
+    res.cookie('omninet_token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({
+      message: `[+] Autenticado via Terminal Dev como @${user.username} [${user.role}].`,
+      token,
+      user
+    });
   }
 };

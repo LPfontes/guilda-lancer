@@ -16,4 +16,7 @@ router.get('/me', authenticateJWT, AuthController.getMe);
 // Encerrar sessão
 router.post('/logout', AuthController.logout);
 
+// Autenticação mock para desenvolvimento local
+router.post('/dev-login', AuthController.devLogin);
+
 export const authRoutes = router;

@@ -1,160 +1,236 @@
-import { ApiClient } from './services/api.js';
-import { IAuthSession } from './types/user.types.js';
+import { authService } from './services/auth.service.js';
+import { HeaderComponent } from './components/header.js';
+import { AuthHeroView } from './views/auth-hero.view.js';
 import { TerminalBackground } from './components/terminal-background.js';
 
 class OmninetApp {
-  private headerEl: HTMLElement | null = null;
   private contentEl: HTMLElement | null = null;
-  private session: IAuthSession = { user: null, pilot: null, pilots: [] };
+  private headerComponent: HeaderComponent | null = null;
   private terminalBg: TerminalBackground | null = null;
 
   constructor() {
-    this.headerEl = document.getElementById('main-header');
     this.contentEl = document.getElementById('main-content');
   }
 
   async init() {
     console.log('[+] Inicializando Terminal Omninet...');
-    // Inicia o fluxo de telemetria e código em cascata no fundo
+
+    // 1. Inicia o canvas de telemetria no fundo
     this.terminalBg = new TerminalBackground('terminal-stream-bg');
     this.terminalBg.start();
 
-    await this.checkAuth();
-    this.renderHeader();
-    this.renderHome();
+    // 2. Monta o cabeçalho tático reativo
+    this.headerComponent = new HeaderComponent('main-header');
+    this.headerComponent.mount();
+
+    // 3. Processa retorno de autenticação OAuth se houver
+    await authService.processAuthCallback();
+
+    // 4. Verifica a sessão existente
+    await authService.checkAuth();
+
+    // 5. Escuta mudanças na autenticação e na rota (hash)
+    authService.subscribe(() => {
+      this.route();
+    });
+
+    window.addEventListener('hashchange', () => {
+      this.route();
+    });
+
+    // 6. Renderiza a visualização inicial
+    this.route();
   }
 
-  private async checkAuth() {
-    try {
-      const data = await ApiClient.get<IAuthSession>('/auth/me');
-      this.session = data;
-    } catch {
-      this.session = { user: null, pilot: null, pilots: [] };
+  private route() {
+    if (!this.contentEl) return;
+
+    const hash = window.location.hash || '#/';
+    const isAuthenticated = authService.isAuthenticated;
+
+    // Se não estiver autenticado, exibe a tela de login / hero
+    if (!isAuthenticated) {
+      const authHero = new AuthHeroView(this.contentEl);
+      authHero.render();
+      return;
     }
+
+    // Se estiver autenticado e na rota raiz (#/), exibe o Dashboard Tático Hub
+    if (hash === '#/' || hash === '' || hash === '#/dashboard') {
+      this.renderDashboard();
+      return;
+    }
+
+    // Rota transitória do Hangar
+    if (hash.startsWith('#/hangar')) {
+      this.renderHangarPlaceholder();
+      return;
+    }
+
+    // Rota transitória de Missões
+    if (hash.startsWith('#/missions')) {
+      this.renderMissionsPlaceholder();
+      return;
+    }
+
+    // Rota transitória de Avaliações
+    if (hash.startsWith('#/review')) {
+      this.renderReviewPlaceholder();
+      return;
+    }
+
+    // Fallback padrão
+    this.renderDashboard();
   }
 
-  private renderHeader() {
-    if (!this.headerEl) return;
+  private renderDashboard() {
+    if (!this.contentEl) return;
 
-    const user = this.session.user;
-    const activePilot = this.session.pilot;
+    const user = authService.currentUser;
+    const pilot = authService.activePilot;
+    const pilots = authService.pilots;
 
-    this.headerEl.innerHTML = `
+    this.contentEl.innerHTML = `
+      <div class="dashboard-container">
+        <div class="auth-radar-badge">
+          <span class="radar-dot"></span>
+          <span>ESTAÇÃO OPERACIONAL ATIVA // GUILDA LANCER</span>
+        </div>
+
+        <h1 class="dashboard-title">
+          BEM-VINDO AO TERMINAL, ${user ? user.username.toUpperCase() : 'OPERADOR'}
+        </h1>
+        <p class="dashboard-subtitle">
+          Canal de dados seguro estabelecido. Gerencie seus mechas no hangar ou candidate-se aos contratos disponíveis.
+        </p>
+
+        <!-- Resumo do Chassi Ativo se existir -->
         ${
-          user
+          pilot
             ? `
-          <nav class="header-nav">
-            <button id="nav-hangar" class="btn btn-secondary header-nav-btn">
-              HANGAR (${this.session.pilots.length})
-            </button>
-            <button id="nav-missions" class="btn btn-secondary header-nav-btn">
-              MISSÕES
-            </button>
-          </nav>
-        `
-            : ''
-        }
-      </div>
-
-      <div class="header-user-area">
-        ${
-          user
-            ? `
-          <div class="header-user-info">
-            <div class="header-callsign">
-              ${activePilot ? `[${activePilot.callsign}]` : `@${user.username}`}
-            </div>
-            <div class="header-user-level">
-              NÍVEL: ${user.role}
+          <div class="card" style="margin-bottom: 2rem; border-color: var(--border-active); text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-mint); margin-bottom: 4px;">
+                  // CHASSI ATIVO MOBILIZADO
+                </div>
+                <h2 style="font-size: 1.4rem; color: #fff; margin-bottom: 4px;">
+                  ${pilot.callsign} <span style="font-size: 0.9rem; color: var(--text-muted);">[LL ${pilot.license_level}]</span>
+                </h2>
+                <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">
+                  ${pilot.active_mech_frame || 'Everest Padrão'} — ${pilot.active_mech_name || 'Mech Primário'}
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span class="role-badge role-pilot" style="font-size: 0.8rem; padding: 4px 8px;">STATUS: ${pilot.status}</span>
+                <a href="#/hangar" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                  VER FICHA COMPLETA
+                </a>
+              </div>
             </div>
           </div>
-          <button id="btn-logout" class="btn btn-secondary header-nav-btn">
-            SAIR
-          </button>
         `
             : `
-          <div class="header-locked-badge">
-            [STATUS: TERMINAL BLOQUEADO]
+          <div class="card" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.4); text-align: left; background: rgba(24, 20, 10, 0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #f59e0b; margin-bottom: 4px;">
+                  ▲ NENHUM CHASSI VINCULADO
+                </div>
+                <div style="font-size: 1rem; color: var(--text-main);">
+                  Seu operador ainda não possui uma ficha de piloto do COMP/CON sincronizada.
+                </div>
+              </div>
+              <a href="#/hangar" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                IMPORTAR FICHA NO HANGAR
+              </a>
+            </div>
           </div>
         `
         }
       </div>
     `;
-
-    document.getElementById('btn-logout')?.addEventListener('click', async () => {
-      await ApiClient.post('/auth/logout');
-      window.location.reload();
-    });
   }
 
-  private renderHome() {
+  private renderHangarPlaceholder() {
     if (!this.contentEl) return;
-
-    const user = this.session.user;
-
-    // Tela Inicial para usuário DESLOGADO: apenas título e botão de entrar via Discord
-    if (!user) {
-      this.contentEl.innerHTML = `
-        <div class="auth-hero-container">
-          <div class="auth-badge">
-            // ACESSO RESTRITO AO PESSOAL DA GUILDA
-          </div>
-          
-          <h1 class="auth-title">
-            TERMINAL TÁTICO
-          </h1>
-          
-          <p class="auth-subtitle">
-            Autentique sua credencial de operador para acessar o hangar de mechas, importar fichas do COMP/CON e visualizar missões.
-          </p>
-
-          <div class="auth-btn-wrapper">
-            <a
-              id="btn-login-discord"
-              href="/api/auth/discord"
-              class="btn btn-primary auth-discord-btn"
-            >
-              <svg class="discord-icon" viewBox="0 0 24 24">
-                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-              </svg>
-              ENTRAR VIA DISCORD
+    this.contentEl.innerHTML = `
+      <div style="padding: 2rem 0; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <a href="#/" style="color: var(--text-dim); text-decoration: none; font-size: 0.8rem; font-family: var(--font-mono);">
+              ← RETORNAR AO HUB
             </a>
+            <h1 style="font-size: 2rem; color: var(--text-main); margin-top: 0.5rem;">
+              HANGAR DE CHASSIS
+            </h1>
           </div>
         </div>
-      `;
-      return;
-    }
+        <div class="card" style="padding: 3rem 2rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">⚙</div>
+          <h2 style="font-size: 1.25rem; color: var(--accent-mint); margin-bottom: 0.5rem;">
+            SEÇÃO DO HANGAR (PRÓXIMA PARTE DO PLANO)
+          </h2>
+          <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
+            O fluxo de autenticação e sessão está ativo com sucesso! O hangar com suporte completo a importação COMP/CON v3 será construído na etapa 2.
+          </p>
+          <a href="#/" class="btn btn-secondary">VOLTAR AO INÍCIO</a>
+        </div>
+      </div>
+    `;
+  }
 
-    // Tela para usuário LOGADO: dashboard operacional com Hangar e Missões
+  private renderMissionsPlaceholder() {
+    if (!this.contentEl) return;
     this.contentEl.innerHTML = `
-      <div class="dashboard-container">
-        <h1 class="dashboard-title">
-          TERMINAL TÁTICO
-        </h1>
-        <p class="dashboard-subtitle">
-          Gerenciamento operacional da guilda: importe fichas do COMP/CON v3, selecione seu mech ativo e candidate-se a missões.
-        </p>
-
-        <div class="dashboard-grid">
-          <div class="card">
-            <h3 class="card-title-crimson">Hangar de Pilotos</h3>
-            <p class="card-text">
-              Sincronize seu piloto via Share Code de 12 dígitos ou JSON oficial do COMP/CON.
-            </p>
-            <button class="btn btn-primary card-action-btn">
-              ACESSAR HANGAR
-            </button>
+      <div style="padding: 2rem 0; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <a href="#/" style="color: var(--text-dim); text-decoration: none; font-size: 0.8rem; font-family: var(--font-mono);">
+              ← RETORNAR AO HUB
+            </a>
+            <h1 style="font-size: 2rem; color: var(--text-main); margin-top: 0.5rem;">
+              MURAL DE OPERAÇÕES WEST MARCHES
+            </h1>
           </div>
+        </div>
+        <div class="card" style="padding: 3rem 2rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">◈</div>
+          <h2 style="font-size: 1.25rem; color: var(--accent-mint); margin-bottom: 0.5rem;">
+            SEÇÃO DE MISSÕES (ETAPA 3 DO PLANO)
+          </h2>
+          <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
+            O quadro de operações e matchmaking com pontuação de prioridade será implementado após o Hangar.
+          </p>
+          <a href="#/" class="btn btn-secondary">VOLTAR AO INÍCIO</a>
+        </div>
+      </div>
+    `;
+  }
 
-          <div class="card">
-            <h3 class="card-title-mint">Mural de Missões</h3>
-            <p class="card-text">
-              Consulte contratos abertos por GMs da União e candidate seu esquadrão.
-            </p>
-            <button class="btn btn-secondary card-action-btn">
-              VER OPERAÇÕES
-            </button>
+  private renderReviewPlaceholder() {
+    if (!this.contentEl) return;
+    this.contentEl.innerHTML = `
+      <div style="padding: 2rem 0; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <a href="#/" style="color: var(--text-dim); text-decoration: none; font-size: 0.8rem; font-family: var(--font-mono);">
+              ← RETORNAR AO HUB
+            </a>
+            <h1 style="font-size: 2rem; color: var(--text-main); margin-top: 0.5rem;">
+              COMITÊ DE AVALIAÇÃO (MESTRES / ADMIN)
+            </h1>
           </div>
+        </div>
+        <div class="card" style="padding: 3rem 2rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">▲</div>
+          <h2 style="font-size: 1.25rem; color: #fbbf24; margin-bottom: 0.5rem;">
+            PAINEL DE AVALIAÇÃO DE FICHAS (ETAPA 4 DO PLANO)
+          </h2>
+          <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
+            Aprovação e rejeição com justificativas para submissões de pilotos.
+          </p>
+          <a href="#/" class="btn btn-secondary">VOLTAR AO INÍCIO</a>
         </div>
       </div>
     `;
