@@ -4,17 +4,20 @@ export interface IPilotTalent {
   id: string;
   name: string;
   rank: number;
+  data?: any;
 }
 
 export interface IPilotSkill {
   id: string;
   name: string;
   bonus: number;
+  data?: any;
 }
 
 export interface IPilotLicense {
   id: string;
   rank: number;
+  data?: any;
 }
 
 export interface IPilotMech {
@@ -54,6 +57,7 @@ export interface IPilot {
   rejection_reason?: string | null;
   reviewed_by?: any;
   reviewed_at?: string | null;
+  compcon_raw?: any;
   validation_warnings?: string[];
   createdAt: string;
   updatedAt: string;

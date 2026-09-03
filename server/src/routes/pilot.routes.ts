@@ -42,10 +42,10 @@ pilotRoutes.delete('/:id', authenticateJWT, PilotController.deleteMyPilot);
 // Ativar piloto no hangar do operador
 pilotRoutes.post('/:id/activate', authenticateJWT, PilotController.setActivePilot);
 
-// Avaliação da ficha por Avaliadores / Admins e GMs
+// Avaliação da ficha por Administradores / Avaliadores (GM não aprova ficha)
 pilotRoutes.post(
   '/:id/review',
   authenticateJWT,
-  requireRole(['ADMIN', 'GM']),
+  requireRole(['ADMIN']),
   PilotController.reviewPilot
 );

@@ -45,6 +45,14 @@ class AuthService {
     return () => this.listeners.delete(listener);
   }
 
+  updatePilots(pilots: IPilot[], activePilot?: IPilot | null) {
+    this.session.pilots = pilots;
+    if (activePilot !== undefined) {
+      this.session.pilot = activePilot;
+    }
+    this.notify();
+  }
+
   private notify() {
     this.listeners.forEach((listener) => {
       try {
@@ -127,6 +135,7 @@ class AuthService {
       console.warn('[!] Erro ao enviar logout:', err);
     } finally {
       this.session = { user: null, pilot: null, pilots: [] };
+      import('./pilot.service.js').then(m => m.pilotService.clearCache());
       this.notify();
     }
   }

@@ -1,0 +1,546 @@
+/* =======================================================
+   TOASTS COMPACTOS E TÉCNICOS
+   ======================================================= */
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 0.6rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #c9d1d9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 0;
+}
+
+.toast-fading {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.toast-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.toast-info .toast-icon { color: var(--accent-mint); }
+.toast-success .toast-icon { color: #3fb950; }
+.toast-warning .toast-icon { color: #d29922; }
+.toast-error .toast-icon { color: #f85149; }
+
+.toast-message {
+  flex: 1;
+  line-height: 1.35;
+  color: #f0f6fc;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #6e7681;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0 0 4px;
+}
+
+.toast-close:hover {
+  color: #f0f6fc;
+}
+
+
+/* Placeholders de Telas */
+.placeholder-wrapper {
+  padding: 2rem 0;
+  text-align: left;
+}
+
+.placeholder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.placeholder-back-link {
+  color: var(--text-mint);
+  text-decoration: none;
+  font-size: 1rem;
+  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.placeholder-back-link:hover {
+  color: var(--text-main);
+}
+
+.placeholder-title {
+  font-size: 2rem;
+  color: var(--text-main);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.placeholder-title-icon {
+  color: var(--accent-mint);
+}
+
+.placeholder-title-icon-blue {
+  color: #38bdf8;
+}
+
+.placeholder-title-icon-gold {
+  color: #d29922;
+}
+
+.placeholder-back-link-blue {
+  color: #38bdf8;
+}
+
+.placeholder-card {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.placeholder-icon-box {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent-mint);
+}
+
+.placeholder-icon-box-blue {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: #38bdf8;
+}
+
+.placeholder-icon-box-gold {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: #d29922;
+}
+
+.placeholder-subtitle {
+  font-size: 1.25rem;
+  color: var(--accent-mint);
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-subtitle-blue {
+  font-size: 1.25rem;
+  color: #38bdf8;
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-subtitle-gold {
+  font-size: 1.25rem;
+  color: #fbbf24;
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-text {
+  color: var(--text-muted);
+  margin: 0 auto 1rem;
+}
+
+.btn-missions {
+  background: var(--bg-tertiary);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+  text-decoration: none;
+}
+
+.btn-missions:hover {
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+  color: #f0f6fc;
+  text-decoration: none;
+}
+
+/* Ícones Oficiais do COMP/CON */
+.compcon-icon {
+  width: 2rem;
+  height: 2rem;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.compcon-icon-lg {
+  width: 3rem;
+  height: 3rem;
+  fill: currentColor;
+  display: inline-block;
+}
+
+.placeholder-icon-box .compcon-icon-lg {
+  color: var(--accent-mint);
+}
+
+.placeholder-icon-box-gold .compcon-icon-lg {
+  color: #d29922;
+}
+
+.dev-icon.compcon-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0 auto 4px auto;
+  display: block;
+}
+
+.compcon-hangar-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.compcon-hangar-icon-lg {
+  width: 3rem;
+  height: 3rem;
+  fill: var(--accent-mint);
+  display: inline-block;
+}
+
+
+/* =======================================================
+   MODAL DE IMPORTAÇÃO COMP/CON
+   ======================================================= */
+.import-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.import-modal-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  max-width: 660px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
+  border-radius: var(--radius-sm);
+}
+
+.import-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #30363d;
+  background: #0d1117;
+}
+
+.import-modal-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent-mint);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.import-modal-close {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.import-modal-close:hover {
+  color: #ffffff;
+}
+
+.import-modal-body {
+  padding: 1.25rem;
+}
+
+.import-instructions {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.import-instructions code {
+  font-family: var(--font-mono);
+  color: var(--accent-mint);
+  background: #0d1117;
+  padding: 1px 4px;
+  border: 1px solid #21262d;
+}
+
+.import-dropzone {
+  border: 2px dashed #30363d;
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  background: #0d1117;
+  transition: all var(--transition-fast);
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.import-dropzone:hover,
+.import-dropzone-active {
+  border-color: var(--accent-mint);
+  background: rgba(120, 192, 145, 0.04);
+}
+
+.import-dropzone-icon {
+  font-size: 2.5rem;
+  color: var(--accent-mint);
+  margin-bottom: 0.5rem;
+}
+
+.import-dropzone-text {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.import-dropzone-sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.import-manual-section {
+  margin-bottom: 1.25rem;
+  background: rgba(13, 17, 23, 0.6);
+  border: 1px solid #21262d;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.sharecode-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-link-toggle {
+  background: transparent;
+  border: none;
+  color: var(--accent-mint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.btn-link-toggle:hover {
+  color: #ffffff;
+}
+
+.sharecode-boxes-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+.sharecode-group {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.sharecode-separator {
+  color: var(--accent-mint);
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: bold;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.sharecode-box {
+  width: 2.15rem;
+  height: 2.85rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffffff;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.sharecode-box:focus {
+  outline: none;
+  border-color: var(--accent-mint);
+  background: #161b22;
+  box-shadow: 0 0 12px var(--accent-mint-glow);
+}
+
+.sharecode-box-filled {
+  border-color: rgba(120, 192, 145, 0.75);
+  color: var(--accent-mint);
+}
+
+.json-paste-wrapper {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #21262d;
+}
+
+.import-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: block;
+  margin-bottom: 0;
+}
+
+.import-textarea {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #f0f6fc;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.75rem;
+  resize: vertical;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+}
+
+.import-textarea:focus {
+  outline: none;
+  border-color: var(--accent-mint);
+}
+
+.import-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+/* =======================================================
+   CORES TÁTICAS DE TIPOS DE AÇÃO (LANCER / COMP/CON)
+   ======================================================= */
+.action-tag {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-right: 0.35rem;
+  display: inline-block;
+  letter-spacing: 0.04em;
+}
+
+.talent-action-type {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  letter-spacing: 0.04em;
+}
+
+/* Protocolo: Lilás / Violeta */
+.action-protocol {
+  color: var(--action-protocol);
+}
+.talent-action-type.action-protocol {
+  background: rgba(188, 140, 255, 0.15);
+  border-color: rgba(188, 140, 255, 0.4);
+}
+
+/* Ação Rápida: Ouro / Âmbar */
+.action-quick {
+  color: var(--action-quick);
+}
+.talent-action-type.action-quick {
+  background: rgba(227, 179, 65, 0.15);
+  border-color: rgba(227, 179, 65, 0.4);
+}
+
+/* Ação Completa: Vermelho / Carmim */
+.action-full {
+  color: var(--action-full);
+}
+.talent-action-type.action-full {
+  background: rgba(248, 81, 73, 0.15);
+  border-color: rgba(248, 81, 73, 0.4);
+}
+
+/* Reação: Azul Elétrico */
+.action-reaction {
+  color: var(--action-reaction);
+}
+.talent-action-type.action-reaction {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Ação Livre: Verde Menta Terminal */
+.action-free {
+  color: var(--action-free);
+}
+.talent-action-type.action-free {
+  background: rgba(120, 192, 145, 0.15);
+  border-color: rgba(120, 192, 145, 0.4);
+}
+.mdi:before,
+.mdi-set {
+  font-size: 2rem;
+}

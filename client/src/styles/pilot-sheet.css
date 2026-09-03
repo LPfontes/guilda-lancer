@@ -1,0 +1,571 @@
+/* Aba Piloto */
+.sheet-pilot-view-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.6fr 0.5fr;
+  gap: 1.5rem;
+}
+
+.sheet-subcard {
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 1.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.sheet-subcard-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: #f0f6fc;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #21262d;
+}
+
+.sheet-talents-list, .sheet-skills-list, .sheet-licenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sheet-skill-item, .sheet-license-item {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  padding: 0.75rem 1rem;
+  border-radius: 2px;
+}
+
+.sheet-talent-item {
+  appearance: none;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  padding: 0.85rem 1rem;
+  border-radius: 3px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-talent-item:hover,
+.sheet-talent-item:focus-visible {
+  background: #161b22;
+  border-color: var(--accent-mint);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+
+.talent-title-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+  width: 100%;
+}
+
+.talent-name-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.talent-lead-icon {
+  color: var(--hase-agility);
+  font-size: 1.1rem;
+}
+
+.talent-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.talent-inspect-icon {
+  color: #6e7681;
+  font-size: 1rem;
+  transition: color var(--transition-fast);
+}
+
+.sheet-talent-item:hover .talent-inspect-icon {
+  color: var(--accent-mint);
+}
+
+.talent-name {
+  color: #f0f6fc;
+  font-size: 1rem;
+}
+
+.talent-rank-badge {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--hase-agility);
+}
+
+.talent-terse-desc {
+  font-size: 1rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* Modal de Detalhes do Talento */
+.talent-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.talent-modal-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  max-width: 800px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  border-radius: var(--radius-sm);
+}
+
+.talent-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem;
+  border-bottom: 1px solid #30363d;
+  background: #0d1117;
+}
+
+.talent-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.talent-modal-icon {
+  font-size: 1.5rem;
+  color: var(--accent-crimson);
+}
+
+.talent-modal-tag {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-crimson);
+  letter-spacing: 0.1em;
+}
+
+.talent-modal-name {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: #f0f6fc;
+  margin: 0;
+}
+
+.talent-modal-close {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color var(--transition-fast);
+}
+
+.talent-modal-close:hover {
+  color: #ffffff;
+}
+
+.talent-modal-body {
+  padding: 1.2rem;
+}
+
+.talent-modal-subline {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.talent-modal-terse-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.talent-modal-lore-box {
+  background: #0d1117;
+  border-left: 3px solid var(--accent-mint);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.2rem;
+  border-radius: 2px;
+}
+
+.talent-modal-lore-text {
+  font-size: 1rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-style: italic;
+  margin: 0;
+}
+
+.talent-modal-ranks-title {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.talent-modal-ranks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.talent-rank-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  padding: 0.8rem 1rem;
+  border-radius: 3px;
+}
+
+.talent-rank-card.rank-active {
+  border-color: var(--accent-crimson);
+  background: rgba(120, 192, 145, 0.04);
+}
+
+.talent-rank-card.rank-locked {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.talent-rank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.talent-rank-card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #f0f6fc;
+}
+
+.talent-rank-badge-status {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  line-height: 1;
+}
+
+.talent-rank-badge-status i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.talent-rank-badge-status.badge-unlocked {
+  background: rgba(120, 192, 145, 0.15);
+  color: var(--accent-mint);
+  border: 1px solid var(--accent-mint);
+}
+
+.talent-rank-badge-status.badge-locked {
+  background: #21262d;
+  color: #8b949e;
+  border: 1px solid #30363d;
+}
+
+.talent-rank-desc {
+  font-size: 1rem;
+  color: #c9d1d9;
+  line-height: 1.5;
+  padding-left: 1rem;
+}
+
+.talent-rank-actions-box {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.5rem;
+  background: #161b22;
+  border-left: 2px solid var(--accent-mint);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.talent-rank-action-item {
+  font-size: 1rem;
+}
+
+.talent-action-header {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.talent-action-title {
+  color: #f0f6fc;
+  font-size: 1rem;
+}
+
+.talent-action-trigger {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: #d29922;
+  margin-bottom: 3px;
+}
+
+.talent-action-detail {
+  font-size: 1rem;
+  color: #c9d1d9;
+  line-height: 1.5;
+}
+
+.sheet-skill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-name {
+  color: #c9d1d9;
+  font-size: 1rem;
+}
+
+.skill-bonus {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+}
+
+.sheet-license-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.license-name {
+  color: #c9d1d9;
+  font-size: 1.2rem;
+}
+
+.license-rank {
+  font-family: var(--font-mono);
+  color: #d29922;
+  font-size: 1rem;
+}
+
+.sheet-error-container {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.sheet-error-icon {
+  font-size: 3rem;
+  color: #f85149;
+}
+
+.sheet-error-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #f0f6fc;
+}
+
+.sheet-error-msg {
+  color: #8b949e;
+  max-width: 500px;
+  margin-bottom: 1rem;
+}
+
+/* Empty State do Dossiê */
+.sheet-empty-card {
+  padding: 3rem 2rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  text-align: center;
+  border-radius: var(--radius-sm);
+}
+
+.sheet-empty-content {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sheet-empty-icon {
+  color: #6e7681;
+  margin-bottom: 0.5rem;
+}
+
+.compcon-icon-empty {
+  width: 64px;
+  height: 64px;
+}
+
+.sheet-empty-tag {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #d29922;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sheet-empty-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #f0f6fc;
+  margin: 0;
+}
+
+.sheet-empty-desc {
+  color: #8b949e;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+/* =======================================================
+   ESTILOS ESPECÍFICOS DA FICHA DO PILOTO / OPERADOR
+   ======================================================= */
+.pilot-dossier-hero {
+  border-left: 4px solid var(--accent-mint);
+}
+
+.pilot-avatar-box {
+  width: 300px;
+  min-height: 300px;
+}
+
+.pilot-real-name {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+}
+
+.pilot-vitals-matrix .matrix-box {
+  background: #161b22;
+}
+
+.sheet-operator-link {
+  color: #f0f6fc;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-mint);
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.sheet-operator-link:hover {
+  color: var(--accent-mint);
+}
+
+/* Card de Mecha Vinculado ao Piloto */
+.pilot-assigned-mech-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 1rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.assigned-mech-layout {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.assigned-mech-img-box {
+  width: 140px;
+  height: 140px;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assigned-mech-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.assigned-mech-info {
+  flex: 1;
+  min-width: 360px;
+}
+
+.assigned-mech-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #f0f6fc;
+  margin: 0.2rem 0;
+}
+
+.assigned-mech-desc {
+  font-size: 1rem;
+  color: #8b949e;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.assigned-mech-action {
+  flex-shrink: 0;
+}
+
+/* Traços do Chassi */
+
+.pilot-background-tag {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-main);
+  margin-bottom: 0.4rem;
+}
+
+.pilot-background-tag strong {
+  color: #f0f6fc;
+}
+
+.pilot-mechs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}

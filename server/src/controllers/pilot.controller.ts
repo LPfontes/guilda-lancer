@@ -305,12 +305,16 @@ export const PilotController = {
 
     const query: any = {};
 
-    // Usuários com papel PILOT comum só visualizam fichas aprovadas (exceto se for Avaliador/Admin ou GM)
-    const canSeeAll = req.user?.role === 'ADMIN' || req.user?.role === 'GM';
+    // Todos os operadores autenticados podem visualizar as fichas na aba de homologação para transparência
+    const canSeeAll = !!req.user;
 
-    if (status && typeof status === 'string') {
+    if (status && typeof status === 'string' && status !== 'ALL') {
       if (canSeeAll || status === 'APPROVED') {
-        query.status = status;
+        if (status === 'PENDING' || status === 'PENDING_APPROVAL') {
+          query.status = { $in: ['PENDING', 'PENDING_APPROVAL'] };
+        } else {
+          query.status = status;
+        }
       } else {
         query.status = 'APPROVED';
       }
@@ -376,15 +380,9 @@ export const PilotController = {
       return res.status(404).json({ error: 'NOT_FOUND', message: '[!] Piloto não encontrado no arquivo da Omninet.' });
     }
 
-    // Pilotos comuns só podem ver fichas alheias se estiverem aprovadas
-    const isOwner = req.user && pilot.user_id && pilot.user_id._id.toString() === req.user._id.toString();
-    const canModerate = req.user && (req.user.role === 'ADMIN' || req.user.role === 'GM');
-
-    if (pilot.status !== 'APPROVED' && !isOwner && !canModerate) {
-      return res.status(403).json({
-        error: 'FORBIDDEN',
-        message: '[!] Esta ficha de piloto ainda não foi aprovada pelo comitê de avaliação.'
-      });
+    // Todos os usuários autenticados têm permissão de leitura técnica para transparência
+    if (!req.user) {
+      return res.status(401).json({ error: 'UNAUTHORIZED' });
     }
 
     const summary = CompconService.generateTacticalSummary(pilot);

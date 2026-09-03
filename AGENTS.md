@@ -2,7 +2,7 @@
 
 ## 1. Proibição de CSS Inline (Regra Estrita)
 - **NUNCA use atributos `style="..."` no código HTML/TypeScript**.
-- Todas as definições de estilo, dimensões, cores, posicionamento e espaçamento **devem** ser declaradas exclusivamente através de classes CSS em `client/src/styles/global.css` ou variáveis em `client/src/styles/variables.css`.
+- Todas as definições de estilo, dimensões, cores, posicionamento e espaçamento **devem** ser declaradas exclusivamente através de classes CSS em `client/src/styles/` (`variables.css`, `base.css`, `components.css`, `mech-sheet.css`, `pilot-sheet.css`, `hangar.css`, `auth.css`, `header.css` importados centralmente em `global.css`).
 - Reutilize ou crie classes semânticas e utilitárias para qualquer novo componente ou elemento de interface.
 
 ## 2. Padrão Estético e Design System

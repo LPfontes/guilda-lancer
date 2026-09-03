@@ -44,20 +44,17 @@ export class HeaderComponent {
               <span>HANGAR</span>
               <span class="header-nav-badge">${pilots.length}</span>
             </a>
+            <a href="#/pilot" id="nav-pilot" class="header-nav-link">
+              ${getCompconIcon('pilot', 'compcon-icon')}
+              <span>PILOTO</span>
+            </a>
             <a href="#/missions" id="nav-missions" class="header-nav-link">
               ${getCompconIcon('missions', 'compcon-icon')}
               <span>MISSÕES</span>
+            <a href="#/review" id="nav-review" class="header-nav-link">
+              ${getCompconIcon('review', 'compcon-icon')}
+              <span>AVALIAÇÕES</span>
             </a>
-            ${
-              user.role === 'GM' || user.role === 'ADMIN'
-                ? `
-              <a href="#/review" id="nav-review" class="header-nav-link header-nav-link-gm">
-                ${getCompconIcon('review', 'compcon-icon')}
-                <span>AVALIAÇÕES</span>
-              </a>
-            `
-                : ''
-            }
           </nav>
         `
             : ''

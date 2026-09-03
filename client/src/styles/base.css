@@ -1,0 +1,270 @@
+@import '@mdi/font/css/materialdesignicons.min.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(120, 192, 145, 0.08), transparent 45%),
+    radial-gradient(circle at 10% 90%, rgba(128, 41, 50, 0.08), transparent 35%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+.dashboard-subtitle{
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+/* Base Terminal Layout */
+.omninet-terminal {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Background Terminal Canvas Stream */
+.terminal-bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  filter: contrast(1.15);
+}
+
+/* CRT Scanline Texture Effect */
+.terminal-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.35) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0.015),
+    rgba(255, 107, 0, 0.01),
+    rgba(0, 240, 255, 0.015)
+  );
+  background-size: 100% 4px, 8px 100%;
+  opacity: 0.75;
+}
+
+.terminal-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--header-height);
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.terminal-viewport {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  max-width: var(--max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Typography Utilities */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Buttons & Interactive Elements */
+button, .btn {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent-crimson);
+  color: #fff;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: var(--accent-crimson-hover);
+  box-shadow: 0 0 25px var(--accent-crimson-glow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-mint);
+  border-color: var(--border-active);
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(120, 192, 145, 0.1);
+  box-shadow: 0 0 15px var(--accent-mint-glow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+/* Cards & Containers */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: all var(--transition-normal);
+}
+
+.card:hover {
+  border-color: var(--border-active);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Utility Helpers */
+.hidden {
+  display: none !important;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =======================================================
+   HORUS GLITCH EFFECT (COMP/CON OFFICIAL SPECIFICATION)
+   ======================================================= */
+code.horus {
+  font-family: var(--font-mono);
+  font-size: 1.05em;
+  line-height: 1.6;
+  padding: 8px 14px;
+  background-color: #000000b3 !important;
+  color: #00ffff;
+  box-shadow: none;
+  font-style: normal;
+  letter-spacing: 0.05em;
+  border-radius: 0;
+  display: inline-block;
+  border-left: 3px solid #ff00ff;
+  animation: distort-subtle 4s infinite;
+  transition: all 0.2s ease;
+  user-select: all;
+  text-align: left;
+}
+
+code.horus:hover {
+  background-color: #000 !important;
+  animation: distort 1.95s infinite;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #fff;
+  border-left-color: #00ffff;
+}
+
+@keyframes distort {
+  0% {
+    text-shadow: 2px 1px #ff00ff, -2px -3px #00ffff;
+    transform: translate(-1px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
+    cursor: crosshair;
+  }
+  25% {
+    text-shadow: -2px -3px #ff00ff, 2px 1px #00ffff;
+    transform: translate(2px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
+    cursor: cell;
+  }
+  50% {
+    text-shadow: 2px -1px #ff00ff, -4px 1px #00ffff;
+    transform: translate(-2px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
+    cursor: col-resize;
+  }
+  75% {
+    text-shadow: -4px -1px #ff00ff, -2px -1px #00ffff;
+    transform: translate(3px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
+    cursor: move;
+  }
+  to {
+    text-shadow: -2px 0 #ff00ff, 2px -1px #00ffff;
+    transform: translate(-2px) translate3d(-10px, 0, 0) rotate(-0.1deg);
+    cursor: all-scroll;
+  }
+}
+
+@keyframes distort-subtle {
+  0%, 25% {
+    text-shadow: none;
+  }
+  26% {
+    text-shadow: 2px -1px #ff0000, -2px 3px #00ffff;
+  }
+  27% {
+    text-shadow: -2px -3px #ff0000, 2px 1px #00ffff;
+  }
+  28% {
+    text-shadow: 2px 1px #ff0000, -4px 1px #00ffff;
+  }
+  29% {
+    text-shadow: -4px 1px #ff0000, -2px -1px #00ffff;
+  }
+  30%, 75% {
+    text-shadow: none;
+  }
+  76% {
+    text-shadow: -4px 1px #ff0000, -2px -1px #00ffff;
+  }
+  77% {
+    text-shadow: -2px -3px #ff0000, 2px 1px #00ffff;
+  }
+  78% {
+    text-shadow: 2px -1px #ff0000, -2px 3px #00ffff;
+  }
+  79% {
+    text-shadow: 2px 1px #ff0000, -4px 1px #00ffff;
+  }
+  80%, 100% {
+    text-shadow: none;
+  }
+}

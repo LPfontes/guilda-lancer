@@ -13,17 +13,30 @@
   --border-lancer: rgba(128, 41, 50, 0.5);
 
   /* Primary Accent - Crimson (#802932) & Mint Terminal (#78C091) */
-  --accent-crimson: #802932;
+  --accent-crimson: #aa3440;
   --accent-crimson-hover: #96323c;
   --accent-crimson-glow: rgba(128, 41, 50, 0.4);
   --accent-mint: #78C091;
   --accent-mint-hover: #8ad0a3;
   --accent-mint-glow: rgba(120, 192, 145, 0.3);
 
+  /* Action Activation Colors (LANCER / COMP/CON) */
+  --action-protocol: #bc8cff;
+  --action-quick: #e3b341;
+  --action-full: #f85149;
+  --action-reaction: #38bdf8;
+  --action-free: #78c091;
+
+  /* Atributos H.A.S.E. / C.A.S.E. (LANCER / COMP/CON) */
+  --hase-hull: #3fb950;         /* Casco: Verde Esmeralda Tático */
+  --hase-agility: #58a6ff;      /* Agilidade: Azul Elétrico Tático */
+  --hase-systems: #bc8cff;      /* Sistemas: Lilás / Violeta Tático */
+  --hase-engineering: #f0883e;  /* Engenharia: Laranja / Âmbar Tático */
+
   /* Typography Colors */
   --text-main: #f3f4f6;
   --text-muted: #9ca3af;
-  --text-dim: #6b7280;
+  --text-dim: #ebebeb;
   --text-mint: #78C091;
   --text-crimson: #c04652;
 

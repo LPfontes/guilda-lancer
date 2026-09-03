@@ -1,6 +1,11 @@
 import { authService } from './services/auth.service.js';
 import { HeaderComponent } from './components/header.js';
 import { AuthHeroView } from './views/auth-hero.view.js';
+import { HangarView } from './views/hangar.view.js';
+import { PilotSheetView } from './views/pilot-sheet.view.js';
+import { MechSheetView } from './views/mech-sheet.view.js';
+import { MissionsView } from './views/missions.view.js';
+import { ReviewView } from './views/review.view.js';
 import { TerminalBackground } from './components/terminal-background.js';
 import { getCompconIcon } from './components/compcon-icons.js';
 
@@ -8,6 +13,8 @@ class OmninetApp {
   private contentEl: HTMLElement | null = null;
   private headerComponent: HeaderComponent | null = null;
   private terminalBg: TerminalBackground | null = null;
+  private currentView: string | null = null;
+  private currentUserId: string | null = null;
 
   constructor() {
     this.contentEl = document.getElementById('main-content');
@@ -48,39 +55,75 @@ class OmninetApp {
 
     const hash = window.location.hash || '#/';
     const isAuthenticated = authService.isAuthenticated;
+    const userId = authService.currentUser?._id || null;
 
     // Se não estiver autenticado, exibe a tela de login / hero
     if (!isAuthenticated) {
-      const authHero = new AuthHeroView(this.contentEl);
-      authHero.render();
+      if (this.currentView !== 'auth') {
+        this.currentView = 'auth';
+        this.currentUserId = null;
+        const authHero = new AuthHeroView(this.contentEl);
+        authHero.render();
+      }
       return;
     }
 
-    // Se estiver autenticado e na rota raiz (#/), exibe o Dashboard Tático Hub
-    if (hash === '#/' || hash === '' || hash === '#/dashboard') {
-      this.renderDashboard();
+    // Se mudou o usuário autenticado, força re-render
+    const authChanged = this.currentUserId !== userId;
+    this.currentUserId = userId;
+
+    let targetView = 'dashboard';
+    if (hash.startsWith('#/hangar')) targetView = 'hangar';
+    else if (hash.startsWith('#/pilot')) targetView = 'pilot';
+    else if (hash.startsWith('#/mech')) targetView = 'mech';
+    else if (hash.startsWith('#/missions')) targetView = 'missions';
+    else if (hash.startsWith('#/review')) targetView = 'review';
+
+    if (!authChanged && this.currentView === targetView && targetView !== 'pilot' && targetView !== 'mech') {
+      return;
+    }
+    this.currentView = targetView;
+
+    // Rota do Hangar de Mechas
+    if (targetView === 'hangar') {
+      const hangarView = new HangarView(this.contentEl);
+      hangarView.render();
       return;
     }
 
-    // Rota transitória do Hangar
-    if (hash.startsWith('#/hangar')) {
-      this.renderHangarPlaceholder();
+    // Rota da Ficha do Piloto / Operador
+    if (targetView === 'pilot') {
+      const searchParams = new URLSearchParams(hash.split('?')[1] || '');
+      const pilotId = searchParams.get('id') || null;
+      const sheetView = new PilotSheetView(this.contentEl, pilotId);
+      sheetView.render();
       return;
     }
 
-    // Rota transitória de Missões
-    if (hash.startsWith('#/missions')) {
-      this.renderMissionsPlaceholder();
+    // Rota da Ficha do Mecha / Chassi
+    if (targetView === 'mech') {
+      const searchParams = new URLSearchParams(hash.split('?')[1] || '');
+      const pilotId = searchParams.get('id') || null;
+      const mechView = new MechSheetView(this.contentEl, pilotId);
+      mechView.render();
       return;
     }
 
-    // Rota transitória de Avaliações
-    if (hash.startsWith('#/review')) {
-      this.renderReviewPlaceholder();
+    // Rota de Missões / Quadro de Operações
+    if (targetView === 'missions') {
+      const missionsView = new MissionsView(this.contentEl);
+      missionsView.render();
       return;
     }
 
-    // Fallback padrão
+    // Rota de Avaliações / Homologação de Fichas (GM / ADMIN)
+    if (targetView === 'review') {
+      const reviewView = new ReviewView(this.contentEl);
+      reviewView.render();
+      return;
+    }
+
+    // Dashboard Padrão
     this.renderDashboard();
   }
 
@@ -122,8 +165,13 @@ class OmninetApp {
               </div>
               <div class="pilot-hero-actions">
                 <span class="role-badge role-pilot pilot-hero-status">STATUS: ${pilot.status}</span>
-                <a href="#/hangar" class="btn btn-secondary pilot-hero-btn">
-                  VER FICHA COMPLETA
+                <a href="#/mech" class="btn btn-primary pilot-hero-btn">
+                  ${getCompconIcon('mech', 'compcon-icon')}
+                  <span>FICHA DO MECHA</span>
+                </a>
+                <a href="#/pilot" class="btn btn-secondary pilot-hero-btn">
+                  ${getCompconIcon('pilot', 'compcon-icon')}
+                  <span>FICHA DO PILOTO</span>
                 </a>
               </div>
             </div>
@@ -152,104 +200,8 @@ class OmninetApp {
     `;
   }
 
-  private renderHangarPlaceholder() {
-    if (!this.contentEl) return;
-    this.contentEl.innerHTML = `
-      <div class="placeholder-wrapper">
-        <div class="placeholder-header">
-          <div>
-            <a href="#/" class="placeholder-back-link">
-              <i class="mdi mdi-arrow-left"></i> RETORNAR AO HUB
-            </a>
-            <h1 class="placeholder-title">
-              ${getCompconIcon('hangar', 'compcon-icon placeholder-title-icon')}
-              <span>HANGAR DE CHASSIS</span>
-            </h1>
-          </div>
-        </div>
-        <div class="card placeholder-card">
-          <div class="placeholder-icon-box">
-            ${getCompconIcon('hangar', 'compcon-icon-lg')}
-          </div>
-          <h2 class="placeholder-subtitle">
-            SEÇÃO DO HANGAR (ETAPA 2 DO PLANO)
-          </h2>
-          <p class="placeholder-text">
-            O fluxo de autenticação e sessão está ativo com sucesso! O hangar com suporte completo a importação COMP/CON v3 será construído na etapa 2.
-          </p>
-          <a href="#/" class="btn btn-secondary">
-            <i class="mdi mdi-arrow-left"></i> VOLTAR AO INÍCIO
-          </a>
-        </div>
-      </div>
-    `;
-  }
 
-  private renderMissionsPlaceholder() {
-    if (!this.contentEl) return;
-    this.contentEl.innerHTML = `
-      <div class="placeholder-wrapper">
-        <div class="placeholder-header">
-          <div>
-            <a href="#/" class="placeholder-back-link placeholder-back-link-blue">
-              <i class="mdi mdi-arrow-left"></i> RETORNAR AO HUB
-            </a>
-            <h1 class="placeholder-title">
-              ${getCompconIcon('missions', 'compcon-icon placeholder-title-icon-blue')}
-              <span>MURAL DE OPERAÇÕES</span>
-            </h1>
-          </div>
-        </div>
-        <div class="card placeholder-card">
-          <div class="placeholder-icon-box placeholder-icon-box-blue">
-            ${getCompconIcon('missions', 'compcon-icon-lg')}
-          </div>
-          <h2 class="placeholder-subtitle placeholder-subtitle-blue">
-            SEÇÃO DE MISSÕES (ETAPA 3 DO PLANO)
-          </h2>
-          <p class="placeholder-text">
-            O quadro de operações e matchmaking com pontuação de prioridade será implementado após o Hangar.
-          </p>
-          <a href="#/" class="btn btn-missions">
-            <i class="mdi mdi-arrow-left"></i> VOLTAR AO INÍCIO
-          </a>
-        </div>
-      </div>
-    `;
-  }
 
-  private renderReviewPlaceholder() {
-    if (!this.contentEl) return;
-    this.contentEl.innerHTML = `
-      <div class="placeholder-wrapper">
-        <div class="placeholder-header">
-          <div>
-            <a href="#/" class="placeholder-back-link">
-              <i class="mdi mdi-arrow-left"></i> RETORNAR AO HUB
-            </a>
-            <h1 class="placeholder-title">
-              ${getCompconIcon('review', 'compcon-icon placeholder-title-icon-gold')}
-              <span>COMITÊ DE AVALIAÇÃO</span>
-            </h1>
-          </div>
-        </div>
-        <div class="card placeholder-card">
-          <div class="placeholder-icon-box-gold">
-            ${getCompconIcon('review', 'compcon-icon-lg')}
-          </div>
-          <h2 class="placeholder-subtitle-gold">
-            PAINEL DE AVALIAÇÃO DE FICHAS (ETAPA 4 DO PLANO)
-          </h2>
-          <p class="placeholder-text">
-            Aprovação e rejeição com justificativas para submissões de pilotos.
-          </p>
-          <a href="#/" class="btn btn-secondary">
-            <i class="mdi mdi-arrow-left"></i> VOLTAR AO INÍCIO
-          </a>
-        </div>
-      </div>
-    `;
-  }
 }
 
 // Boot
