@@ -11,8 +11,10 @@ class ChatService {
 
   connectSocket(): Socket {
     if (!this.socket) {
+      const token = localStorage.getItem('omninet_token');
       this.socket = io(API_BASE || undefined, {
         path: '/socket.io',
+        auth: token ? { token } : undefined,
         withCredentials: true,
         transports: ['websocket', 'polling']
       });

@@ -135,6 +135,7 @@ class AuthService {
     } catch (err: any) {
       console.warn('[!] Erro ao enviar logout:', err);
     } finally {
+      localStorage.removeItem('omninet_token');
       this.session = { user: null, pilot: null, pilots: [] };
       import('./pilot.service.js').then(m => m.pilotService.clearCache());
       this.notify();
@@ -156,6 +157,10 @@ class AuthService {
 
     const finalError = error || hashError;
     const finalToken = token || hashToken;
+
+    if (finalToken) {
+      localStorage.setItem('omninet_token', finalToken);
+    }
 
     if (finalError) {
       ToastService.error(`Erro retornado pelo Discord: ${decodeURIComponent(finalError)}`);

@@ -9,8 +9,10 @@ export class ApiClient {
   static async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
+    const token = localStorage.getItem('omninet_token');
     const defaultHeaders: HeadersInit = {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers
     };
 
