@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+import fs from 'fs';
 import { ENV } from './config/env.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { pilotRoutes } from './routes/pilot.routes.js';
@@ -42,3 +44,23 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Servir arquivos estáticos do frontend (para ambiente de produção ou container Docker)
+const clientDistPath = path.resolve(process.cwd(), '../client/dist');
+const localPublicPath = path.resolve(process.cwd(), 'public');
+const distPath = fs.existsSync(localPublicPath)
+  ? localPublicPath
+  : fs.existsSync(clientDistPath)
+  ? clientDistPath
+  : null;
+
+if (distPath) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
