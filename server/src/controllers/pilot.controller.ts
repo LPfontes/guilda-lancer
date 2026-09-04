@@ -126,23 +126,28 @@ export const PilotController = {
       // Se não, verifica se já existe um piloto com o mesmo callsign para atualizar, ou cria um novo piloto no hangar.
       let pilot: any = null;
       if (pilot_id && mongoose.isValidObjectId(pilot_id)) {
-        pilot = await PilotModel.findOne({ _id: pilot_id, user_id: req.user._id });
+        const filter: any = { _id: pilot_id };
+        if (req.user.role !== 'ADMIN') {
+          filter.user_id = req.user._id;
+        }
+        pilot = await PilotModel.findOne(filter);
         if (!pilot) {
           return res.status(404).json({
             error: 'PILOT_NOT_FOUND',
-            message: '[!] Piloto especificado não foi localizado no seu hangar.'
+            message: '[!] Piloto especificado não foi localizado.'
           });
         }
       } else {
         pilot = await PilotModel.findOne({ user_id: req.user._id, callsign: parsed.callsign });
       }
 
-      const totalUserPilots = await PilotModel.countDocuments({ user_id: req.user._id });
+      const targetUserId = pilot ? pilot.user_id : req.user._id;
+      const totalUserPilots = await PilotModel.countDocuments({ user_id: targetUserId });
       const shouldBeActive = set_active === true || totalUserPilots === 0 || (pilot && pilot.is_active);
 
       if (shouldBeActive) {
         // Desativa temporariamente outros pilotos para garantir apenas 1 ativo
-        await PilotModel.updateMany({ user_id: req.user._id }, { is_active: false });
+        await PilotModel.updateMany({ user_id: targetUserId }, { is_active: false });
       }
 
       const pilotDataToSave = {
@@ -165,7 +170,6 @@ export const PilotController = {
         is_active: shouldBeActive,
         share_code: parsed.share_code || share_code || '',
         compcon_raw: parsed.raw_data,
-        validation_warnings: parsed.validation_warnings,
         status: 'PENDING_APPROVAL',
         rejection_reason: null,
         reviewed_by: null,
@@ -195,8 +199,6 @@ export const PilotController = {
         message: '[+] Ficha do piloto cadastrada no seu hangar e enviada para avaliação.',
         pilot,
         tactical_summary: summary,
-        warnings: parsed.validation_warnings,
-        is_valid: parsed.is_valid
       });
     } catch (err: any) {
       return res.status(400).json({
@@ -250,9 +252,7 @@ export const PilotController = {
 
       return res.json({
         parsed,
-        tactical_summary: summary,
-        warnings: parsed.validation_warnings,
-        is_valid: parsed.is_valid
+        tactical_summary: summary
       });
     } catch (err: any) {
       return res.status(400).json({

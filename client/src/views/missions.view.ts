@@ -751,17 +751,23 @@ export class MissionsView {
       }
     }, { signal });
 
+    let isSendingChat = false;
     chatForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (isSendingChat) return;
       if (!this.activeChatMissionId || !chatTextarea) return;
       const content = chatTextarea.value.trim();
       if (!content) return;
 
+      isSendingChat = true;
+      chatTextarea.value = '';
       try {
         await chatService.sendMissionMessage(this.activeChatMissionId, content);
-        chatTextarea.value = '';
       } catch (err: any) {
+        chatTextarea.value = content;
         ToastService.error(err.message || 'Falha ao transmitir mensagem.');
+      } finally {
+        isSendingChat = false;
       }
     }, { signal });
 
@@ -1510,6 +1516,12 @@ export class MissionsView {
     const messagesArea = this.container.querySelector('#mission-chat-messages');
     if (!messagesArea) return;
 
+    // Deduplicação estrita: se a mensagem já foi renderizada na área, ignora
+    const msgId = msg._id ? String(msg._id) : null;
+    if (msgId && messagesArea.querySelector(`[data-msg-id="${msgId}"]`)) {
+      return;
+    }
+
     const currentUserId = authService.currentUser?._id;
     const authorId = typeof msg.author_id === 'object' && msg.author_id !== null
       ? (msg.author_id as any)._id
@@ -1527,6 +1539,9 @@ export class MissionsView {
 
     const row = document.createElement('div');
     row.className = `transmission-row ${isOwn ? 'is-own' : ''} ${isGm ? 'is-gm' : ''} ${isSystem ? 'is-system' : ''}`;
+    if (msgId) {
+      row.setAttribute('data-msg-id', msgId);
+    }
 
     const roleBadgeClass = isGm ? 'badge-role-gm' : msg.author_role === 'ADMIN' ? 'badge-role-admin' : 'badge-role-pilot';
 

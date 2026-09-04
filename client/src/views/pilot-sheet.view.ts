@@ -16,6 +16,10 @@ export class PilotSheetView {
   private pilotId: string | null = null;
   private pilotData: IPilot | null = null;
   private resolvedTalents: any[] = [];
+  private syncRawData: string = '';
+  private syncPreviewData: any = null;
+  private isSyncing: boolean = false;
+  private isDeleting: boolean = false;
 
   constructor(container: HTMLElement, pilotId: string | null = null) {
     this.container = container;
@@ -146,6 +150,12 @@ export class PilotSheetView {
       };
     });
 
+    const currentUser = authService.currentUser;
+    const pilotUserId = typeof p.user_id === 'object' && p.user_id ? (p.user_id as any)._id : p.user_id;
+    const isOwner = Boolean(currentUser?._id && pilotUserId && currentUser._id.toString() === pilotUserId.toString());
+    const isAdmin = currentUser?.role === 'ADMIN';
+    const canManage = isOwner || isAdmin;
+
     this.container.innerHTML = `
       <div class="sheet-container">
         <!-- Navegação Superior / Breadcrumbs -->
@@ -182,6 +192,20 @@ export class PilotSheetView {
               <i class="mdi mdi-clipboard-text-outline"></i>
               <span>RELATÓRIO DE MISSÃO</span>
             </button>
+            ${
+              canManage
+                ? `
+              <button id="btn-sync-pilot" class="btn btn-secondary sheet-action-btn sheet-action-btn-sync" title="Sincronizar Dossiê com o COMP/CON">
+                <i class="mdi mdi-cloud-sync-outline"></i>
+                <span>SINCRONIZAR COMP/CON</span>
+              </button>
+              <button id="btn-delete-pilot" class="btn btn-secondary sheet-action-btn sheet-action-btn-danger" title="Excluir Ficha do Hangar">
+                <i class="mdi mdi-delete-alert-outline"></i>
+                <span>EXCLUIR FICHA</span>
+              </button>
+            `
+                : ''
+            }
           </div>
         </div>
 
@@ -564,6 +588,207 @@ export class PilotSheetView {
             </div>
           </div>
         </div>
+
+        <!-- Modal de Sincronização COMP/CON -->
+        <div id="sync-pilot-modal" class="import-modal-overlay hidden" role="dialog" aria-modal="true">
+          <div class="import-modal-box">
+            <div class="import-modal-header">
+              <div class="import-modal-title">
+                ${getCompconIcon('hangar', 'compcon-icon')}
+                <span>LNC://SYNC_MODULE.02 // SINCRONIZAÇÃO COMP/CON</span>
+              </div>
+              <button id="btn-close-sync-modal" class="import-modal-close" type="button" aria-label="Fechar">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+
+            <div class="import-modal-body">
+              ${
+                p.share_code
+                  ? `
+                <div class="pilot-sync-current-badge">
+                  <span class="pilot-sync-current-label">SHARE CODE VINCULADO:</span>
+                  <span class="pilot-sync-current-code">${p.share_code}</span>
+                  <button id="btn-sync-use-current" class="pilot-sync-btn-use-current" type="button">
+                    <i class="mdi mdi-refresh"></i>
+                    <span>PREENCHER CÓDIGO ATUAL</span>
+                  </button>
+                </div>
+              `
+                  : ''
+              }
+
+              <div class="import-instructions">
+                Atualize o dossiê do piloto enviando o arquivo <code>.json</code> exportado do COMP/CON v3 ou informando o Share Code de 12 dígitos:
+              </div>
+
+              <!-- Dropzone para arquivo JSON -->
+              <div id="sync-dropzone" class="import-dropzone">
+                <i class="mdi mdi-file-upload-outline import-dropzone-icon"></i>
+                <div class="import-dropzone-text">ARRASTE O ARQUIVO .JSON DO COMP/CON AQUI</div>
+                <div class="import-dropzone-sub">ou clique para selecionar do dispositivo</div>
+                <input id="sync-file-input" type="file" accept=".json,application/json" class="hidden-file-input" />
+              </div>
+
+              <!-- Entrada de Share Code com Caixas para Cada Dígito -->
+              <div class="import-manual-section">
+                <div class="sharecode-header-row">
+                  <label class="import-label">INFORME O SHARE CODE DO COMP/CON (12 DÍGITOS):</label>
+                  <button id="btn-sync-toggle-raw" class="btn-link-toggle" type="button">Alternar para JSON bruto</button>
+                </div>
+
+                <div class="sharecode-boxes-container" id="sync-sharecode-boxes">
+                  <div class="sharecode-group">
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="0" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="1" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="2" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="3" autocomplete="off" spellcheck="false" />
+                  </div>
+                  <span class="sharecode-separator">-</span>
+                  <div class="sharecode-group">
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="4" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="5" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="6" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="7" autocomplete="off" spellcheck="false" />
+                  </div>
+                  <span class="sharecode-separator">-</span>
+                  <div class="sharecode-group">
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="8" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="9" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="10" autocomplete="off" spellcheck="false" />
+                    <input type="text" maxlength="1" class="sharecode-box sync-sharecode-box" data-index="11" autocomplete="off" spellcheck="false" />
+                  </div>
+                </div>
+
+                <div id="sync-json-paste-wrapper" class="json-paste-wrapper hidden">
+                  <textarea
+                    id="sync-text-input"
+                    class="import-textarea"
+                    placeholder='Cole o JSON bruto aqui: {"callsign": "${callsign}", ...}'
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="import-action-row">
+                <button id="btn-sync-validate-preview" class="btn btn-secondary" type="button">
+                  <i class="mdi mdi-magnify-scan"></i>
+                  <span>ANALISAR ATUALIZAÇÃO</span>
+                </button>
+              </div>
+
+              <!-- Painel de Pré-Visualização / Preview da Ficha -->
+              <div id="sync-preview-box" class="import-preview-box hidden">
+                <div class="preview-header">
+                  <span class="preview-tag">[ TELEMETRIA DETECTADA ]</span>
+                  <span id="sync-preview-status-badge" class="preview-status-valid">FICHA VÁLIDA</span>
+                </div>
+
+                <div class="preview-grid">
+                  <div class="preview-item">
+                    <span class="preview-label">INDICATIVO (CALLSIGN):</span>
+                    <span id="sync-preview-callsign" class="preview-value">-</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="preview-label">CHASSI / FRAME:</span>
+                    <span id="sync-preview-frame" class="preview-value">-</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="preview-label">NÍVEL DE LICENÇA:</span>
+                    <span id="sync-preview-ll" class="preview-value">-</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="preview-label">H.A.S.E.:</span>
+                    <span id="sync-preview-hase" class="preview-value">-</span>
+                  </div>
+                </div>
+
+                <div id="sync-preview-warnings-container" class="preview-warnings-box hidden"></div>
+
+                <div class="preview-confirm-bar">
+                  <button id="btn-confirm-sync" class="btn btn-primary" type="button">
+                    <i class="mdi mdi-cloud-sync"></i>
+                    <span>CONFIRMAR SINCRONIZAÇÃO</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão da Ficha -->
+        <div id="delete-pilot-modal" class="pilot-delete-modal-overlay hidden" role="dialog" aria-modal="true">
+          <div class="pilot-delete-modal-box">
+            <div class="pilot-delete-header">
+              <div class="pilot-delete-title">
+                <i class="mdi mdi-alert-octagon"></i>
+                <span>[ALERTA TÁTICO] // DESMOBILIZAÇÃO DE PILOTO</span>
+              </div>
+              <button id="btn-close-delete-modal" class="import-modal-close" type="button" aria-label="Fechar">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+
+            <div class="pilot-delete-body">
+              ${
+                p.active_mission_id
+                  ? `
+                <div class="pilot-delete-blocked-box">
+                  <div class="pilot-delete-blocked-title">
+                    <i class="mdi mdi-shield-alert"></i>
+                    <span>MOBILIZAÇÃO ATIVA DETECTADA</span>
+                  </div>
+                  <div>
+                    O piloto <strong>${callsign}</strong> está designado para uma missão ativa em andamento.
+                    De acordo com os protocolos da guilda, a ficha não pode ser excluída ou desmobilizada enquanto a missão estiver em curso.
+                  </div>
+                </div>
+                <div class="pilot-delete-footer">
+                  <button id="btn-cancel-delete-modal" class="btn btn-secondary" type="button">
+                    <span>FECHAR</span>
+                  </button>
+                </div>
+              `
+                  : `
+                <div class="pilot-delete-warning-box">
+                  <div class="pilot-delete-warning-title">
+                    <i class="mdi mdi-alert-circle"></i>
+                    <span>PROCEDIMENTO DE PURGA DEFINITIVA</span>
+                  </div>
+                  <div>
+                    Você está prestes a desmobilizar permanentemente o operador <strong>${callsign}</strong> e todos os dados de chassi e licenças associados.
+                    Esta operação removerá a ficha do hangar e não poderá ser desfeita.
+                  </div>
+                </div>
+
+                <div class="pilot-delete-input-group">
+                  <label class="pilot-delete-input-label" for="input-delete-callsign-confirm">
+                    DIGITE O CALLSIGN <strong>${callsign}</strong> PARA AUTORIZAR A EXCLUSÃO:
+                  </label>
+                  <input
+                    type="text"
+                    id="input-delete-callsign-confirm"
+                    class="pilot-delete-confirm-input"
+                    placeholder="${callsign}"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+
+                <div class="pilot-delete-footer">
+                  <button id="btn-cancel-delete-modal" class="btn btn-secondary" type="button">
+                    <span>CANCELAR</span>
+                  </button>
+                  <button id="btn-confirm-delete" class="btn-danger-confirm" type="button" disabled>
+                    <i class="mdi mdi-delete-forever"></i>
+                    <span>CONFIRMAR EXCLUSÃO</span>
+                  </button>
+                </div>
+              `
+              }
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -619,6 +844,96 @@ export class PilotSheetView {
       }
     });
 
+    // Botões de Abertura dos Modais de Sincronização e Exclusão
+    const btnSyncPilot = this.container.querySelector('#btn-sync-pilot');
+    btnSyncPilot?.addEventListener('click', () => this.openSyncModal());
+
+    const btnCloseSyncModal = this.container.querySelector('#btn-close-sync-modal');
+    btnCloseSyncModal?.addEventListener('click', () => this.closeSyncModal());
+
+    const btnDeletePilot = this.container.querySelector('#btn-delete-pilot');
+    btnDeletePilot?.addEventListener('click', () => this.openDeleteModal());
+
+    const btnCloseDeleteModal = this.container.querySelector('#btn-close-delete-modal');
+    btnCloseDeleteModal?.addEventListener('click', () => this.closeDeleteModal());
+
+    const btnCancelDeleteModal = this.container.querySelector('#btn-cancel-delete-modal');
+    btnCancelDeleteModal?.addEventListener('click', () => this.closeDeleteModal());
+
+    // Modal de Exclusão - Validação de Entrada
+    const deleteConfirmInput = this.container.querySelector('#input-delete-callsign-confirm') as HTMLInputElement | null;
+    const btnConfirmDelete = this.container.querySelector('#btn-confirm-delete') as HTMLButtonElement | null;
+    deleteConfirmInput?.addEventListener('input', () => {
+      const targetCallsign = (this.pilotData?.callsign || '').trim().toUpperCase();
+      const entered = deleteConfirmInput.value.trim().toUpperCase();
+      if (btnConfirmDelete) {
+        btnConfirmDelete.disabled = entered !== targetCallsign;
+      }
+    });
+
+    btnConfirmDelete?.addEventListener('click', () => this.handleConfirmDelete());
+
+    // Modal de Sincronização - Dropzone de Arquivo JSON
+    const syncDropzone = this.container.querySelector('#sync-dropzone');
+    const syncFileInput = this.container.querySelector('#sync-file-input') as HTMLInputElement | null;
+    syncDropzone?.addEventListener('click', () => syncFileInput?.click());
+    syncDropzone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      syncDropzone.classList.add('import-dropzone-active');
+    });
+    syncDropzone?.addEventListener('dragleave', () => {
+      syncDropzone.classList.remove('import-dropzone-active');
+    });
+    syncDropzone?.addEventListener('drop', (e: any) => {
+      e.preventDefault();
+      syncDropzone.classList.remove('import-dropzone-active');
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        this.handleSyncFileUpload(files[0]);
+      }
+    });
+
+    syncFileInput?.addEventListener('change', () => {
+      if (syncFileInput.files && syncFileInput.files.length > 0) {
+        this.handleSyncFileUpload(syncFileInput.files[0]);
+      }
+    });
+
+    // Modal de Sincronização - Preencher Share Code Atual
+    const btnSyncUseCurrent = this.container.querySelector('#btn-sync-use-current');
+    btnSyncUseCurrent?.addEventListener('click', () => {
+      if (this.pilotData?.share_code) {
+        this.fillSyncShareCode(this.pilotData.share_code);
+      }
+    });
+
+    // Modal de Sincronização - Alternar para JSON Bruto
+    const btnSyncToggleRaw = this.container.querySelector('#btn-sync-toggle-raw');
+    const syncBoxesContainer = this.container.querySelector('#sync-sharecode-boxes');
+    const syncJsonWrapper = this.container.querySelector('#sync-json-paste-wrapper');
+    btnSyncToggleRaw?.addEventListener('click', () => {
+      const isJsonVisible = !syncJsonWrapper?.classList.contains('hidden');
+      if (isJsonVisible) {
+        syncJsonWrapper?.classList.add('hidden');
+        syncBoxesContainer?.classList.remove('hidden');
+        btnSyncToggleRaw.textContent = 'Alternar para JSON bruto';
+      } else {
+        syncJsonWrapper?.classList.remove('hidden');
+        syncBoxesContainer?.classList.add('hidden');
+        btnSyncToggleRaw.textContent = 'Alternar para Share Code';
+      }
+    });
+
+    // Modal de Sincronização - Botão de Análise e Confirmação
+    const btnSyncValidate = this.container.querySelector('#btn-sync-validate-preview');
+    btnSyncValidate?.addEventListener('click', () => this.handleSyncValidate());
+
+    const btnConfirmSync = this.container.querySelector('#btn-confirm-sync');
+    btnConfirmSync?.addEventListener('click', () => this.handleConfirmSync());
+
+    // Modal de Sincronização - Caixas de Share Code
+    this.bindSyncShareCodeBoxes();
+
     // Triggers do Modal de Talento
     const talentBtns = this.container.querySelectorAll('.talent-btn-trigger');
     talentBtns.forEach((btn) => {
@@ -635,18 +950,283 @@ export class PilotSheetView {
     const closeTalentBtn = this.container.querySelector('#btn-close-talent-modal');
     closeTalentBtn?.addEventListener('click', () => this.closeTalentModal());
 
+    // Fechamento ao clicar fora nos overlays dos modais
     const talentModalOverlay = this.container.querySelector('#talent-modal');
     talentModalOverlay?.addEventListener('click', (e) => {
-      if (e.target === talentModalOverlay) {
-        this.closeTalentModal();
-      }
+      if (e.target === talentModalOverlay) this.closeTalentModal();
+    });
+
+    const syncModalOverlay = this.container.querySelector('#sync-pilot-modal');
+    syncModalOverlay?.addEventListener('click', (e) => {
+      if (e.target === syncModalOverlay) this.closeSyncModal();
+    });
+
+    const deleteModalOverlay = this.container.querySelector('#delete-pilot-modal');
+    deleteModalOverlay?.addEventListener('click', (e) => {
+      if (e.target === deleteModalOverlay) this.closeDeleteModal();
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeTalentModal();
+        this.closeSyncModal();
+        this.closeDeleteModal();
       }
     });
+  }
+
+  private openSyncModal() {
+    const modal = this.container.querySelector('#sync-pilot-modal');
+    modal?.classList.remove('hidden');
+  }
+
+  private closeSyncModal() {
+    const modal = this.container.querySelector('#sync-pilot-modal');
+    modal?.classList.add('hidden');
+    this.syncPreviewData = null;
+    this.syncRawData = '';
+    const textArea = this.container.querySelector('#sync-text-input') as HTMLTextAreaElement | null;
+    if (textArea) textArea.value = '';
+    const boxes = Array.from(this.container.querySelectorAll<HTMLInputElement>('.sync-sharecode-box'));
+    boxes.forEach((b) => {
+      b.value = '';
+      b.classList.remove('sharecode-box-filled');
+    });
+    const previewBox = this.container.querySelector('#sync-preview-box');
+    previewBox?.classList.add('hidden');
+  }
+
+  private openDeleteModal() {
+    const modal = this.container.querySelector('#delete-pilot-modal');
+    modal?.classList.remove('hidden');
+    const deleteConfirmInput = this.container.querySelector('#input-delete-callsign-confirm') as HTMLInputElement | null;
+    const btnConfirmDelete = this.container.querySelector('#btn-confirm-delete') as HTMLButtonElement | null;
+    if (deleteConfirmInput) {
+      deleteConfirmInput.value = '';
+      deleteConfirmInput.focus();
+    }
+    if (btnConfirmDelete) {
+      btnConfirmDelete.disabled = true;
+    }
+  }
+
+  private closeDeleteModal() {
+    const modal = this.container.querySelector('#delete-pilot-modal');
+    modal?.classList.add('hidden');
+    const deleteConfirmInput = this.container.querySelector('#input-delete-callsign-confirm') as HTMLInputElement | null;
+    if (deleteConfirmInput) {
+      deleteConfirmInput.value = '';
+    }
+  }
+
+  private getSyncShareCode(): string {
+    const boxes = Array.from(this.container.querySelectorAll<HTMLInputElement>('.sync-sharecode-box'));
+    return boxes.map((b) => b.value.trim().toUpperCase()).join('');
+  }
+
+  private fillSyncShareCode(code: string) {
+    const clean = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const boxes = Array.from(this.container.querySelectorAll<HTMLInputElement>('.sync-sharecode-box'));
+    boxes.forEach((box, i) => {
+      if (i < clean.length) {
+        box.value = clean[i];
+        box.classList.add('sharecode-box-filled');
+      } else {
+        box.value = '';
+        box.classList.remove('sharecode-box-filled');
+      }
+    });
+
+    if (clean.length === 12) {
+      this.handleSyncValidate();
+    }
+  }
+
+  private bindSyncShareCodeBoxes() {
+    const boxes = Array.from(this.container.querySelectorAll<HTMLInputElement>('.sync-sharecode-box'));
+
+    boxes.forEach((box, idx) => {
+      box.addEventListener('input', () => {
+        const clean = (box.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        box.value = clean.slice(0, 1);
+        if (box.value.length === 1) {
+          box.classList.add('sharecode-box-filled');
+          if (idx < boxes.length - 1) {
+            boxes[idx + 1].focus();
+            boxes[idx + 1].select();
+          }
+        } else {
+          box.classList.remove('sharecode-box-filled');
+        }
+
+        if (this.getSyncShareCode().length === 12) {
+          this.handleSyncValidate();
+        }
+      });
+
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          if (!box.value && idx > 0) {
+            boxes[idx - 1].focus();
+            boxes[idx - 1].select();
+          } else {
+            box.value = '';
+            box.classList.remove('sharecode-box-filled');
+          }
+        } else if (e.key === 'ArrowLeft' && idx > 0) {
+          boxes[idx - 1].focus();
+          boxes[idx - 1].select();
+        } else if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+          boxes[idx + 1].focus();
+          boxes[idx + 1].select();
+        }
+      });
+
+      box.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const clipboardText = (e.clipboardData?.getData('text') || '').trim();
+        const cleaned = clipboardText.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        if (cleaned.length > 0) {
+          const chars = cleaned.slice(0, boxes.length - idx).split('');
+          chars.forEach((char, offset) => {
+            if (idx + offset < boxes.length) {
+              boxes[idx + offset].value = char;
+              boxes[idx + offset].classList.add('sharecode-box-filled');
+            }
+          });
+          const nextIndex = Math.min(idx + chars.length, boxes.length - 1);
+          boxes[nextIndex].focus();
+          if (this.getSyncShareCode().length === 12) {
+            this.handleSyncValidate();
+          }
+        }
+      });
+    });
+  }
+
+  private handleSyncFileUpload(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        this.syncRawData = content;
+        const textArea = this.container.querySelector('#sync-text-input') as HTMLTextAreaElement | null;
+        if (textArea) textArea.value = content;
+        ToastService.info(`Arquivo "${file.name}" carregado. Analisando telemetria...`);
+        this.handleSyncValidate();
+      }
+    };
+    reader.onerror = () => {
+      ToastService.error('Falha ao ler o arquivo selecionado.');
+    };
+    reader.readAsText(file);
+  }
+
+  private async handleSyncValidate() {
+    const shareCode = this.getSyncShareCode();
+    const textArea = this.container.querySelector('#sync-text-input') as HTMLTextAreaElement | null;
+    const jsonVal = textArea?.value.trim() || '';
+    const inputVal = (shareCode.length > 0 ? shareCode : '') || jsonVal || this.syncRawData.trim();
+
+    if (!inputVal) {
+      ToastService.warning('Informe o Share Code de 12 dígitos ou envie o arquivo .json do COMP/CON.');
+      return;
+    }
+
+    this.syncRawData = inputVal;
+    const previewBox = this.container.querySelector('#sync-preview-box');
+
+    try {
+      ToastService.info('Processando telemetria da ficha...');
+      const isJson = inputVal.startsWith('{') || inputVal.startsWith('[');
+      const payload = isJson ? { compcon_json: inputVal } : { share_code: inputVal };
+
+      const res = await pilotService.previewPilot(payload);
+      this.syncPreviewData = res;
+
+      const callsignEl = this.container.querySelector('#sync-preview-callsign');
+      const frameEl = this.container.querySelector('#sync-preview-frame');
+      const llEl = this.container.querySelector('#sync-preview-ll');
+      const haseEl = this.container.querySelector('#sync-preview-hase');
+      const statusBadge = this.container.querySelector('#sync-preview-status-badge');
+      const warningsBox = this.container.querySelector('#sync-preview-warnings-container');
+
+      if (callsignEl) callsignEl.textContent = res.parsed?.callsign || 'N/A';
+      if (frameEl) frameEl.textContent = res.parsed?.active_mech_frame || 'GMS Everest Padrão';
+      if (llEl) llEl.textContent = `LL ${res.parsed?.license_level ?? 0}`;
+      if (haseEl) {
+        const { hull = 0, agility = 0, systems = 0, engineering = 0 } = res.parsed || {};
+        haseEl.textContent = `H:${hull} | A:${agility} | S:${systems} | E:${engineering}`;
+      }
+
+      if (statusBadge) {
+        statusBadge.textContent = res.is_valid ? 'FICHA VÁLIDA' : 'ATENÇÃO';
+        statusBadge.className = res.is_valid ? 'preview-status-valid' : 'preview-status-warning';
+      }
+
+      if (warningsBox) {
+        if (res.warnings && res.warnings.length > 0) {
+          warningsBox.classList.remove('hidden');
+          warningsBox.innerHTML = `
+            <div class="warnings-title"><i class="mdi mdi-alert-outline"></i> NOTIFICAÇÕES DE VALIDAÇÃO:</div>
+            <ul class="warnings-list">
+              ${res.warnings.map((w: string) => `<li>${w}</li>`).join('')}
+            </ul>
+          `;
+        } else {
+          warningsBox.classList.add('hidden');
+          warningsBox.innerHTML = '';
+        }
+      }
+
+      previewBox?.classList.remove('hidden');
+      ToastService.success(`Ficha de "${res.parsed?.callsign}" validada com sucesso!`);
+    } catch (err: any) {
+      previewBox?.classList.add('hidden');
+      ToastService.error(`Erro na validação: ${err.message || 'Formato inválido.'}`);
+    }
+  }
+
+  private async handleConfirmSync() {
+    if (!this.syncPreviewData || !this.pilotData) {
+      ToastService.warning('Analise a ficha antes de sincronizar.');
+      return;
+    }
+
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+
+    try {
+      const isJson = this.syncRawData.startsWith('{') || this.syncRawData.startsWith('[');
+      const payload: any = isJson
+        ? { compcon_json: this.syncRawData, pilot_id: this.pilotData._id }
+        : { share_code: this.syncRawData, pilot_id: this.pilotData._id };
+
+      const res = await pilotService.submitPilot(payload);
+      ToastService.success(res.message || 'Dossiê do piloto sincronizado com sucesso!');
+      this.closeSyncModal();
+      await this.render();
+    } catch (err: any) {
+      ToastService.error(err.message || 'Falha ao sincronizar ficha.');
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  private async handleConfirmDelete() {
+    if (!this.pilotData || this.isDeleting) return;
+    this.isDeleting = true;
+
+    try {
+      await pilotService.deletePilot(this.pilotData._id);
+      ToastService.success(`Ficha de "${this.pilotData.callsign}" foi desmobilizada e excluída com sucesso.`);
+      this.closeDeleteModal();
+      window.location.hash = '#/hangar';
+    } catch (err: any) {
+      ToastService.error(err.message || 'Falha ao excluir ficha do piloto.');
+    } finally {
+      this.isDeleting = false;
+    }
   }
 
   private openTalentModal(t: any) {
@@ -739,3 +1319,4 @@ export class PilotSheetView {
     `;
   }
 }
+

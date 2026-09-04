@@ -51,12 +51,14 @@ class ChatService {
   leaveMission(missionId: string) {
     if (this.currentMissionRoom === missionId) {
       this.socket?.emit('leave_mission', missionId);
+      this.socket?.removeAllListeners('new_message');
       this.currentMissionRoom = null;
     }
   }
 
   onNewMessage(callback: (msg: IChatMessage) => void) {
     this.connectSocket();
+    this.socket?.removeAllListeners('new_message');
     this.socket?.on('new_message', callback);
     return () => {
       this.socket?.off('new_message', callback);
