@@ -161,11 +161,12 @@ export const AuthController = {
       // Passo D: Gera o JWT de sessão da aplicação
       const token = createToken(user!);
 
-      // Define cookie seguro
+      // Define cookie seguro (suporta cross-domain se frontend estiver na Vercel e backend na VPS)
+      const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
       res.cookie('omninet_token', token, {
         httpOnly: true,
         secure: ENV.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: isCrossDomain ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 

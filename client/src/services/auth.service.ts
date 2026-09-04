@@ -98,7 +98,8 @@ class AuthService {
         window.location.href = res.auth_url;
       } else {
         // Fallback direto com redirect
-        window.location.href = '/api/auth/discord/login?redirect=true';
+        const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        window.location.href = `${apiBase}/api/auth/discord/login?redirect=true`;
       }
     } catch (err: any) {
       ToastService.error(`Falha ao conectar com o gateway Discord: ${err.message}`);

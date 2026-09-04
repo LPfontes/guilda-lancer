@@ -2,6 +2,8 @@ import { io, Socket } from 'socket.io-client';
 import { ApiClient } from './api.js';
 import { IChatMessage, IReportData } from '../types/chat.types.js';
 
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 class ChatService {
   private socket: Socket | null = null;
   private currentMissionRoom: string | null = null;
@@ -9,7 +11,7 @@ class ChatService {
 
   connectSocket(): Socket {
     if (!this.socket) {
-      this.socket = io({
+      this.socket = io(API_BASE || undefined, {
         path: '/socket.io',
         withCredentials: true,
         transports: ['websocket', 'polling']

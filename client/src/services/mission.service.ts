@@ -19,8 +19,10 @@ export interface IMissionsResponse {
   };
 }
 
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 class MissionService {
-  private baseUrl = '/api/missions';
+  private baseUrl = `${API_BASE}/api/missions`;
 
   /**
    * Lista missões com filtros opcionais

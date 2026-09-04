@@ -1,8 +1,10 @@
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 /**
  * Cliente HTTP base para comunicação com o Omninet Hub Backend.
  */
 export class ApiClient {
-  private static baseUrl = '/api';
+  private static baseUrl = `${API_BASE}/api`;
 
   static async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
