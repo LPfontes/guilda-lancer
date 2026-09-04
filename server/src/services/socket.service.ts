@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
+import { isOriginAllowed } from '../config/cors.js';
 
 interface ISocketUser {
   userId: string;
@@ -20,7 +21,13 @@ class SocketService {
   init(httpServer: HttpServer) {
     this.io = new Server(httpServer, {
       cors: {
-        origin: [ENV.CLIENT_URL, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+        origin: (origin, callback) => {
+          if (!origin || isOriginAllowed(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Bloqueado por política de CORS no Socket.io'));
+          }
+        },
         credentials: true
       }
     });

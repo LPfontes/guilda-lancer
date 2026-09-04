@@ -8,14 +8,31 @@ import { authRoutes } from './routes/auth.routes.js';
 import { pilotRoutes } from './routes/pilot.routes.js';
 import { missionRoutes } from './routes/mission.routes.js';
 import { chatRoutes } from './routes/chat.routes.js';
+import { isOriginAllowed } from './config/cors.js';
 
 export const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: [ENV.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5173'],
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`[!] CORS bloqueado para origem: ${origin}`);
+      callback(new Error('Bloqueado por política de CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept']
+}));
+
+// Preflight CORS handler explícito
+app.options('*', cors({
+  origin: (origin, callback) => callback(null, isOriginAllowed(origin)),
   credentials: true
 }));
+
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
