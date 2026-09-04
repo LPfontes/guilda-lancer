@@ -114,7 +114,25 @@
 
 #nav-pilot:hover {
   color: #f0f6fc;
-  border-color: rgba(167, 139, 250, 0.4);
+  border-color: rgba(248, 81, 73, 0.4);
+}
+
+#nav-reports {
+  color: #e3b341;
+}
+
+#nav-reports:hover {
+  color: #f0f6fc;
+  border-color: rgba(227, 179, 65, 0.4);
+}
+
+#nav-review {
+  color: #bc8cff;
+}
+
+#nav-review:hover {
+  color: #f0f6fc;
+  border-color: rgba(188, 140, 255, 0.4);
 }
 
 .header-nav-link-gm {
@@ -140,7 +158,7 @@
 
 .header-role-badge {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 1rem;
   padding: 1px 5px;
   border: 1px solid #30363d;
   background: #161b22;

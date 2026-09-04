@@ -220,6 +220,16 @@
   justify-content: center;
   font-size: 1.5rem;
   color: var(--action-reaction);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.review-pilot-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
 }
 
 .review-pilot-callsign {

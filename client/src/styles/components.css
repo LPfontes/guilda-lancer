@@ -182,8 +182,8 @@
 
 /* Ícones Oficiais do COMP/CON */
 .compcon-icon {
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   fill: currentColor;
   display: inline-block;
   vertical-align: middle;
@@ -191,8 +191,8 @@
 }
 
 .compcon-icon-lg {
-  width: 3rem;
-  height: 3rem;
+  width: 1.5rem;
+  height: 1.5rem;
   fill: currentColor;
   display: inline-block;
 }
@@ -206,8 +206,8 @@
 }
 
 .dev-icon.compcon-icon {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.2rem;
+  height: 1.2rem;
   margin: 0 auto 4px auto;
   display: block;
 }
@@ -259,19 +259,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.2rem;
   border-bottom: 1px solid #30363d;
   background: #0d1117;
 }
 
 .import-modal-title {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--accent-mint);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
 }
 
 .import-modal-close {
@@ -290,11 +290,11 @@
 }
 
 .import-modal-body {
-  padding: 1.25rem;
+  padding: 1.2rem;
 }
 
 .import-instructions {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin-bottom: 1rem;
   line-height: 1.4;
@@ -333,14 +333,14 @@
 
 .import-dropzone-text {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.05em;
 }
 
 .import-dropzone-sub {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   margin-top: 4px;
 }
@@ -350,7 +350,7 @@
 }
 
 .import-manual-section {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   background: rgba(13, 17, 23, 0.6);
   border: 1px solid #21262d;
   padding: 1rem;
@@ -363,7 +363,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .btn-link-toggle {
@@ -371,7 +371,7 @@
   border: none;
   color: var(--accent-mint);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
@@ -399,7 +399,7 @@
 .sharecode-separator {
   color: var(--accent-mint);
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: bold;
   user-select: none;
   display: flex;
@@ -407,8 +407,8 @@
 }
 
 .sharecode-box {
-  width: 2.15rem;
-  height: 2.85rem;
+  width: 2rem;
+  height: 2rem;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 1.3rem;
@@ -542,5 +542,5 @@
 }
 .mdi:before,
 .mdi-set {
-  font-size: 2rem;
+  font-size: 1.5rem;
 }

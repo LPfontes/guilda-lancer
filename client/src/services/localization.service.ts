@@ -31,12 +31,52 @@ class LocalizationService {
     if (locales[nameKey]) return locales[nameKey];
 
     // Procura id sem prefixo ou variações
-    for (const prefix of ['', 'mw_', 'ms_', 'mf_', 'ta_', 'sk_', 'wm_']) {
+    for (const prefix of ['', 'cb_', 'mw_', 'ms_', 'mf_', 'ta_', 'sk_', 'wm_']) {
       const k = `${prefix}${id}.name`;
       if (locales[k]) return locales[k];
     }
 
     return fallback || id;
+  }
+
+  /**
+   * Traduz especificamente o efeito tático de um Bônus de Núcleo (Core Bonus)
+   */
+  translateCoreBonusEffect(id?: string, fallback?: string): string {
+    if (!id) return fallback || '';
+
+    const effectKeys = [
+      `${id}.effect`,
+      `cb_${id}.effect`,
+      id.startsWith('cb_') ? `${id.replace(/^cb_/, '')}.effect` : '',
+      `${id}.mounted_effect`
+    ];
+
+    for (const k of effectKeys) {
+      if (k && locales[k]) return locales[k];
+    }
+
+    return fallback || '';
+  }
+
+  /**
+   * Traduz a descrição/lore de um Bônus de Núcleo (Core Bonus)
+   */
+  translateCoreBonusDescription(id?: string, fallback?: string): string {
+    if (!id) return fallback || '';
+
+    const descKeys = [
+      `${id}.description`,
+      `cb_${id}.description`,
+      id.startsWith('cb_') ? `${id.replace(/^cb_/, '')}.description` : '',
+      `${id}.detail`
+    ];
+
+    for (const k of descKeys) {
+      if (k && locales[k]) return locales[k];
+    }
+
+    return fallback || '';
   }
 
   /**
@@ -430,8 +470,18 @@ class LocalizationService {
     }
 
     const tid = id || data?.id || '';
-    const cleanId = tid.replace(/^(t_|ta_|mf_)/, '');
-    const prefixes = [tid, `t_${cleanId}`, `mf_${cleanId}`, `ta_${cleanId}`, cleanId];
+    const cleanId = tid.replace(/^(t_|ta_|mf_)/, '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const nameCandidate = (data?.name || (typeof id === 'string' && !id.startsWith('t_') ? id : '')).toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const prefixes = [
+      tid,
+      `t_${cleanId}`,
+      `mf_${cleanId}`,
+      `ta_${cleanId}`,
+      cleanId,
+      nameCandidate ? `t_${nameCandidate}` : '',
+      nameCandidate ? `mf_${nameCandidate}` : '',
+      nameCandidate
+    ].filter(Boolean);
 
     let name = '';
     for (const p of prefixes) {
@@ -501,35 +551,59 @@ class LocalizationService {
       // Sub-ações e poderes concedidos por este ranque
       const rawActions: any[] = r.actions || [];
       const actions = rawActions.map((a: any) => {
-        const cleanAct = (a.name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const aid = (a.id || '').toLowerCase().replace(/^(act_|action_)/, '');
+        const aname = (a.name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+
         let aName = '';
-        for (const pfx of prefixes) {
-          const k = `${pfx}.rank_${cleanRank}.action_${cleanAct}.name`;
-          if (locales[k]) {
-            aName = locales[k];
-            break;
-          }
-        }
-        if (!aName) aName = a.name || 'Poder';
-
         let aDetail = '';
-        for (const pfx of prefixes) {
-          const k = `${pfx}.rank_${cleanRank}.action_${cleanAct}.detail`;
-          if (locales[k]) {
-            aDetail = locales[k];
-            break;
-          }
-        }
-        if (!aDetail) aDetail = a.detail || '';
-
         let aTrigger = '';
+
+        // 1. Testar chaves diretas e compostas do compcon-pt-br.json
         for (const pfx of prefixes) {
-          const k = `${pfx}.rank_${cleanRank}.action_${cleanAct}.trigger`;
-          if (locales[k]) {
-            aTrigger = locales[k];
-            break;
+          const candidates = [
+            `act_${aid}`,
+            aid,
+            `${pfx}.rank_${cleanRank}.action_${aname}`,
+            `${pfx}.rank_${cleanRank}.action_${aid}`,
+            `${pfx}.rank_${cleanRank}.action_${cleanRank}_${aname}`,
+            `${pfx}.rank_${cleanRank}.action_${cleanRank}_${aid}`,
+            `${pfx}.rank_${cleanRank}.active_effect_${aname}`,
+            `${pfx}.rank_${cleanRank}.active_effect_${aid}`,
+            `${pfx}.rank_${cleanRank}.active_effect_${cleanRank}`
+          ];
+
+          for (const c of candidates) {
+            if (locales[`${c}.name`]) {
+              aName = locales[`${c}.name`];
+              aDetail = locales[`${c}.detail`] || locales[`${c}.description`] || '';
+              aTrigger = locales[`${c}.trigger`] || '';
+              break;
+            }
+          }
+          if (aName) break;
+        }
+
+        // 2. Se não encontrou por correspondência direta, faz busca inteligente no ranque
+        if (!aName) {
+          for (const pfx of prefixes) {
+            const rankPrefix = `${pfx}.rank_${cleanRank}.action_`;
+            const rankKeys = Object.keys(locales).filter((k) => k.startsWith(rankPrefix) && k.endsWith('.name'));
+            for (const rk of rankKeys) {
+              const baseKey = rk.replace('.name', '');
+              if ((aid && baseKey.includes(aid)) || (aname && baseKey.includes(aname))) {
+                aName = locales[rk];
+                aDetail = locales[`${baseKey}.detail`] || locales[`${baseKey}.description`] || '';
+                aTrigger = locales[`${baseKey}.trigger`] || '';
+                break;
+              }
+            }
+            if (aName) break;
           }
         }
+
+        // 3. Fallbacks caso não esteja no dicionário
+        if (!aName) aName = a.name || 'Poder';
+        if (!aDetail) aDetail = a.detail || a.description || '';
         if (!aTrigger) aTrigger = a.trigger || '';
 
         return {
@@ -561,3 +635,4 @@ class LocalizationService {
 }
 
 export const localization = new LocalizationService();
+export const localizationService = localization;

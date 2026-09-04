@@ -5,12 +5,20 @@ import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
 import { IMission } from '../types/mission.types.js';
 import { IPilot } from '../types/pilot.types.js';
+import { buildMissionReportText } from '../services/mission-report.helper.js';
+import { chatService } from '../services/chat.service.js';
+import { IChatMessage } from '../types/chat.types.js';
 
 export class MissionsView {
   private container: HTMLElement;
   private missions: IMission[] = [];
   private activePilot: IPilot | null = null;
   private currentFilters: IMissionFilters = { status: 'ALL', search: '' };
+  private editingMissionId: string | null = null;
+  private abortController: AbortController = new AbortController();
+  private activeAarMission: IMission | null = null;
+  private activeChatMissionId: string | null = null;
+  private chatUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -185,6 +193,12 @@ export class MissionsView {
 
         <!-- Modal de Criação de Missão (GM / ADMIN) -->
         ${isGmOrAdmin ? this.renderCreateMissionModal() : ''}
+
+        <!-- Modal de Relatório de Missão / AAR -->
+        ${this.renderAarModal()}
+
+        <!-- Modal Tático de Chat Pré-Missão -->
+        ${this.renderPreMissionChatModal()}
       </div>
     `;
   }
@@ -221,6 +235,15 @@ export class MissionsView {
         : m.status === 'COMPLETED'
         ? 'CONCLUÍDA'
         : 'CANCELADA';
+
+    const user = authService.currentUser;
+    const isOwnerGm = !!(
+      user && m.gm_id && (
+        (typeof m.gm_id === 'object' && String((m.gm_id as any)._id) === String(user._id)) ||
+        String(m.gm_id) === String(user._id)
+      )
+    );
+    const canManageMission = isOwnerGm || user?.role === 'ADMIN';
 
     const pilotApp = this.activePilot
       ? (m.applications || []).find((a: any) => {
@@ -321,7 +344,17 @@ export class MissionsView {
 
           <div class="mission-card-actions">
             ${
-              m.status === 'OPEN'
+              canManageMission
+                ? `
+              <button type="button"
+                      class="btn btn-secondary btn-edit-mission"
+                      data-mission-id="${m._id}"
+                      title="Editar parâmetros desta operação">
+                <i class="mdi mdi-pencil-outline"></i>
+                <span>EDITAR</span>
+              </button>
+            `
+                : m.status === 'OPEN'
                 ? pilotApp
                   ? `
                 <button type="button"
@@ -344,6 +377,13 @@ export class MissionsView {
                 : ''
             }
             <button type="button"
+                    class="btn-mission-chat"
+                    data-mission-id="${m._id}"
+                    title="Abrir canal pré-missão para conversar e alinhar com o GM e pilotos">
+              <i class="mdi mdi-chat-processing-outline"></i>
+              <span>CHAT PRÉ-MISSÃO</span>
+            </button>
+            <button type="button"
                     class="btn btn-secondary btn-view-mission"
                     data-mission-id="${m._id}"
                     title="Ver briefing completo e esquadrão">
@@ -364,8 +404,8 @@ export class MissionsView {
             <div class="mission-modal-title-group">
               <i class="mdi mdi-plus-box-multiple mission-modal-icon"></i>
               <div>
-                <div class="mission-modal-tag">// TERMINAL DO MESTRE // NOVO CONTRATO</div>
-                <h3 class="mission-modal-name">CRIAR NOVA OPERAÇÃO TÁTICA</h3>
+                <div id="create-modal-tag" class="mission-modal-tag">// TERMINAL DO MESTRE // NOVO CONTRATO</div>
+                <h3 id="create-modal-name" class="mission-modal-name">CRIAR NOVA OPERAÇÃO TÁTICA</h3>
               </div>
             </div>
             <button id="btn-close-create-modal" class="mission-modal-close" type="button" aria-label="Fechar">
@@ -448,7 +488,7 @@ export class MissionsView {
               <button id="btn-cancel-create" type="button" class="btn btn-secondary">CANCELAR</button>
               <button type="submit" class="btn btn-primary">
                 <i class="mdi mdi-check"></i>
-                <span>PUBLICAR OPERAÇÃO</span>
+                <span id="create-modal-submit-text">PUBLICAR OPERAÇÃO</span>
               </button>
             </div>
           </form>
@@ -457,7 +497,69 @@ export class MissionsView {
     `;
   }
 
+  private renderAarModal(): string {
+    return `
+      <div id="aar-modal" class="mission-modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="mission-modal-box aar-modal-box">
+          <div class="mission-modal-header">
+            <div class="mission-modal-title-group">
+              <i class="mdi mdi-clipboard-text-clock-outline mission-modal-icon"></i>
+              <div>
+                <div id="aar-modal-tag" class="mission-modal-tag">// TERMINAL OMNINET // RELATÓRIO PÓS-AÇÃO</div>
+                <h3 id="aar-modal-title" class="mission-modal-name">RELATÓRIO DE MISSÃO (AAR)</h3>
+              </div>
+            </div>
+            <button id="btn-close-aar-modal" class="mission-modal-close" type="button" aria-label="Fechar">
+              <i class="mdi mdi-close"></i>
+            </button>
+          </div>
+
+          <div class="mission-modal-body" id="aar-modal-body">
+            <div class="aar-template-selector-bar">
+              <label class="aar-selector-label" for="select-aar-pilot">PILOTO / MODELO:</label>
+              <select id="select-aar-pilot" class="form-select aar-select">
+                <option value="GENERIC">Modelo Padrão em Branco</option>
+              </select>
+              <button type="button" id="btn-load-aar-template" class="btn btn-secondary" title="Carregar modelo do piloto selecionado">
+                <i class="mdi mdi-refresh"></i>
+                <span>CARREGAR</span>
+              </button>
+            </div>
+
+            <div class="form-group">
+              <textarea id="aar-text-content" class="form-textarea aar-textarea" placeholder="Relatório de Missão..."></textarea>
+            </div>
+
+            <div class="aar-actions-row">
+              <div class="aar-actions-left">
+                <button type="button" id="btn-copy-aar-text" class="btn btn-secondary">
+                  <i class="mdi mdi-content-copy"></i>
+                  <span>COPIAR TEXTO</span>
+                </button>
+                <button type="button" id="btn-reset-aar-template" class="btn btn-secondary">
+                  <i class="mdi mdi-restore"></i>
+                  <span>RESTAURAR</span>
+                </button>
+              </div>
+              <div class="aar-actions-right">
+                <button type="button" id="btn-cancel-aar" class="btn btn-secondary">FECHAR</button>
+                <button type="button" id="btn-submit-aar-complete" class="btn btn-primary hidden">
+                  <i class="mdi mdi-check-all"></i>
+                  <span>CONCLUIR E ARQUIVAR MISSÃO</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private bindEvents() {
+    this.abortController.abort();
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     // 1. Filtros de Status
     const filterBtns = this.container.querySelectorAll('.filter-btn');
     filterBtns.forEach((btn) => {
@@ -470,7 +572,7 @@ export class MissionsView {
         target.classList.add('active');
 
         await this.refreshGrid();
-      });
+      }, { signal });
     });
 
     // 2. Busca por Texto
@@ -482,91 +584,196 @@ export class MissionsView {
         this.currentFilters.search = searchInput.value.trim();
         await this.refreshGrid();
       }, 350);
-    });
+    }, { signal });
 
-    // 3. Botão Candidatar
+    // 3. Clique unificado para ações nos Cards do Grid
     this.container.addEventListener('click', async (e) => {
-      const applyBtn = (e.target as HTMLElement).closest('.btn-apply-mission') as HTMLElement;
+      const target = e.target as HTMLElement;
+
+      const applyBtn = target.closest('.btn-apply-mission') as HTMLElement;
       if (applyBtn) {
         const missionId = applyBtn.getAttribute('data-mission-id');
         if (missionId) {
           await this.handleApply(missionId);
         }
+        return;
       }
-    });
 
-    // 4. Botão Cancelar Candidatura
-    this.container.addEventListener('click', async (e) => {
-      const cancelBtn = (e.target as HTMLElement).closest('.btn-cancel-app') as HTMLElement;
+      const cancelBtn = target.closest('.btn-cancel-app') as HTMLElement;
       if (cancelBtn) {
         const missionId = cancelBtn.getAttribute('data-mission-id');
         if (missionId) {
           await this.handleCancelApplication(missionId);
         }
+        return;
       }
-    });
 
-    // 5. Botão Ver Detalhes
-    this.container.addEventListener('click', (e) => {
-      const viewBtn = (e.target as HTMLElement).closest('.btn-view-mission') as HTMLElement;
+      const viewBtn = target.closest('.btn-view-mission') as HTMLElement;
       if (viewBtn) {
         const missionId = viewBtn.getAttribute('data-mission-id');
         if (missionId) {
-          this.openMissionDetailModal(missionId);
+          await this.openMissionDetailModal(missionId);
         }
+        return;
       }
-    });
 
-    // 6. Fechamento do Modal de Detalhes
+      const editBtn = target.closest('.btn-edit-mission') as HTMLElement;
+      if (editBtn) {
+        const missionId = editBtn.getAttribute('data-mission-id');
+        const mission = this.missions.find((m) => m._id === missionId);
+        if (mission) {
+          this.openEditMissionModal(mission);
+        }
+        return;
+      }
+
+      const chatBtn = target.closest('.btn-mission-chat') as HTMLElement;
+      if (chatBtn) {
+        const missionId = chatBtn.getAttribute('data-mission-id');
+        if (missionId) {
+          await this.openPreMissionChat(missionId);
+        }
+        return;
+      }
+    }, { signal });
+
+    // 4. Fechamento do Modal de Detalhes
     const closeDetailBtn = this.container.querySelector('#btn-close-mission-modal');
-    closeDetailBtn?.addEventListener('click', () => this.closeMissionDetailModal());
+    closeDetailBtn?.addEventListener('click', () => this.closeMissionDetailModal(), { signal });
 
     const detailOverlay = this.container.querySelector('#mission-modal');
     detailOverlay?.addEventListener('click', (e) => {
       if (e.target === detailOverlay) this.closeMissionDetailModal();
-    });
+    }, { signal });
 
-    // 7. Abertura do Modal de Criação (GM / ADMIN)
+    // 5. Abertura do Modal de Criação (GM / ADMIN)
     const openCreateBtn = this.container.querySelector('#btn-open-create-mission');
     openCreateBtn?.addEventListener('click', () => {
-      const createModal = this.container.querySelector('#create-mission-modal');
-      createModal?.classList.remove('hidden');
+      this.openCreateModal();
+    }, { signal });
 
-      // Preenche data padrão com amanhã
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dateInput = this.container.querySelector('#mission-start-date-input') as HTMLInputElement;
-      if (dateInput && !dateInput.value) {
-        dateInput.value = tomorrow.toISOString().split('T')[0];
-      }
-    });
-
-    // 8. Fechamento do Modal de Criação
+    // 6. Fechamento do Modal de Criação
     const closeCreateBtn = this.container.querySelector('#btn-close-create-modal');
-    closeCreateBtn?.addEventListener('click', () => this.closeCreateModal());
+    closeCreateBtn?.addEventListener('click', () => this.closeCreateModal(), { signal });
 
     const cancelCreateBtn = this.container.querySelector('#btn-cancel-create');
-    cancelCreateBtn?.addEventListener('click', () => this.closeCreateModal());
+    cancelCreateBtn?.addEventListener('click', () => this.closeCreateModal(), { signal });
 
     const createOverlay = this.container.querySelector('#create-mission-modal');
     createOverlay?.addEventListener('click', (e) => {
       if (e.target === createOverlay) this.closeCreateModal();
-    });
+    }, { signal });
 
-    // 9. Submissão do Formulário de Criação
+    // 7. Submissão do Formulário de Criação
     const createForm = this.container.querySelector('#create-mission-form') as HTMLFormElement;
     createForm?.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       await this.handleCreateMission(createForm);
-    });
+    }, { signal });
 
-    // 10. Tecla Escape fecha modais
+    // 8. Fechamento do Modal de Relatório AAR
+    const closeAarBtn = this.container.querySelector('#btn-close-aar-modal');
+    closeAarBtn?.addEventListener('click', () => this.closeAarModal(), { signal });
+
+    const cancelAarBtn = this.container.querySelector('#btn-cancel-aar');
+    cancelAarBtn?.addEventListener('click', () => this.closeAarModal(), { signal });
+
+    const aarOverlay = this.container.querySelector('#aar-modal');
+    aarOverlay?.addEventListener('click', (e) => {
+      if (e.target === aarOverlay) this.closeAarModal();
+    }, { signal });
+
+    // 9. Copiar texto do AAR
+    const copyAarBtn = this.container.querySelector('#btn-copy-aar-text');
+    copyAarBtn?.addEventListener('click', async () => {
+      const textarea = this.container.querySelector('#aar-text-content') as HTMLTextAreaElement;
+      if (textarea && textarea.value) {
+        await navigator.clipboard.writeText(textarea.value);
+        ToastService.success('Relatório de Missão copiado para a área de transferência!');
+      }
+    }, { signal });
+
+    // 10. Restaurar / Carregar modelo do Piloto Selecionado
+    const loadAarBtn = this.container.querySelector('#btn-load-aar-template');
+    const pilotSelect = this.container.querySelector('#select-aar-pilot') as HTMLSelectElement;
+    loadAarBtn?.addEventListener('click', async () => {
+      if (pilotSelect) {
+        await this.populateAarTextarea(pilotSelect.value);
+        ToastService.info('Modelo de relatório atualizado.');
+      }
+    }, { signal });
+
+    pilotSelect?.addEventListener('change', async () => {
+      await this.populateAarTextarea(pilotSelect.value);
+    }, { signal });
+
+    const resetAarBtn = this.container.querySelector('#btn-reset-aar-template');
+    resetAarBtn?.addEventListener('click', async () => {
+      if (pilotSelect) {
+        await this.populateAarTextarea(pilotSelect.value);
+        ToastService.info('Modelo restaurado para os valores originais.');
+      }
+    }, { signal });
+
+    // 11. Concluir e arquivar missão via modal AAR
+    const submitAarBtn = this.container.querySelector('#btn-submit-aar-complete');
+    submitAarBtn?.addEventListener('click', async () => {
+      if (!this.activeAarMission) return;
+      const textarea = this.container.querySelector('#aar-text-content') as HTMLTextAreaElement;
+      const aarContent = textarea?.value?.trim() || '';
+      try {
+        await missionService.completeMission(this.activeAarMission._id, aarContent);
+        ToastService.success('Operação concluída com sucesso! Histórico e AAR arquivados na Omninet.');
+        this.closeAarModal();
+        this.closeMissionDetailModal();
+        await this.refreshGrid();
+      } catch (err: any) {
+        ToastService.error(err.message || 'Falha ao concluir operação.');
+      }
+    }, { signal });
+
+    // 12. Fechamento e Envio do Chat Pré-Missão
+    const closeChatBtn = this.container.querySelector('#btn-close-chat-modal');
+    closeChatBtn?.addEventListener('click', () => this.closePreMissionChat(), { signal });
+
+    const chatOverlay = this.container.querySelector('#mission-chat-modal');
+    chatOverlay?.addEventListener('click', (e) => {
+      if (e.target === chatOverlay) this.closePreMissionChat();
+    }, { signal });
+
+    const chatForm = this.container.querySelector('#form-mission-chat-input') as HTMLFormElement;
+    const chatTextarea = this.container.querySelector('#input-mission-chat-text') as HTMLTextAreaElement;
+
+    chatTextarea?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm?.requestSubmit();
+      }
+    }, { signal });
+
+    chatForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!this.activeChatMissionId || !chatTextarea) return;
+      const content = chatTextarea.value.trim();
+      if (!content) return;
+
+      try {
+        await chatService.sendMissionMessage(this.activeChatMissionId, content);
+        chatTextarea.value = '';
+      } catch (err: any) {
+        ToastService.error(err.message || 'Falha ao transmitir mensagem.');
+      }
+    }, { signal });
+
+    // 13. Tecla Escape fecha todos os modais
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeMissionDetailModal();
         this.closeCreateModal();
+        this.closeAarModal();
+        this.closePreMissionChat();
       }
-    });
+    }, { signal });
   }
 
   private async refreshGrid() {
@@ -639,22 +846,114 @@ export class MissionsView {
         optional_rules: rulesInput.value.trim()
       };
 
-      await missionService.createMission(payload);
-      ToastService.success('Nova operação cadastrada e publicada no Quadro da Omninet!');
+      if (this.editingMissionId) {
+        await missionService.updateMission(this.editingMissionId, payload);
+        ToastService.success('Operação tática atualizada com sucesso!');
+      } else {
+        await missionService.createMission(payload);
+        ToastService.success('Nova operação cadastrada e publicada no Quadro da Omninet!');
+      }
       this.closeCreateModal();
       form.reset();
+      this.editingMissionId = null;
       await this.refreshGrid();
     } catch (err: any) {
-      ToastService.error(err.message || 'Erro ao publicar operação.');
+      ToastService.error(err.message || 'Erro ao salvar operação.');
     }
   }
 
-  private openMissionDetailModal(missionId: string) {
-    const mission = this.missions.find((m) => m._id === missionId);
+  private openCreateModal() {
+    this.editingMissionId = null;
+    const modal = this.container.querySelector('#create-mission-modal');
+    if (!modal) return;
+
+    const modalTag = modal.querySelector('#create-modal-tag');
+    const modalName = modal.querySelector('#create-modal-name');
+    const submitText = modal.querySelector('#create-modal-submit-text');
+    const form = modal.querySelector('#create-mission-form') as HTMLFormElement;
+
+    if (modalTag) modalTag.textContent = '// TERMINAL DO MESTRE // NOVO CONTRATO';
+    if (modalName) modalName.textContent = 'CRIAR NOVA OPERAÇÃO TÁTICA';
+    if (submitText) submitText.textContent = 'PUBLICAR OPERAÇÃO';
+    form?.reset();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateInput = modal.querySelector('#mission-start-date-input') as HTMLInputElement;
+    if (dateInput) {
+      dateInput.value = tomorrow.toISOString().split('T')[0];
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  private openEditMissionModal(mission: IMission) {
+    this.editingMissionId = mission._id;
+    const modal = this.container.querySelector('#create-mission-modal');
+    if (!modal) return;
+
+    const modalTag = modal.querySelector('#create-modal-tag');
+    const modalName = modal.querySelector('#create-modal-name');
+    const submitText = modal.querySelector('#create-modal-submit-text');
+
+    if (modalTag) modalTag.textContent = '// TERMINAL DO MESTRE // ATUALIZAR CONTRATO';
+    if (modalName) modalName.textContent = 'EDITAR OPERAÇÃO TÁTICA';
+    if (submitText) submitText.textContent = 'SALVAR ALTERAÇÕES';
+
+    const titleInput = modal.querySelector('#mission-title-input') as HTMLInputElement;
+    const contractorInput = modal.querySelector('#mission-contractor-input') as HTMLInputElement;
+    const difficultyInput = modal.querySelector('#mission-difficulty-input') as HTMLSelectElement;
+    const minLlInput = modal.querySelector('#mission-min-ll-input') as HTMLInputElement;
+    const maxLlInput = modal.querySelector('#mission-max-ll-input') as HTMLInputElement;
+    const slotsInput = modal.querySelector('#mission-slots-input') as HTMLInputElement;
+    const startDateInput = modal.querySelector('#mission-start-date-input') as HTMLInputElement;
+    const startTimeInput = modal.querySelector('#mission-start-time-input') as HTMLInputElement;
+    const platformInput = modal.querySelector('#mission-platform-input') as HTMLInputElement;
+    const voiceInput = modal.querySelector('#mission-voice-input') as HTMLInputElement;
+    const briefingInput = modal.querySelector('#mission-briefing-input') as HTMLTextAreaElement;
+    const rulesInput = modal.querySelector('#mission-rules-input') as HTMLInputElement;
+
+    if (titleInput) titleInput.value = mission.title || '';
+    if (contractorInput) contractorInput.value = mission.contractor || 'Union / GMS';
+    if (difficultyInput) {
+      const numDiff = Math.max(1, Math.min(3, Number(mission.difficulty) || 1));
+      difficultyInput.value = String(numDiff);
+    }
+    if (minLlInput) minLlInput.value = String(mission.min_ll ?? 0);
+    if (maxLlInput) maxLlInput.value = String(mission.max_ll ?? 12);
+    if (slotsInput) slotsInput.value = String(mission.slots_total ?? 4);
+
+    if (startDateInput) {
+      const d = mission.start_date ? new Date(mission.start_date) : new Date();
+      startDateInput.value = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+    }
+    if (startTimeInput) startTimeInput.value = mission.start_time || '19:30';
+    if (platformInput) platformInput.value = mission.platform || 'Foundry VTT';
+    if (voiceInput) voiceInput.value = mission.voice_channel || '#op-bravo-01';
+    if (briefingInput) briefingInput.value = mission.briefing || '';
+    if (rulesInput) rulesInput.value = mission.optional_rules || '';
+
+    modal.classList.remove('hidden');
+  }
+
+  private async openMissionDetailModal(missionId: string) {
+    let mission = this.missions.find((m) => m._id === missionId);
     if (!mission) return;
 
     const modal = this.container.querySelector('#mission-modal');
     if (!modal) return;
+
+    // Busca detalhes completos e atualizados da missão com pilotos populados
+    try {
+      const full = await missionService.getMissionById(missionId);
+      if (full && full._id) {
+        mission = full;
+        const idx = this.missions.findIndex((m) => m._id === missionId);
+        if (idx !== -1) this.missions[idx] = full;
+      }
+    } catch {
+      // continua com dados do cache se offline
+    }
 
     const titleEl = modal.querySelector('#modal-mission-title');
     const tagEl = modal.querySelector('#modal-mission-tag');
@@ -669,11 +968,17 @@ export class MissionsView {
     if (tagEl) tagEl.textContent = `// CONTRATANTE: ${mission.contractor.toUpperCase()} // STATUS: ${mission.status}`;
 
     const user = authService.currentUser;
-    const isGmOrAdmin = user?.role === 'GM' || user?.role === 'ADMIN';
+    const isOwnerGm = !!(
+      user && mission.gm_id && (
+        (typeof mission.gm_id === 'object' && String((mission.gm_id as any)._id) === String(user._id)) ||
+        String(mission.gm_id) === String(user._id)
+      )
+    );
+    const canManageMission = isOwnerGm || user?.role === 'ADMIN';
 
     if (bodyEl) {
       bodyEl.innerHTML = `
-        <div class="mission-telemetry-strip">
+        <div class="mission-telemetry-strip modal-telemetry-strip">
           <div class="telemetry-cell">
             <span class="telemetry-label">FAIXA DE LICENÇA</span>
             <span class="telemetry-val highlight-ll">LL ${mission.min_ll} até LL ${mission.max_ll}</span>
@@ -725,14 +1030,35 @@ export class MissionsView {
               (mission.applications || []).length > 0
                 ? (mission.applications || [])
                     .map((app: any) => {
-                      const p = app.pilot_id || {};
+                      const p = typeof app.pilot_id === 'object' && app.pilot_id !== null ? app.pilot_id : {};
+                      const pilotCallsign = p.callsign || '';
+                      const pilotRealName = p.name ? ` (${p.name})` : '';
+                      const displayName = pilotCallsign ? `${pilotCallsign}${pilotRealName}` : (p.name || 'Piloto da Guilda');
+                      const frameName = p.active_mech_name || p.active_mech_frame || 'Chassi Padrão GMS';
+                      const llText = p.license_level !== undefined ? `LL ${p.license_level}` : 'LL ?';
+                      const pilotId = p._id || (typeof app.pilot_id === 'string' ? app.pilot_id : '');
+
                       return `
                   <div class="roster-pilot-card">
                     <div class="roster-pilot-info">
-                      <i class="mdi mdi-account-circle"></i>
-                      <div>
-                        <strong class="roster-pilot-name">${p.callsign ? `${p.callsign} (${p.name})` : 'Piloto da Guilda'}</strong>
-                        <div class="roster-pilot-frame">Chassi: ${p.active_mech_name || 'N/A'} [LL ${p.license_level ?? '?'}]</div>
+                      <i class="mdi mdi-account-circle roster-pilot-avatar"></i>
+                      <div class="roster-pilot-details">
+                        <div class="roster-pilot-title-row">
+                          ${
+                            pilotId
+                              ? `
+                            <a href="#/mech?id=${pilotId}" class="roster-mech-link" title="Inspecionar Ficha de Combate do Mecha" target="_blank">
+                              <strong class="roster-pilot-name">${displayName}</strong>
+                            </a>
+                          `
+                              : ''
+                          }
+                        </div>
+                        <div class="roster-pilot-frame">
+                          <span class="roster-frame-label">Chassi:</span>
+                          <span class="roster-frame-highlight">${frameName}</span>
+                          <span class="roster-ll-badge">${llText}</span>
+                        </div>
                       </div>
                     </div>
                     <div class="roster-pilot-actions">
@@ -746,19 +1072,32 @@ export class MissionsView {
                         ${app.status === 'SELECTED' ? 'ESCALADO' : app.status === 'WAITLIST' ? 'ESPERA' : 'PENDENTE'}
                       </span>
                       ${
-                        isGmOrAdmin && mission.status === 'OPEN'
+                        pilotId
+                          ? `
+                        <button type="button"
+                                class="btn-roster-aar"
+                                data-pilot-id="${pilotId}"
+                                title="Gerar modelo de Relatório de Missão para este Piloto">
+                          <i class="mdi mdi-clipboard-text-outline"></i>
+                          <span>RELATÓRIO</span>
+                        </button>
+                      `
+                          : ''
+                      }
+                      ${
+                        canManageMission && mission.status === 'OPEN'
                           ? `
                         <div class="roster-gm-controls">
                           <button type="button"
                                   class="btn-roster-action btn-roster-select"
-                                  data-pilot-id="${p._id || app.pilot_id}"
+                                  data-pilot-id="${pilotId}"
                                   data-status="SELECTED"
                                   title="Escalar para o esquadrão principal">
                             <i class="mdi mdi-check"></i> ESCALAR
                           </button>
                           <button type="button"
                                   class="btn-roster-action btn-roster-waitlist"
-                                  data-pilot-id="${p._id || app.pilot_id}"
+                                  data-pilot-id="${pilotId}"
                                   data-status="WAITLIST"
                                   title="Colocar na lista de espera">
                             <i class="mdi mdi-clock-outline"></i> ESPERA
@@ -778,7 +1117,35 @@ export class MissionsView {
         </div>
 
         ${
-          isGmOrAdmin
+          mission.aar
+            ? `
+          <div class="mission-modal-section mission-aar-section">
+            <div class="mission-aar-header">
+              <h4 class="mission-modal-label">
+                <i class="mdi mdi-clipboard-text-clock-outline"></i>
+                RELATÓRIO PÓS-AÇÃO // AFTER ACTION REPORT (AAR)
+              </h4>
+              <button type="button" id="btn-copy-modal-aar" class="btn btn-secondary btn-copy-aar" title="Copiar relatório pós-ação completo">
+                <i class="mdi mdi-content-copy"></i>
+                <span>COPIAR RELATÓRIO</span>
+              </button>
+            </div>
+            <pre class="mission-aar-content">${mission.aar}</pre>
+          </div>
+        `
+            : ''
+        }
+
+        <!-- Seção de Acesso ao Canal Pré-Missão -->
+        <div class="mission-modal-section">
+          <button type="button" class="btn-mission-chat btn-mission-chat-full" data-mission-id="${mission._id}" title="Conversar com o GM e pilotos no canal pré-missão">
+            <i class="mdi mdi-chat-processing-outline"></i>
+            <span>CANAL PRÉ-MISSÃO // BRIEFING & ALINHAMENTO COM O GM</span>
+          </button>
+        </div>
+
+        ${
+          canManageMission
             ? `
           <div class="form-actions-row">
             ${
@@ -794,6 +1161,16 @@ export class MissionsView {
               <button type="button" id="btn-complete-mission" class="btn btn-primary" data-mission-id="${mission._id}">
                 <i class="mdi mdi-check-all"></i>
                 <span>CONCLUIR OPERAÇÃO (AAR)</span>
+              </button>
+            `
+                : ''
+            }
+            ${
+              !['COMPLETED', 'CANCELLED'].includes(mission.status)
+                ? `
+              <button type="button" id="btn-edit-modal-mission" class="btn btn-secondary">
+                <i class="mdi mdi-pencil-outline"></i>
+                <span>EDITAR</span>
               </button>
             `
                 : ''
@@ -835,6 +1212,12 @@ export class MissionsView {
       });
 
       // Eventos dos botões do GM no modal
+      const editModalBtn = bodyEl.querySelector('#btn-edit-modal-mission');
+      editModalBtn?.addEventListener('click', () => {
+        this.closeMissionDetailModal();
+        this.openEditMissionModal(mission);
+      });
+
       const startBtn = bodyEl.querySelector('#btn-start-mission');
       startBtn?.addEventListener('click', async () => {
         try {
@@ -847,19 +1230,28 @@ export class MissionsView {
         }
       });
 
+      // Evento de clique para o botão RELATÓRIO nos cards do esquadrão
+      bodyEl.querySelectorAll('.btn-roster-aar').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const pilotId = (e.currentTarget as HTMLElement).getAttribute('data-pilot-id');
+          if (pilotId) {
+            await this.openAarModal(mission, { pilotId, isConcluding: false });
+          }
+        });
+      });
+
+      // Evento para copiar AAR no mission-modal
+      const copyModalAarBtn = bodyEl.querySelector('#btn-copy-modal-aar');
+      copyModalAarBtn?.addEventListener('click', async () => {
+        if (mission.aar) {
+          await navigator.clipboard.writeText(mission.aar);
+          ToastService.success('Relatório Pós-Ação (AAR) copiado para a área de transferência!');
+        }
+      });
+
       const completeBtn = bodyEl.querySelector('#btn-complete-mission');
       completeBtn?.addEventListener('click', async () => {
-        const aar = prompt('Insira o AAR (After Action Report) resumindo os resultados da missão:');
-        if (aar !== null) {
-          try {
-            await missionService.completeMission(mission._id, aar);
-            ToastService.success('Operação concluída com sucesso! Histórico arquivado na Omninet.');
-            this.closeMissionDetailModal();
-            await this.refreshGrid();
-          } catch (err: any) {
-            ToastService.error(err.message || 'Falha ao concluir operação.');
-          }
-        }
+        await this.openAarModal(mission, { isConcluding: true });
       });
 
       const deleteBtn = bodyEl.querySelector('#btn-delete-mission');
@@ -880,6 +1272,109 @@ export class MissionsView {
     modal.classList.remove('hidden');
   }
 
+  private async openAarModal(mission: IMission, options: { pilotId?: string; isConcluding?: boolean } = {}) {
+    this.activeAarMission = mission;
+    const modal = this.container.querySelector('#aar-modal');
+    if (!modal) return;
+
+    const modalTag = modal.querySelector('#aar-modal-tag');
+    const modalTitle = modal.querySelector('#aar-modal-title');
+    const pilotSelect = modal.querySelector('#select-aar-pilot') as HTMLSelectElement;
+    const submitBtn = modal.querySelector('#btn-submit-aar-complete');
+
+    if (options.isConcluding) {
+      if (modalTag) modalTag.textContent = '// DEBRIEFING TÁTICO // CONCLUIR OPERAÇÃO';
+      if (modalTitle) modalTitle.textContent = `CONCLUIR MISSÃO: ${mission.title.toUpperCase()}`;
+      submitBtn?.classList.remove('hidden');
+    } else {
+      if (modalTag) modalTag.textContent = '// TELEMETRIA DE RECESSO // RELATÓRIO DO PILOTO';
+      if (modalTitle) modalTitle.textContent = 'RELATÓRIO DE MISSÃO // PILOTO';
+      submitBtn?.classList.add('hidden');
+    }
+
+    // Popula o select de pilotos
+    if (pilotSelect) {
+      pilotSelect.innerHTML = '<option value="GENERIC">Modelo Padrão em Branco</option>';
+      const applications = mission.applications || [];
+      applications.forEach((app: any) => {
+        const p = typeof app.pilot_id === 'object' && app.pilot_id !== null ? app.pilot_id : null;
+        if (p) {
+          const pilotName = p.callsign || p.name || 'Piloto';
+          const mechName = p.active_mech_name || p.active_mech_frame || 'Chassi';
+          const opt = document.createElement('option');
+          opt.value = String(p._id);
+          opt.textContent = `${pilotName} (${mechName}) [LL ${p.license_level ?? 0}]`;
+          if (options.pilotId && String(p._id) === String(options.pilotId)) {
+            opt.selected = true;
+          }
+          pilotSelect.appendChild(opt);
+        }
+      });
+      if (applications.length > 1) {
+        const allOpt = document.createElement('option');
+        allOpt.value = 'ALL_ROSTER';
+        allOpt.textContent = 'Todos os Pilotos Escalados (Concatenados)';
+        pilotSelect.appendChild(allOpt);
+      }
+    }
+
+    // Carrega o template
+    await this.populateAarTextarea(options.pilotId || pilotSelect?.value || 'GENERIC');
+
+    modal.classList.remove('hidden');
+  }
+
+  private closeAarModal() {
+    const modal = this.container.querySelector('#aar-modal');
+    modal?.classList.add('hidden');
+    this.activeAarMission = null;
+  }
+
+  private async populateAarTextarea(selectedVal: string) {
+    const textarea = this.container.querySelector('#aar-text-content') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    if (selectedVal === 'GENERIC') {
+      textarea.value = buildMissionReportText();
+      return;
+    }
+
+    if (selectedVal === 'ALL_ROSTER' && this.activeAarMission) {
+      const reports: string[] = [];
+      const selectedApps = (this.activeAarMission.applications || []).filter(
+        (a: any) => a.status === 'SELECTED' || a.status === 'PENDING'
+      );
+      for (const app of selectedApps) {
+        const p = typeof app.pilot_id === 'object' && app.pilot_id !== null ? app.pilot_id : null;
+        if (p && p._id) {
+          try {
+            const fullPilot = await pilotService.getPilotById(String(p._id));
+            reports.push(buildMissionReportText(fullPilot));
+          } catch {
+            reports.push(buildMissionReportText(p));
+          }
+        }
+      }
+      textarea.value = reports.length > 0
+        ? reports.join('\n\n' + '='.repeat(40) + '\n\n')
+        : buildMissionReportText();
+      return;
+    }
+
+    // Piloto individual selecionado
+    try {
+      const fullPilot = await pilotService.getPilotById(selectedVal);
+      textarea.value = buildMissionReportText(fullPilot);
+    } catch {
+      const app = (this.activeAarMission?.applications || []).find((a: any) => {
+        const pId = typeof a.pilot_id === 'object' ? a.pilot_id?._id : a.pilot_id;
+        return String(pId) === String(selectedVal);
+      });
+      const p = typeof app?.pilot_id === 'object' ? app?.pilot_id : null;
+      textarea.value = buildMissionReportText(p);
+    }
+  }
+
   private closeMissionDetailModal() {
     const modal = this.container.querySelector('#mission-modal');
     modal?.classList.add('hidden');
@@ -888,6 +1383,167 @@ export class MissionsView {
   private closeCreateModal() {
     const modal = this.container.querySelector('#create-mission-modal');
     modal?.classList.add('hidden');
+  }
+
+  private renderPreMissionChatModal(): string {
+    return `
+      <div id="mission-chat-modal" class="mission-chat-modal-overlay is-hidden" role="dialog" aria-modal="true">
+        <div class="mission-chat-modal-box">
+          <div class="mission-chat-header">
+            <div class="mission-chat-title-group">
+              <span class="mission-chat-sub">
+                <span class="link-online-pulse"></span>
+                // CANAL PRÉ-MISSÃO // BRIEFING & ALINHAMENTO COM O GM
+              </span>
+              <h2 id="chat-modal-mission-title" class="mission-chat-title">OPERAÇÃO</h2>
+            </div>
+            <div class="mission-chat-header-actions">
+              <button type="button" id="btn-close-chat-modal" class="mission-chat-close-btn" title="Fechar Canal">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de Mensagens de Alinhamento -->
+          <div id="mission-chat-messages" class="mission-chat-messages-area">
+            <div class="comms-empty-state">
+              <div class="comms-empty-icon"><i class="mdi mdi-forum-outline"></i></div>
+              <div>Carregando transmissões do canal pré-missão...</div>
+            </div>
+          </div>
+
+          <!-- Barra de Entrada de Transmissão -->
+          <form id="form-mission-chat-input" class="mission-chat-input-bar">
+            <textarea id="input-mission-chat-text" class="mission-chat-input" placeholder="Tire dúvidas sobre regras, cenário, sinergia de chassis ou combine detalhes com o GM (Enter para transmitir)..." rows="1"></textarea>
+            <button type="submit" class="btn-transmit">
+              <i class="mdi mdi-send"></i>
+              <span>TRANSMITIR</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  private async openPreMissionChat(missionId: string) {
+    this.activeChatMissionId = missionId;
+    const mission = this.missions.find((m) => m._id === missionId);
+    const modalEl = this.container.querySelector('#mission-chat-modal') as HTMLElement;
+    const titleEl = this.container.querySelector('#chat-modal-mission-title');
+    const messagesArea = this.container.querySelector('#mission-chat-messages');
+
+    if (titleEl && mission) {
+      titleEl.textContent = mission.title;
+    }
+
+    if (modalEl) {
+      modalEl.classList.remove('is-hidden');
+    }
+
+    chatService.joinMission(missionId);
+
+    // Carrega mensagens anteriores
+    if (messagesArea) {
+      messagesArea.innerHTML = `
+        <div class="comms-empty-state">
+          <div class="comms-empty-icon"><i class="mdi mdi-forum-outline"></i></div>
+          <div>Lendo transmissões do terminal Omninet...</div>
+        </div>
+      `;
+
+      try {
+        const msgs = await chatService.getMissionMessages(missionId);
+        if (msgs.length === 0) {
+          messagesArea.innerHTML = `
+            <div class="comms-empty-state">
+              <div class="comms-empty-icon"><i class="mdi mdi-message-text-outline"></i></div>
+              <div>Nenhuma transmissão registrada neste canal pré-missão ainda.</div>
+              <div class="comms-empty-hint">Utilize o campo abaixo para tirar dúvidas e alinhar estratégias com o GM e os pilotos.</div>
+            </div>
+          `;
+        } else {
+          messagesArea.innerHTML = '';
+          msgs.forEach((m) => this.appendChatMessage(m));
+        }
+      } catch {
+        messagesArea.innerHTML = `
+          <div class="comms-empty-state">
+            <div>Falha ao carregar mensagens anteriores.</div>
+          </div>
+        `;
+      }
+    }
+
+    // Listener de novas mensagens em tempo real
+    if (this.chatUnsubscribe) {
+      this.chatUnsubscribe();
+    }
+    this.chatUnsubscribe = chatService.onNewMessage((newMsg) => {
+      const msgMissionId = typeof newMsg.mission_id === 'object' && newMsg.mission_id !== null
+        ? (newMsg.mission_id as any)._id
+        : newMsg.mission_id;
+
+      if (String(msgMissionId) === String(this.activeChatMissionId)) {
+        const emptyState = messagesArea?.querySelector('.comms-empty-state');
+        if (emptyState) emptyState.remove();
+        this.appendChatMessage(newMsg);
+      }
+    });
+  }
+
+  private closePreMissionChat() {
+    if (this.activeChatMissionId) {
+      chatService.leaveMission(this.activeChatMissionId);
+      this.activeChatMissionId = null;
+    }
+    const modalEl = this.container.querySelector('#mission-chat-modal') as HTMLElement;
+    if (modalEl) {
+      modalEl.classList.add('is-hidden');
+    }
+    if (this.chatUnsubscribe) {
+      this.chatUnsubscribe();
+      this.chatUnsubscribe = null;
+    }
+  }
+
+  private appendChatMessage(msg: IChatMessage) {
+    const messagesArea = this.container.querySelector('#mission-chat-messages');
+    if (!messagesArea) return;
+
+    const currentUserId = authService.currentUser?._id;
+    const authorId = typeof msg.author_id === 'object' && msg.author_id !== null
+      ? (msg.author_id as any)._id
+      : msg.author_id;
+
+    const isOwn = String(authorId) === String(currentUserId);
+    const isGm = msg.author_role === 'GM';
+    const isSystem = msg.message_type === 'SYSTEM';
+
+    const timeFormatted = new Date(msg.createdAt).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    const row = document.createElement('div');
+    row.className = `transmission-row ${isOwn ? 'is-own' : ''} ${isGm ? 'is-gm' : ''} ${isSystem ? 'is-system' : ''}`;
+
+    const roleBadgeClass = isGm ? 'badge-role-gm' : msg.author_role === 'ADMIN' ? 'badge-role-admin' : 'badge-role-pilot';
+
+    row.innerHTML = `
+      <div class="transmission-meta">
+        <div class="transmission-author-info">
+          <span class="author-role-badge ${roleBadgeClass}">${msg.author_role}</span>
+          <strong class="transmission-callsign">${msg.pilot_callsign || msg.author_name}</strong>
+          ${msg.pilot_callsign && msg.author_name !== msg.pilot_callsign ? `<span class="transmission-author-username">(@${msg.author_name})</span>` : ''}
+        </div>
+        <span class="transmission-time">${timeFormatted}</span>
+      </div>
+      <div class="transmission-text">${msg.content}</div>
+    `;
+
+    messagesArea.appendChild(row);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
   }
 
   private renderError(message: string) {

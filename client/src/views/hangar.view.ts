@@ -3,6 +3,7 @@ import { IPilot } from '../types/pilot.types.js';
 import { authService } from '../services/auth.service.js';
 import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
+import { localizationService } from '../services/localization.service.js';
 
 export class HangarView {
   private container: HTMLElement;
@@ -343,7 +344,12 @@ export class HangarView {
             : 'PENDENTE // AVALIAÇÃO';
 
         const talentsList = pilot.talents && pilot.talents.length > 0
-          ? pilot.talents.map((t) => `${t.name} (Rk ${t.rank})`).join(', ')
+          ? pilot.talents
+              .map((t) => {
+                const translated = localizationService.translateTalent(t.id, (t as any).data || t, t.rank);
+                return `${translated.name || t.name} (Rk ${t.rank})`;
+              })
+              .join(', ')
           : 'Nenhum talento configurado';
 
         return `
@@ -402,23 +408,23 @@ export class HangarView {
               <!-- Telemetria H.A.S.E. -->
               <div class="mech-stats-row">
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">HULL</span>
+                  <span class="mech-stat-label">Casco</span>
                   <span class="mech-stat-val">${pilot.hull || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">AGI</span>
+                  <span class="mech-stat-label">Agilidade</span>
                   <span class="mech-stat-val">${pilot.agility || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">SYS</span>
+                  <span class="mech-stat-label">Sistemas</span>
                   <span class="mech-stat-val">${pilot.systems || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">ENG</span>
+                  <span class="mech-stat-label">Engenharia</span>
                   <span class="mech-stat-val">${pilot.engineering || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">GRIT</span>
+                  <span class="mech-stat-label">Brio</span>
                   <span class="mech-stat-val">+${pilot.grit || 0}</span>
                 </div>
               </div>

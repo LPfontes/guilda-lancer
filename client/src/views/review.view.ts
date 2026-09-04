@@ -10,6 +10,7 @@ export class ReviewView {
   private currentFilter: string = 'PENDING';
   private searchKeyword: string = '';
   private selectedPilotForReject: IPilot | null = null;
+  private abortController: AbortController = new AbortController();
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -220,12 +221,24 @@ export class ReviewView {
     const reviewerObj = p.reviewed_by as any;
     const isAdmin = authService.currentUser?.role === 'ADMIN';
 
+    const playerAvatar =
+      userObj?.avatar ||
+      p.portrait ||
+      (p.compcon_raw as any)?.cloud_portrait ||
+      (p.compcon_raw as any)?.img?.cloud_portrait ||
+      (p.compcon_raw as any)?.img?.avatar?.image?.src ||
+      '';
+
     return `
       <div class="review-card ${statusClass}">
         <div class="review-card-header">
           <div class="review-card-pilot-info">
             <div class="review-pilot-avatar-box">
-              <i class="mdi mdi-account-card-details"></i>
+              ${
+                playerAvatar
+                  ? `<img src="${playerAvatar}" alt="${userObj?.username || p.callsign || 'Operador'}" class="review-pilot-avatar-img" loading="lazy" />`
+                  : `<i class="mdi mdi-account-card-details"></i>`
+              }
             </div>
             <div>
               <h3 class="review-pilot-callsign">
@@ -267,7 +280,7 @@ export class ReviewView {
             </div>
             <div class="review-telemetry-item">
               <span class="review-telemetry-lbl">Talentos</span>
-              <span class="review-telemetry-val">${(p.talents || []).length} // ${p.skills.length}</span>
+              <span class="review-telemetry-val">${(p.talents || []).length}</span>
             </div>
           </div>
 
@@ -359,6 +372,10 @@ export class ReviewView {
   }
 
   private bindEvents() {
+    this.abortController.abort();
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     // 1. Filtros de Status
     const filterBtns = this.container.querySelectorAll('.review-filter-group .filter-btn');
     filterBtns.forEach((btn) => {
@@ -374,7 +391,7 @@ export class ReviewView {
         if (listContainer) {
           listContainer.innerHTML = this.renderPilotsList();
         }
-      });
+      }, { signal });
     });
 
     // 2. Busca por Texto
@@ -390,23 +407,23 @@ export class ReviewView {
           listContainer.innerHTML = this.renderPilotsList();
         }
       }, 350);
-    });
+    }, { signal });
 
-    // 3. Botão Aprovar Ficha
+    // 3. Clique unificado para ações
     this.container.addEventListener('click', async (e) => {
-      const approveBtn = (e.target as HTMLElement).closest('.btn-approve-sheet') as HTMLElement;
+      const target = e.target as HTMLElement;
+
+      const approveBtn = target.closest('.btn-approve-sheet') as HTMLElement;
       if (approveBtn) {
         const pilotId = approveBtn.getAttribute('data-pilot-id');
         const callsign = approveBtn.getAttribute('data-callsign') || 'Piloto';
         if (pilotId) {
           await this.handleApprovePilot(pilotId, callsign);
         }
+        return;
       }
-    });
 
-    // 4. Botão Rejeitar Ficha (Abre Modal)
-    this.container.addEventListener('click', (e) => {
-      const rejectBtn = (e.target as HTMLElement).closest('.btn-reject-sheet') as HTMLElement;
+      const rejectBtn = target.closest('.btn-reject-sheet') as HTMLElement;
       if (rejectBtn) {
         const pilotId = rejectBtn.getAttribute('data-pilot-id');
         if (pilotId) {
@@ -415,34 +432,49 @@ export class ReviewView {
             this.openRejectModal(pilot);
           }
         }
+        return;
       }
-    });
+    }, { signal });
 
     // 5. Fechamento do Modal de Rejeição
     const closeRejectBtn = this.container.querySelector('#btn-close-reject-modal');
-    closeRejectBtn?.addEventListener('click', () => this.closeRejectModal());
+    closeRejectBtn?.addEventListener('click', () => this.closeRejectModal(), { signal });
 
     const cancelRejectBtn = this.container.querySelector('#btn-cancel-reject');
-    cancelRejectBtn?.addEventListener('click', () => this.closeRejectModal());
+    cancelRejectBtn?.addEventListener('click', () => this.closeRejectModal(), { signal });
 
     const rejectOverlay = this.container.querySelector('#reject-modal');
     rejectOverlay?.addEventListener('click', (e) => {
       if (e.target === rejectOverlay) this.closeRejectModal();
-    });
+    }, { signal });
 
     // 6. Submissão do Formulário de Rejeição
     const rejectForm = this.container.querySelector('#reject-form') as HTMLFormElement;
     rejectForm?.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       await this.handleConfirmReject(rejectForm);
-    });
+    }, { signal });
 
-    // 7. Escape fecha modal
+    // 7. Fallback resiliente para imagens de avatar com falha de carregamento
+    this.container.addEventListener('error', (e) => {
+      const target = e.target as HTMLElement;
+      if (target && target.classList.contains('review-pilot-avatar-img')) {
+        const parent = target.parentElement;
+        if (parent) {
+          target.remove();
+          const fallbackIcon = document.createElement('i');
+          fallbackIcon.className = 'mdi mdi-account-card-details';
+          parent.appendChild(fallbackIcon);
+        }
+      }
+    }, { signal, capture: true });
+
+    // 8. Escape fecha modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeRejectModal();
       }
-    });
+    }, { signal });
   }
 
   private async handleApprovePilot(pilotId: string, callsign: string) {

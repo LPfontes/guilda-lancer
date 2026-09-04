@@ -4,6 +4,7 @@ import { IPilot } from '../types/pilot.types.js';
 import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
 import { localization } from '../services/localization.service.js';
+import { buildMissionReportText } from '../services/mission-report.helper.js';
 
 /**
  * Ficha Completa do Piloto / Operador (Pilot Personnel Dossier).
@@ -131,8 +132,9 @@ export class PilotSheetView {
     // Lista de Chassis do Piloto
     const mechsList: any[] = raw?.mechs || p.mechs || [];
 
-    // Core Bonuses (se houver no COMP/CON)
-    const coreBonuses: any[] = raw?.core_bonuses || [];
+    // Core Bonuses (lidos diretamente do COMP/CON persistido no banco)
+    const rawCoreBonuses: any[] = raw?.core_bonuses || raw?.pilot?.core_bonuses || raw?.data?.core_bonuses || (p as any).core_bonuses || [];
+    const coreBonuses = rawCoreBonuses.map((cb) => (typeof cb === 'string' ? { id: cb, name: cb, effect: '', description: '' } : cb));
 
     // Talentos do Piloto (mesclando p.talents com raw.talents para garantir dados de ranks e ações completas)
     const rawTalents: any[] = raw?.talents || [];
@@ -175,6 +177,10 @@ export class PilotSheetView {
             <button id="btn-print-sheet" class="btn btn-secondary sheet-action-btn" title="Imprimir Dossiê">
               <i class="mdi mdi-printer"></i>
               <span>IMPRIMIR</span>
+            </button>
+            <button id="btn-pilot-aar" class="btn btn-secondary sheet-action-btn" title="Copiar Modelo Oficial de Relatório de Missão">
+              <i class="mdi mdi-clipboard-text-outline"></i>
+              <span>RELATÓRIO DE MISSÃO</span>
             </button>
           </div>
         </div>
@@ -398,17 +404,39 @@ export class PilotSheetView {
           <div class="sheet-section-title">
             <i class="mdi mdi-star-shooting-outline"></i>
             <span>BÔNUS DE NÚCLEO</span>
+            <span class="sheet-section-counter">[${coreBonuses.length}]</span>
           </div>
           <div class="sheet-traits-grid">
             ${coreBonuses
-              .map(
-                (cb: any) => `
-              <div class="card sheet-trait-card">
-                <div class="sheet-trait-name">${localization.translateItemName(cb.id, cb.name || 'Bônus de Núcleo')}</div>
-                <div class="sheet-trait-desc">${localization.translateItemDesc(cb.id, cb.description || cb.effect || '')}</div>
+              .map((cb: any) => {
+                const name = localization.translateItemName(cb.id, cb.name || 'Bônus de Núcleo');
+                const effect = localization.translateCoreBonusEffect(cb.id, cb.effect || '');
+                const description = localization.translateCoreBonusDescription(cb.id, cb.description || '');
+                return `
+              <div class="card sheet-trait-card sheet-core-bonus-card">
+                <div class="core-bonus-card-header">
+                  ${cb.source ? `<span class="sheet-corp-badge">${cb.source}</span>` : ''}
+                  <span class="core-bonus-type-tag">BÔNUS DE NÚCLEO</span>
+                </div>
+                <div class="sheet-trait-name">${name}</div>
+                ${
+                  effect
+                    ? `
+                  <div class="core-bonus-effect-box">
+                    <div class="core-bonus-effect-label">EFEITO:</div>
+                    <div class="sheet-trait-desc core-bonus-effect-text">${effect}</div>
+                  </div>
+                `
+                    : ''
+                }
+                ${
+                  description && description !== effect
+                    ? `<div class="core-bonus-lore">${description}</div>`
+                    : ''
+                }
               </div>
-            `
-              )
+            `;
+              })
               .join('')}
           </div>
         `
@@ -554,6 +582,15 @@ export class PilotSheetView {
       window.print();
     });
 
+    const aarBtn = this.container.querySelector('#btn-pilot-aar');
+    aarBtn?.addEventListener('click', async () => {
+      if (this.pilotData) {
+        const text = buildMissionReportText(this.pilotData);
+        await navigator.clipboard.writeText(text);
+        ToastService.success('Relatório de Missão do Piloto copiado para a área de transferência!');
+      }
+    });
+
     // Eventos de Homologação do Administrador
     const approveBtn = this.container.querySelector('#btn-admin-approve-pilot');
     approveBtn?.addEventListener('click', async () => {
@@ -659,7 +696,7 @@ export class PilotSheetView {
                   (act: any) => `
                 <div class="talent-rank-action-item">
                   <div class="talent-action-header">
-                    <span class="action-tag talent-action-type ${localization.getActionClass(act.activation)}">[${act.activation}]</span>
+                    <span class="action-tag talent-action-type ${localization.getActionClass(act.activation)}">${act.activation}</span>
                     <strong class="talent-action-title">${act.name}</strong>
                   </div>
                   ${act.trigger ? `<div class="talent-action-trigger"><strong>GATILHO:</strong> ${act.trigger}</div>` : ''}

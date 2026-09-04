@@ -213,7 +213,8 @@
   color: #6e7681;
 }
 
-.sheet-ll-badge, .sheet-grit-badge {
+.sheet-ll-badge,
+.sheet-grit-badge {
   padding: 2px 6px;
   border: 1px solid #30363d;
   background: #0d1117;
@@ -277,6 +278,7 @@
 .sheet-hase-item:nth-child(1) {
   border-left-color: var(--hase-hull);
 }
+
 .sheet-hase-item.hase-hull .hase-label,
 .sheet-hase-item:nth-child(1) .hase-label,
 .sheet-hase-item.hase-hull .hase-val,
@@ -289,6 +291,7 @@
 .sheet-hase-item:nth-child(2) {
   border-left-color: var(--hase-agility);
 }
+
 .sheet-hase-item.hase-agility .hase-label,
 .sheet-hase-item:nth-child(2) .hase-label,
 .sheet-hase-item.hase-agility .hase-val,
@@ -301,6 +304,7 @@
 .sheet-hase-item:nth-child(3) {
   border-left-color: var(--hase-systems);
 }
+
 .sheet-hase-item.hase-systems .hase-label,
 .sheet-hase-item:nth-child(3) .hase-label,
 .sheet-hase-item.hase-systems .hase-val,
@@ -313,6 +317,7 @@
 .sheet-hase-item:nth-child(4) {
   border-left-color: var(--hase-engineering);
 }
+
 .sheet-hase-item.hase-engineering .hase-label,
 .sheet-hase-item:nth-child(4) .hase-label,
 .sheet-hase-item.hase-engineering .hase-val,
@@ -775,7 +780,6 @@
 
 .sheet-traits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -798,6 +802,68 @@
   font-size: 1rem;
   color: #c9d1d9;
   line-height: 1.5;
+}
+
+/* =======================================================
+   BÔNUS DE NÚCLEO (CORE BONUSES) ESTILOS TÁTICOS
+   ======================================================= */
+.sheet-core-bonus-card {
+  border-left: 3px solid var(--accent-mint);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #111520;
+  transition: all var(--transition-fast);
+}
+
+.core-bonus-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.core-bonus-type-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #8b949e;
+  letter-spacing: 0.08em;
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 1px 6px;
+}
+
+.core-bonus-effect-box {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-left: 2px solid var(--accent-mint);
+  padding: 0.6rem 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.core-bonus-effect-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent-mint);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.core-bonus-effect-text {
+  font-size: 0.88rem;
+  color: #e6edf3;
+  line-height: 1.45;
+}
+
+.core-bonus-lore {
+  font-size: 0.78rem;
+  color: #8b949e;
+  font-style: italic;
+  line-height: 1.4;
+  border-top: 1px solid #21262d;
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
 }
 
 /* Mod de Arma e Slots Vazios */
@@ -852,4 +918,315 @@
   font-size: 1rem;
   line-height: 1.5;
   margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   RASTREADOR DE COMBATE DINÂMICO (LIVE COMBAT TRACKER) // ZERO INLINE CSS
+   ========================================================================== */
+
+/* Classes de largura utilitárias (0% a 100% em passos de 5%) */
+.vital-fill-w-0   { width: 0%; }
+.vital-fill-w-5   { width: 5%; }
+.vital-fill-w-10  { width: 10%; }
+.vital-fill-w-15  { width: 15%; }
+.vital-fill-w-20  { width: 20%; }
+.vital-fill-w-25  { width: 25%; }
+.vital-fill-w-30  { width: 30%; }
+.vital-fill-w-35  { width: 35%; }
+.vital-fill-w-40  { width: 40%; }
+.vital-fill-w-45  { width: 45%; }
+.vital-fill-w-50  { width: 50%; }
+.vital-fill-w-55  { width: 55%; }
+.vital-fill-w-60  { width: 60%; }
+.vital-fill-w-65  { width: 65%; }
+.vital-fill-w-70  { width: 70%; }
+.vital-fill-w-75  { width: 75%; }
+.vital-fill-w-80  { width: 80%; }
+.vital-fill-w-85  { width: 85%; }
+.vital-fill-w-90  { width: 90%; }
+.vital-fill-w-95  { width: 95%; }
+.vital-fill-w-100 { width: 100%; }
+
+/* Controles de incremento/decremento de vitais */
+.vital-tracker-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: #090d13;
+  padding: 4px 6px;
+  border: 1px solid #21262d;
+  border-radius: 2px;
+  justify-content: space-between;
+}
+
+.vital-tracker-btn-group {
+  display: flex;
+  gap: 3px;
+}
+
+.btn-vital-step {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: bold;
+  background: #161b22;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 2px;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-vital-step:hover {
+  background: #21262d;
+  color: #f0f6fc;
+  border-color: #58a6ff;
+}
+
+.btn-vital-step.btn-vital-minus:hover {
+  border-color: var(--accent-crimson);
+  color: #ff7b72;
+}
+
+.btn-vital-step.btn-vital-plus:hover {
+  border-color: var(--accent-mint);
+  color: var(--accent-mint);
+}
+
+.vital-value-display {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #f0f6fc;
+  padding: 0 4px;
+}
+
+/* Pips Interativos com feedback ao clique */
+button.pip.pip-interactive {
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+button.pip.pip-interactive:hover {
+  transform: scale(1.15);
+  border-color: #f0f6fc;
+}
+
+/* Alerta de Superaquecimento / Zona Crítica */
+.badge-overheat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: bold;
+  color: #f85149;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+@keyframes pulse-danger {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; box-shadow: 0 0 8px rgba(248, 81, 73, 0.6); }
+}
+
+/* Botão Interativo de Ponto de Núcleo (Core Power) */
+button.core-power-pip {
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+button.core-power-pip.active {
+  background: rgba(120, 192, 145, 0.2);
+  color: var(--accent-mint);
+  border-color: var(--accent-mint);
+  box-shadow: 0 0 8px rgba(120, 192, 145, 0.3);
+}
+
+button.core-power-pip.active:hover {
+  background: rgba(120, 192, 145, 0.35);
+}
+
+button.core-power-pip.depleted {
+  background: rgba(248, 81, 73, 0.1);
+  color: #8b949e;
+  border-color: #30363d;
+  text-decoration: line-through;
+}
+
+button.core-power-pip.depleted:hover {
+  background: rgba(248, 81, 73, 0.2);
+  color: #c9d1d9;
+  border-color: #8b949e;
+}
+
+/* Botões e Badges de Estado de Armas e Sistemas */
+.weapon-status-btn,
+.system-status-btn,
+.weapon-status-badge,
+.system-status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.weapon-status-btn,
+.system-status-btn {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheet-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8b949e;
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 0.35rem 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+.pip.pip-static {
+  cursor: default;
+  pointer-events: none;
+}
+
+.core-power-pip.core-power-static {
+  cursor: default;
+  pointer-events: none;
+}
+
+.weapon-status-operational,
+.system-status-operational {
+  background: rgba(63, 185, 80, 0.15);
+  color: #3fb950;
+  border: 1px solid #2ea043;
+}
+
+.weapon-status-operational:hover,
+.system-status-operational:hover {
+  background: rgba(63, 185, 80, 0.3);
+  box-shadow: 0 0 6px rgba(63, 185, 80, 0.4);
+}
+
+.weapon-status-unloaded {
+  background: rgba(210, 153, 34, 0.2);
+  color: #d29922;
+  border: 1px solid #bb8009;
+}
+
+.weapon-status-unloaded:hover {
+  background: rgba(210, 153, 34, 0.35);
+  box-shadow: 0 0 6px rgba(210, 153, 34, 0.4);
+}
+
+.weapon-status-destroyed,
+.system-status-destroyed {
+  background: rgba(248, 81, 73, 0.2);
+  color: #f85149;
+  border: 1px solid #da3633;
+}
+
+.weapon-status-destroyed:hover,
+.system-status-destroyed:hover {
+  background: rgba(248, 81, 73, 0.35);
+  box-shadow: 0 0 6px rgba(248, 81, 73, 0.4);
+}
+
+/* Estados Visuais nos Cards de Encaixes e Sistemas Avariados */
+.mount-card-unloaded {
+  border-color: #bb8009;
+}
+
+.mount-card-destroyed {
+  border-color: #da3633;
+  opacity: 0.75;
+}
+
+.mount-card-destroyed .mount-weapon-name,
+.mount-card-destroyed .mount-weapon-stats {
+  text-decoration: line-through;
+  color: #8b949e;
+}
+
+.system-card-destroyed {
+  border-color: #da3633;
+  opacity: 0.75;
+}
+
+.system-card-destroyed .system-name,
+.system-card-destroyed .system-desc {
+  text-decoration: line-through;
+  color: #8b949e;
+}
+
+.destroyed-notice {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #f85149;
+  font-weight: bold;
+  background: rgba(248, 81, 73, 0.1);
+  padding: 4px 8px;
+  border: 1px dashed #da3633;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.unloaded-notice {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #d29922;
+  font-weight: bold;
+  background: rgba(210, 153, 34, 0.1);
+  padding: 4px 8px;
+  border: 1px dashed #bb8009;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Botão de Reparo Completo (Descanso / Reset de Combate) */
+.btn-full-repair {
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+  border: 1px solid #388bfd;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.btn-full-repair:hover {
+  background: rgba(88, 166, 255, 0.25);
+  box-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
+  color: #f0f6fc;
 }

@@ -113,6 +113,11 @@ export const MissionController = {
     const [missions, total] = await Promise.all([
       MissionModel.find(query)
         .populate('gm_id', 'name username avatar')
+        .populate({
+          path: 'applications.pilot_id',
+          select: 'callsign name license_level grit active_mech_name active_mech_frame status user_id',
+          populate: { path: 'user_id', select: 'name username avatar' }
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -273,6 +278,14 @@ export const MissionController = {
       return res.status(400).json({
         error: 'MISSION_NOT_OPEN',
         message: `[!] Esta missão não aceita mais inscrições (Status: ${mission.status}).`
+      });
+    }
+
+    // O Mestre de Jogo não pode se candidatar à sua própria missão
+    if (mission.gm_id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        error: 'GM_CANNOT_APPLY',
+        message: '[!] O Mestre da operação não pode se candidatar como piloto na própria missão que criou.'
       });
     }
 

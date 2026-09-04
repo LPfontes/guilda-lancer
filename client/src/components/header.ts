@@ -51,6 +51,11 @@ export class HeaderComponent {
             <a href="#/missions" id="nav-missions" class="header-nav-link">
               ${getCompconIcon('missions', 'compcon-icon')}
               <span>MISSÕES</span>
+            </a>
+            <a href="#/reports" id="nav-reports" class="header-nav-link">
+              <i class="mdi mdi-clipboard-text-outline"></i>
+              <span>RELATÓRIOS</span>
+            </a>
             <a href="#/review" id="nav-review" class="header-nav-link">
               ${getCompconIcon('review', 'compcon-icon')}
               <span>AVALIAÇÕES</span>

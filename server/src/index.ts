@@ -1,6 +1,8 @@
+import http from 'http';
 import { app } from './app.js';
 import { ENV, validateEnv } from './config/env.js';
 import { connectMongoDB } from './database/db.js';
+import { socketService } from './services/socket.service.js';
 
 // Validate environment configuration
 validateEnv();
@@ -10,8 +12,12 @@ async function bootstrap() {
     // 1. Connect to MongoDB Atlas
     await connectMongoDB();
 
-    // 2. Start Express HTTP Server
-    app.listen(ENV.PORT, () => {
+    // 2. Attach Socket.io to HTTP Server
+    const httpServer = http.createServer(app);
+    socketService.init(httpServer);
+
+    // 3. Start Server
+    httpServer.listen(ENV.PORT, () => {
       console.log(`
   =============================================================
   ⬣  OMNINET MISSION HUB // BACKEND ONLINE

@@ -6,6 +6,7 @@ export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 export class ToastService {
   private static container: HTMLElement | null = null;
+  private static recentToasts: Map<string, number> = new Map();
 
   private static getContainer(): HTMLElement {
     if (!this.container) {
@@ -21,6 +22,21 @@ export class ToastService {
   }
 
   static show(message: string, type: ToastType = 'info', durationMs: number = 3500) {
+    const key = `${type}:${message.trim()}`;
+    const now = Date.now();
+    const lastTime = this.recentToasts.get(key) || 0;
+
+    // Previne que o mesmo toast dispare mais de uma vez em um intervalo curto (800ms)
+    if (now - lastTime < 800) {
+      return;
+    }
+    this.recentToasts.set(key, now);
+    setTimeout(() => {
+      if (this.recentToasts.get(key) === now) {
+        this.recentToasts.delete(key);
+      }
+    }, 1500);
+
     const container = this.getContainer();
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;

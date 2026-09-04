@@ -4,6 +4,16 @@ import { IPilot } from '../types/pilot.types.js';
 import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
 import { localization } from '../services/localization.service.js';
+import { buildMissionReportText } from '../services/mission-report.helper.js';
+import {
+  IMechCombatState,
+  getStoredCombatState,
+  saveCombatState,
+  resetCombatState,
+  getVitalWidthClass,
+  WeaponCombatState,
+  SystemCombatState
+} from '../services/combat-tracker.helper.js';
 
 interface IWeaponParsed {
   mountType: string;
@@ -50,6 +60,14 @@ export class MechSheetView {
   private container: HTMLElement;
   private pilotId: string | null = null;
   private pilotData: IPilot | null = null;
+  private combatState: IMechCombatState | null = null;
+  private maxHp: number = 10;
+  private maxRepairs: number = 4;
+  private totalHeat: number = 6;
+  private abortController: AbortController = new AbortController();
+  private weaponsListCached: IWeaponParsed[] = [];
+  private systemsListCached: ISystemParsed[] = [];
+  private canEdit: boolean = false;
 
   constructor(container: HTMLElement, pilotId: string | null = null) {
     this.container = container;
@@ -194,6 +212,18 @@ export class MechSheetView {
       }
     }
 
+    // Extrair Bônus de Núcleo (Core Bonuses diretamente do banco para exibição)
+    const rawCbList: any[] = (
+      p.compcon_raw?.core_bonuses ||
+      p.compcon_raw?.pilot?.core_bonuses ||
+      p.compcon_raw?.data?.core_bonuses ||
+      (p as any).core_bonuses ||
+      activeMech?.core_bonuses ||
+      loadout?.core_bonuses ||
+      []
+    );
+    const coreBonuses = rawCbList.map((cb) => (typeof cb === 'string' ? { id: cb, name: cb, effect: '', description: '' } : cb));
+
     const totalHp = baseHp + hullBonus * 2 + gritBonus + extraHp;
     const totalHeat = baseHeat + engBonus;
     const totalSpeed = baseSpeed + Math.floor(agiBonus / 2);
@@ -213,6 +243,30 @@ export class MechSheetView {
     const coreSystem = this.extractCoreSystem(frameData, frameId);
     const totalSpUsed = systems.reduce((acc, s) => acc + s.sp, 0);
 
+    this.maxHp = totalHp;
+    this.totalHeat = totalHeat;
+    this.maxRepairs = totalRepairs;
+    this.weaponsListCached = weapons;
+    this.systemsListCached = systems;
+
+    // Permissões: apenas o dono da ficha e um administrador podem alterar o estado do chassi
+    const currentUser = authService.currentUser;
+    const isAdmin = currentUser?.role === 'ADMIN';
+    const pilotUserId = typeof p.user_id === 'object' && p.user_id !== null ? (p.user_id as any)._id : p.user_id;
+    const isOwner = Boolean(
+      (currentUser?._id && pilotUserId && String(currentUser._id) === String(pilotUserId)) ||
+      (authService.activePilot?._id && String(authService.activePilot._id) === String(p._id))
+    );
+    this.canEdit = Boolean(isAdmin || isOwner);
+
+    if (!this.combatState) {
+      this.combatState = getStoredCombatState(p._id, {
+        maxHp: totalHp,
+        maxRepairs: totalRepairs
+      });
+    }
+    const cs = this.combatState;
+
     this.container.innerHTML = `
       <div class="sheet-container">
         <!-- Navegação Superior -->
@@ -227,6 +281,21 @@ export class MechSheetView {
           </div>
 
           <div class="sheet-top-actions">
+            ${
+              this.canEdit
+                ? `
+              <button id="btn-full-repair" class="btn-full-repair sheet-action-btn" title="Descanso Completo: Restaura PV, Estrutura, Estresse, Reparos e repara Armas/Sistemas">
+                <i class="mdi mdi-wrench-clock"></i>
+                <span>REPARO COMPLETO</span>
+              </button>
+            `
+                : `
+              <span class="sheet-readonly-badge" title="Ficha aberta em modo de leitura (apenas o operador proprietário e administradores podem alterar)">
+                <i class="mdi mdi-eye-outline"></i>
+                <span>MODO LEITURA // TELEMETRIA</span>
+              </span>
+            `
+            }
             <a href="#/pilot?id=${p._id}" class="btn btn-secondary sheet-action-btn" title="Ver Dossiê do Piloto">
               ${getCompconIcon('pilot', 'compcon-icon')}
               <span>FICHA DO PILOTO</span>
@@ -244,6 +313,10 @@ export class MechSheetView {
             <button id="btn-print-sheet" class="btn btn-secondary sheet-action-btn" title="Imprimir Ficha">
               <i class="mdi mdi-printer"></i>
               <span>IMPRIMIR</span>
+            </button>
+            <button id="btn-pilot-aar" class="btn btn-secondary sheet-action-btn" title="Copiar Modelo Oficial de Relatório de Missão">
+              <i class="mdi mdi-clipboard-text-outline"></i>
+              <span>RELATÓRIO DE MISSÃO</span>
             </button>
           </div>
         </div>
@@ -363,64 +436,138 @@ export class MechSheetView {
           </div>
         </div>
 
-        <!-- Módulo 1: Gauges de Sobrevivência (Combat Vitals) -->
+        <!-- Módulo 1: Gauges de Sobrevivência (Combat Vitals Interativos) -->
         <div class="sheet-vitals-grid">
+          <!-- Card de PV & Estrutura -->
           <div class="card sheet-vital-card">
             <div class="vital-card-header">
               <span class="vital-title">PONTOS DE VIDA (PV)</span>
-              <span class="vital-counter">${totalHp} / ${totalHp} PV</span>
+              <span class="vital-counter">${cs.currentHp} / ${totalHp} PV</span>
             </div>
             <div class="vital-progress-bar">
-              <div class="vital-fill vital-fill-hp"></div>
+              <div class="vital-fill vital-fill-hp ${getVitalWidthClass(cs.currentHp, totalHp)}"></div>
             </div>
+            ${
+              this.canEdit
+                ? `
+            <div class="vital-tracker-controls">
+              <div class="vital-tracker-btn-group">
+                <button type="button" class="btn-vital-step btn-vital-minus" data-vital="hp" data-delta="-5" title="-5 PV">-5</button>
+                <button type="button" class="btn-vital-step btn-vital-minus" data-vital="hp" data-delta="-1" title="-1 PV">-1</button>
+              </div>
+              <span class="vital-value-display">${cs.currentHp} PV</span>
+              <div class="vital-tracker-btn-group">
+                <button type="button" class="btn-vital-step btn-vital-plus" data-vital="hp" data-delta="1" title="+1 PV">+1</button>
+                <button type="button" class="btn-vital-step btn-vital-plus" data-vital="hp" data-delta="5" title="+5 PV">+5</button>
+              </div>
+            </div>
+            `
+                : ''
+            }
             <div class="vital-pips-container">
               <span class="vital-pips-label">ESTRUTURA:</span>
               <div class="pips-row">
-                <span class="pip pip-structure active"></span>
-                <span class="pip pip-structure active"></span>
-                <span class="pip pip-structure active"></span>
-                <span class="pip pip-structure active"></span>
+                ${[1, 2, 3, 4]
+                  .map((idx) =>
+                    this.canEdit
+                      ? `<button type="button" class="pip pip-structure pip-interactive ${idx <= cs.currentStructure ? 'active' : ''}" data-vital-pip="structure" data-val="${idx}" title="Definir Estrutura para ${idx}"></button>`
+                      : `<span class="pip pip-structure pip-static ${idx <= cs.currentStructure ? 'active' : ''}"></span>`
+                  )
+                  .join('')}
               </div>
             </div>
           </div>
 
+          <!-- Card de Calor & Estresse -->
           <div class="card sheet-vital-card">
             <div class="vital-card-header">
-              <span class="vital-title">CALOR</span>
-              <span class="vital-counter">0 / ${totalHeat} CALOR</span>
+              <span class="vital-title">CALOR / REATOR</span>
+              <div class="vital-counter-box">
+                ${cs.currentHeat >= totalHeat ? '<span class="badge-overheat"><i class="mdi mdi-fire-alert"></i></span>' : ''}
+                <span class="vital-counter">${cs.currentHeat} / ${totalHeat} CALOR</span>
+              </div>
             </div>
             <div class="vital-progress-bar">
-              <div class="vital-fill vital-fill-heat"></div>
+              <div class="vital-fill vital-fill-heat ${getVitalWidthClass(cs.currentHeat, totalHeat)}"></div>
             </div>
+            ${
+              this.canEdit
+                ? `
+            <div class="vital-tracker-controls">
+              <div class="vital-tracker-btn-group">
+                <button type="button" class="btn-vital-step btn-vital-minus" data-vital="heat" data-delta="-2" title="-2 Calor">-2</button>
+                <button type="button" class="btn-vital-step btn-vital-minus" data-vital="heat" data-delta="-1" title="-1 Calor">-1</button>
+              </div>
+              <span class="vital-value-display">${cs.currentHeat} CALOR</span>
+              <div class="vital-tracker-btn-group">
+                <button type="button" class="btn-vital-step btn-vital-plus" data-vital="heat" data-delta="1" title="+1 Calor">+1</button>
+                <button type="button" class="btn-vital-step btn-vital-plus" data-vital="heat" data-delta="2" title="+2 Calor">+2</button>
+              </div>
+            </div>
+            `
+                : ''
+            }
             <div class="vital-pips-container">
               <span class="vital-pips-label">ESTRESSE DE REATOR:</span>
               <div class="pips-row">
-                <span class="pip pip-stress active"></span>
-                <span class="pip pip-stress active"></span>
-                <span class="pip pip-stress active"></span>
-                <span class="pip pip-stress active"></span>
+                ${[1, 2, 3, 4]
+                  .map((idx) =>
+                    this.canEdit
+                      ? `<button type="button" class="pip pip-stress pip-interactive ${idx <= cs.currentStress ? 'active' : ''}" data-vital-pip="stress" data-val="${idx}" title="Definir Estresse para ${idx}"></button>`
+                      : `<span class="pip pip-stress pip-static ${idx <= cs.currentStress ? 'active' : ''}"></span>`
+                  )
+                  .join('')}
               </div>
             </div>
           </div>
 
+          <!-- Card de Reparos & Poder de Núcleo -->
           <div class="card sheet-vital-card sheet-vital-compact">
             <div class="vital-card-header">
               <span class="vital-title">LOGÍSTICA & NÚCLEO</span>
-              <span class="vital-counter">${totalRepairs} REPAROS</span>
+              <span class="vital-counter">${cs.currentRepairs} / ${totalRepairs} REPAROS</span>
             </div>
+            ${
+              this.canEdit
+                ? `
+            <div class="vital-tracker-controls">
+              <button type="button" class="btn-vital-step btn-vital-minus" data-vital="repairs" data-delta="-1" title="-1 Reparo de Campo">-1</button>
+              <span class="vital-value-display">${cs.currentRepairs} REPAROS</span>
+              <button type="button" class="btn-vital-step btn-vital-plus" data-vital="repairs" data-delta="1" title="+1 Reparo de Campo">+1</button>
+            </div>
+            `
+                : ''
+            }
             <div class="vital-pips-container">
               <span class="vital-pips-label">REPAROS DE CAMPO:</span>
               <div class="pips-row">
                 ${Array.from({ length: Math.min(8, totalRepairs) })
-                  .map(() => `<span class="pip pip-repairs active"></span>`)
+                  .map((_, i) => {
+                    const val = i + 1;
+                    return this.canEdit
+                      ? `<button type="button" class="pip pip-repairs pip-interactive ${val <= cs.currentRepairs ? 'active' : ''}" data-vital-pip="repairs" data-val="${val}" title="Definir Reparos para ${val}"></button>`
+                      : `<span class="pip pip-repairs pip-static ${val <= cs.currentRepairs ? 'active' : ''}"></span>`;
+                  })
                   .join('')}
               </div>
             </div>
             <div class="vital-pips-container">
               <span class="vital-pips-label">PODER DE NÚCLEO:</span>
-              <div class="core-power-pip active">
-                <span>DISPONÍVEL</span>
-              </div>
+              ${
+                this.canEdit
+                  ? `
+                <button type="button" id="btn-toggle-core-power" class="core-power-pip ${cs.corePowerUsed ? 'depleted' : 'active'}" title="Clique para alternar disponibilidade do Poder de Núcleo">
+                  <i class="mdi ${cs.corePowerUsed ? 'mdi-checkbox-blank-circle-outline' : 'mdi-checkbox-marked-circle'}"></i>
+                  <span>${cs.corePowerUsed ? 'UTILIZADO [0/1]' : 'DISPONÍVEL [1/1]'}</span>
+                </button>
+              `
+                  : `
+                <div class="core-power-pip core-power-static ${cs.corePowerUsed ? 'depleted' : 'active'}">
+                  <i class="mdi ${cs.corePowerUsed ? 'mdi-checkbox-blank-circle-outline' : 'mdi-checkbox-marked-circle'}"></i>
+                  <span>${cs.corePowerUsed ? 'UTILIZADO [0/1]' : 'DISPONÍVEL [1/1]'}</span>
+                </div>
+              `
+              }
             </div>
           </div>
         </div>
@@ -531,6 +678,52 @@ export class MechSheetView {
             : ''
         }
 
+        <!-- Módulo 4b: Bônus de Núcleo Instalados (Core Bonuses) -->
+        ${
+          coreBonuses.length > 0
+            ? `
+          <div class="sheet-section-title">
+            <i class="mdi mdi-star-shooting-outline"></i>
+            <span>BÔNUS DE NÚCLEO INSTALADOS</span>
+            <span class="sheet-section-counter">[${coreBonuses.length}]</span>
+          </div>
+          <div class="sheet-traits-grid">
+            ${coreBonuses
+              .map((cb: any) => {
+                const name = localization.translateItemName(cb.id, cb.name || 'Bônus de Núcleo');
+                const effect = localization.translateCoreBonusEffect(cb.id, cb.effect || '');
+                const description = localization.translateCoreBonusDescription(cb.id, cb.description || '');
+                return `
+              <div class="card sheet-trait-card sheet-core-bonus-card">
+                <div class="core-bonus-card-header">
+                  ${cb.source ? `<span class="sheet-corp-badge">${cb.source}</span>` : ''}
+                  <span class="core-bonus-type-tag">BÔNUS DE NÚCLEO</span>
+                </div>
+                <div class="sheet-trait-name">${name}</div>
+                ${
+                  effect
+                    ? `
+                  <div class="core-bonus-effect-box">
+                    <div class="core-bonus-effect-label">EFEITO:</div>
+                    <div class="sheet-trait-desc core-bonus-effect-text">${effect}</div>
+                  </div>
+                `
+                    : ''
+                }
+                ${
+                  description && description !== effect
+                    ? `<div class="core-bonus-lore">${description}</div>`
+                    : ''
+                }
+              </div>
+            `;
+              })
+              .join('')}
+          </div>
+        `
+            : ''
+        }
+
         <!-- Módulo 5: Arsenal Mobilizado (Weapon Mounts) -->
         <div class="sheet-section-title">
           ${getCompconIcon('weapon', 'compcon-icon')}
@@ -541,14 +734,75 @@ export class MechSheetView {
           ${
             weapons.length > 0
               ? weapons
-                  .map(
-                    (w) => `
-            <div class="card sheet-mount-card ${w.isEmpty ? 'sheet-mount-empty' : ''}">
+                  .map((w, idx) => {
+                    const wState = cs.weaponsState[idx] || 'OPERATIONAL';
+                    const hasLoadingTag = w.tags?.some(
+                      (t) => t.name.toLowerCase().includes('recarga') || t.name.toLowerCase().includes('loading')
+                    );
+                    const cardStateClass =
+                      wState === 'DESTROYED'
+                        ? 'mount-card-destroyed'
+                        : wState === 'UNLOADED'
+                        ? 'mount-card-unloaded'
+                        : '';
+
+                    return `
+            <div class="card sheet-mount-card ${w.isEmpty ? 'sheet-mount-empty' : ''} ${cardStateClass}">
               <div class="mount-header">
                 <span class="mount-tag">${w.mountType}</span>
-                <span class="${w.isEmpty ? 'mount-status-empty' : 'mount-status-ok'}">
-                  ${w.isEmpty ? 'ENCAIXE LIVRE' : 'OPERACIONAL'}
-                </span>
+                ${
+                  w.isEmpty
+                    ? '<span class="mount-status-empty">ENCAIXE LIVRE</span>'
+                    : this.canEdit
+                    ? `
+                  <button type="button" class="weapon-status-btn ${
+                    wState === 'DESTROYED'
+                      ? 'weapon-status-destroyed'
+                      : wState === 'UNLOADED'
+                      ? 'weapon-status-unloaded'
+                      : 'weapon-status-operational'
+                  }" data-weapon-idx="${idx}" title="Clique para alternar estado (Operacional / ${hasLoadingTag ? 'Descarregada / ' : ''}Destruída)">
+                    <i class="mdi ${
+                      wState === 'DESTROYED'
+                        ? 'mdi-close-octagon'
+                        : wState === 'UNLOADED'
+                        ? 'mdi-reload-alert'
+                        : 'mdi-check-circle'
+                    }"></i>
+                    <span>${
+                      wState === 'DESTROYED'
+                        ? 'DESTRUÍDA'
+                        : wState === 'UNLOADED'
+                        ? 'DESCARREGADA'
+                        : 'OPERACIONAL'
+                    }</span>
+                  </button>
+                `
+                    : `
+                  <span class="weapon-status-badge ${
+                    wState === 'DESTROYED'
+                      ? 'weapon-status-destroyed'
+                      : wState === 'UNLOADED'
+                      ? 'weapon-status-unloaded'
+                      : 'weapon-status-operational'
+                  }">
+                    <i class="mdi ${
+                      wState === 'DESTROYED'
+                        ? 'mdi-close-octagon'
+                        : wState === 'UNLOADED'
+                        ? 'mdi-reload-alert'
+                        : 'mdi-check-circle'
+                    }"></i>
+                    <span>${
+                      wState === 'DESTROYED'
+                        ? 'DESTRUÍDA'
+                        : wState === 'UNLOADED'
+                        ? 'DESCARREGADA'
+                        : 'OPERACIONAL'
+                    }</span>
+                  </span>
+                `
+                }
               </div>
               <div class="mount-weapon-name">
                 ${w.name}
@@ -580,13 +834,20 @@ export class MechSheetView {
                 `
                     : ''
                 }
+                ${
+                  wState === 'DESTROYED'
+                    ? '<div class="destroyed-notice"><i class="mdi mdi-alert-octagon"></i> SISTEMA DE ARMA DESTRUÍDO // AVARIA EM COMBATE</div>'
+                    : wState === 'UNLOADED'
+                    ? '<div class="unloaded-notice"><i class="mdi mdi-alert"></i> ARMA DESCARREGADA // REQUER AÇÃO DE RECARGA</div>'
+                    : ''
+                }
                 ${w.description ? `<div class="weapon-detail-desc">${w.description}</div>` : ''}
               `
                   : '<p class="system-desc">Nenhuma arma instalada neste encaixe.</p>'
               }
             </div>
-          `
-                  )
+          `;
+                  })
                   .join('')
               : `
             <div class="card sheet-mount-card">
@@ -606,14 +867,43 @@ export class MechSheetView {
           ${
             systems.length > 0
               ? systems
-                  .map(
-                    (s) => `
-            <div class="card sheet-system-card">
+                  .map((s, idx) => {
+                    const sysState = cs.systemsState[idx] || 'OPERATIONAL';
+                    const isDestroyed = sysState === 'DESTROYED';
+
+                    return `
+            <div class="card sheet-system-card ${isDestroyed ? 'system-card-destroyed' : ''}">
               <div class="system-top-line">
                 <span class="system-name">${s.name}</span>
-                <span class="system-sp-cost">${s.sp} SP</span>
+                <div class="system-top-actions">
+                  <span class="system-sp-cost">${s.sp} SP</span>
+                  ${
+                    this.canEdit
+                      ? `
+                    <button type="button" class="system-status-btn ${
+                      isDestroyed ? 'system-status-destroyed' : 'system-status-operational'
+                    }" data-system-idx="${idx}" title="Clique para alternar estado (Operacional / Destruído)">
+                      <i class="mdi ${isDestroyed ? 'mdi-close-octagon' : 'mdi-check-circle'}"></i>
+                      <span>${isDestroyed ? 'DESTRUÍDO' : 'OPERACIONAL'}</span>
+                    </button>
+                  `
+                      : `
+                    <span class="system-status-badge ${
+                      isDestroyed ? 'system-status-destroyed' : 'system-status-operational'
+                    }">
+                      <i class="mdi ${isDestroyed ? 'mdi-close-octagon' : 'mdi-check-circle'}"></i>
+                      <span>${isDestroyed ? 'DESTRUÍDO' : 'OPERACIONAL'}</span>
+                    </span>
+                  `
+                  }
+                </div>
               </div>
               <div class="system-desc">${s.description}</div>
+              ${
+                isDestroyed
+                  ? '<div class="destroyed-notice"><i class="mdi mdi-alert-octagon"></i> SISTEMA AVARIADO // INOPERANTE</div>'
+                  : ''
+              }
               ${
                 s.actions && s.actions.length > 0
                   ? `
@@ -633,8 +923,8 @@ export class MechSheetView {
                   : ''
               }
             </div>
-          `
-                  )
+          `;
+                  })
                   .join('')
               : `
             <div class="card sheet-system-card">
@@ -822,19 +1112,163 @@ export class MechSheetView {
     };
   }
 
+  private updateCombat(mutator: (state: IMechCombatState) => void) {
+    if (!this.canEdit) {
+      ToastService.warning('Apenas o proprietário da ficha ou um Administrador possui permissão para modificar o estado de combate.');
+      return;
+    }
+    if (!this.pilotData || !this.combatState) return;
+    mutator(this.combatState);
+    saveCombatState(this.pilotData._id, this.combatState);
+    this.renderContent();
+    this.bindEvents();
+  }
+
   private bindEvents() {
+    // Resetar listeners anteriores para evitar vazamentos e disparos múltiplos
+    this.abortController.abort();
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     const copyBtn = this.container.querySelector('#btn-copy-sharecode');
     copyBtn?.addEventListener('click', async () => {
       if (this.pilotData?.share_code) {
         await navigator.clipboard.writeText(this.pilotData.share_code);
         ToastService.success(`Código de Compartilhamento "${this.pilotData.share_code}" copiado!`);
       }
-    });
+    }, { signal });
 
     const printBtn = this.container.querySelector('#btn-print-sheet');
     printBtn?.addEventListener('click', () => {
       window.print();
+    }, { signal });
+
+    const aarBtn = this.container.querySelector('#btn-pilot-aar');
+    aarBtn?.addEventListener('click', async () => {
+      if (this.pilotData) {
+        const text = buildMissionReportText(this.pilotData);
+        await navigator.clipboard.writeText(text);
+        ToastService.success('Relatório de Missão do Mecha copiado para a área de transferência!');
+      }
+    }, { signal });
+
+    // Se não tiver permissão para editar (não for dono nem admin), não ativa eventos de combate
+    if (!this.canEdit) {
+      // Eventos de Homologação do Administrador ainda podem rodar se for admin
+      this.bindAdminEvents(signal);
+      return;
+    }
+
+    // Botão de Reparo Completo (Descanso Completo)
+    const fullRepairBtn = this.container.querySelector('#btn-full-repair');
+    fullRepairBtn?.addEventListener('click', () => {
+      if (!this.pilotData) return;
+      const confirmReset = window.confirm(
+        'Executar REPARO COMPLETO no Chassi?\n\nIsso restaurará todos os Pontos de Vida (PV), Estrutura, Estresse, Reparos de Campo, Carga de Núcleo e reparará todas as Armas e Sistemas avariados.'
+      );
+      if (confirmReset) {
+        this.combatState = resetCombatState(this.pilotData._id, {
+          maxHp: this.maxHp,
+          maxRepairs: this.maxRepairs
+        });
+        ToastService.success('Reparo Completo executado: Chassi 100% operacional!');
+        this.renderContent();
+        this.bindEvents();
+      }
+    }, { signal });
+
+    // Controles de Incremento / Decremento de Vitais (PV, Calor, Reparos)
+    this.container.querySelectorAll<HTMLButtonElement>('.btn-vital-step').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const vital = btn.dataset.vital;
+        const delta = Number(btn.dataset.delta) || 0;
+        this.updateCombat((st) => {
+          if (vital === 'hp') {
+            st.currentHp = Math.max(0, Math.min(this.maxHp, st.currentHp + delta));
+          } else if (vital === 'heat') {
+            const prevHeat = st.currentHeat;
+            st.currentHeat = Math.max(0, st.currentHeat + delta);
+            if (st.currentHeat >= this.totalHeat && prevHeat < this.totalHeat) {
+              ToastService.warning(`Alerta: Reator em Superaquecimento (${st.currentHeat}/${this.totalHeat} Calor)!`);
+            }
+          } else if (vital === 'repairs') {
+            st.currentRepairs = Math.max(0, Math.min(this.maxRepairs, st.currentRepairs + delta));
+          }
+        });
+      }, { signal });
     });
+
+    // Pips Interativos (Estrutura, Estresse, Reparos)
+    this.container.querySelectorAll<HTMLButtonElement>('button.pip.pip-interactive').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const vital = btn.dataset.vitalPip;
+        const val = Number(btn.dataset.val);
+        this.updateCombat((st) => {
+          if (vital === 'structure') {
+            st.currentStructure = st.currentStructure === val ? val - 1 : val;
+          } else if (vital === 'stress') {
+            st.currentStress = st.currentStress === val ? val - 1 : val;
+          } else if (vital === 'repairs') {
+            st.currentRepairs = st.currentRepairs === val ? val - 1 : val;
+          }
+        });
+      }, { signal });
+    });
+
+    // Alternar Poder de Núcleo
+    const corePowerBtn = this.container.querySelector<HTMLButtonElement>('#btn-toggle-core-power');
+    corePowerBtn?.addEventListener('click', () => {
+      this.updateCombat((st) => {
+        st.corePowerUsed = !st.corePowerUsed;
+      });
+    }, { signal });
+
+    // Alternar Estado de Armas (Operacional / Descarregada / Destruída)
+    this.container.querySelectorAll<HTMLButtonElement>('.weapon-status-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.weaponIdx);
+        const w = this.weaponsListCached[idx];
+        const hasLoading = w?.tags?.some(
+          (t) => t.name.toLowerCase().includes('recarga') || t.name.toLowerCase().includes('loading')
+        );
+
+        this.updateCombat((st) => {
+          const curr = st.weaponsState[idx] || 'OPERATIONAL';
+          let next: WeaponCombatState;
+          if (hasLoading) {
+            // OPERATIONAL -> UNLOADED -> DESTROYED -> OPERATIONAL
+            next = curr === 'OPERATIONAL' ? 'UNLOADED' : curr === 'UNLOADED' ? 'DESTROYED' : 'OPERATIONAL';
+          } else {
+            // OPERATIONAL -> DESTROYED -> OPERATIONAL
+            next = curr === 'OPERATIONAL' ? 'DESTROYED' : 'OPERATIONAL';
+          }
+          st.weaponsState[idx] = next;
+        });
+      }, { signal });
+    });
+
+    // Alternar Estado de Sistemas (Operacional / Destruído)
+    this.container.querySelectorAll<HTMLButtonElement>('.system-status-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.systemIdx);
+        const sys = this.systemsListCached[idx];
+        const sysName = sys?.name || `Sistema #${idx + 1}`;
+
+        this.updateCombat((st) => {
+          const curr = st.systemsState[idx] || 'OPERATIONAL';
+          const next: SystemCombatState = curr === 'OPERATIONAL' ? 'DESTROYED' : 'OPERATIONAL';
+          st.systemsState[idx] = next;
+          if (next === 'DESTROYED') {
+            ToastService.info(`${sysName} avariado em combate.`);
+          }
+        });
+      }, { signal });
+    });
+
+    this.bindAdminEvents(signal);
+  }
+
+  private bindAdminEvents(signal: AbortSignal) {
 
     // Eventos de Homologação do Administrador
     const approveBtn = this.container.querySelector('#btn-admin-approve');
@@ -847,7 +1281,7 @@ export class MechSheetView {
       } catch (err: any) {
         ToastService.error(err.message || 'Falha ao aprovar ficha.');
       }
-    });
+    }, { signal });
 
     const rejectBtn = this.container.querySelector('#btn-admin-reject');
     rejectBtn?.addEventListener('click', async () => {
@@ -862,7 +1296,7 @@ export class MechSheetView {
           ToastService.error(err.message || 'Falha ao rejeitar ficha.');
         }
       }
-    });
+    }, { signal });
   }
 
   private renderError(message: string) {

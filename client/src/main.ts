@@ -6,6 +6,7 @@ import { PilotSheetView } from './views/pilot-sheet.view.js';
 import { MechSheetView } from './views/mech-sheet.view.js';
 import { MissionsView } from './views/missions.view.js';
 import { ReviewView } from './views/review.view.js';
+import { ReportsView } from './views/reports.view.js';
 import { TerminalBackground } from './components/terminal-background.js';
 import { getCompconIcon } from './components/compcon-icons.js';
 
@@ -38,6 +39,7 @@ class OmninetApp {
     await authService.checkAuth();
 
     // 5. Escuta mudanças na autenticação e na rota (hash)
+    // authService.subscribe já dispara o listener imediatamente na inicialização
     authService.subscribe(() => {
       this.route();
     });
@@ -45,9 +47,6 @@ class OmninetApp {
     window.addEventListener('hashchange', () => {
       this.route();
     });
-
-    // 6. Renderiza a visualização inicial
-    this.route();
   }
 
   private route() {
@@ -78,6 +77,7 @@ class OmninetApp {
     else if (hash.startsWith('#/mech')) targetView = 'mech';
     else if (hash.startsWith('#/missions')) targetView = 'missions';
     else if (hash.startsWith('#/review')) targetView = 'review';
+    else if (hash.startsWith('#/reports')) targetView = 'reports';
 
     if (!authChanged && this.currentView === targetView && targetView !== 'pilot' && targetView !== 'mech') {
       return;
@@ -120,6 +120,13 @@ class OmninetApp {
     if (targetView === 'review') {
       const reviewView = new ReviewView(this.contentEl);
       reviewView.render();
+      return;
+    }
+
+    // Rota de Relatórios de Missão & Recesso
+    if (targetView === 'reports') {
+      const reportsView = new ReportsView(this.contentEl);
+      reportsView.render();
       return;
     }
 

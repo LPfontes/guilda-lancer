@@ -120,6 +120,24 @@ class MissionService {
   }
 
   /**
+   * Atualizar dados da missão (Apenas GM dono ou ADMIN)
+   */
+  async updateMission(id: string, missionData: Partial<IMission>): Promise<IMission> {
+    const res = await fetch(`${this.baseUrl}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(missionData)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Falha ao atualizar dados da missão.');
+    }
+
+    return data.mission;
+  }
+
+  /**
    * Escalar esquadrão da missão (Apenas GM dono ou ADMIN)
    */
   async selectPilots(
