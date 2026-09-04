@@ -59,6 +59,38 @@ export async function authenticateJWT(req: Request, res: Response, next: NextFun
   }
 }
 
+/**
+ * Middleware opcional de autenticação: se o token existir e for válido, define req.user.
+ * Se não houver token ou for inválido, prossegue com req.user = undefined sem disparar erro HTTP 401.
+ */
+export async function optionalAuthenticateJWT(req: Request, res: Response, next: NextFunction) {
+  const cookieToken = req.cookies?.omninet_token;
+  const authHeader = req.headers.authorization;
+
+  let token: string | undefined;
+
+  if (cookieToken) {
+    token = cookieToken;
+  } else if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  if (!token) {
+    req.user = undefined;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, ENV.JWT_SECRET) as AuthenticatedUserPayload;
+    const user = await UserModel.findById(decoded.userId);
+    req.user = user || undefined;
+  } catch {
+    req.user = undefined;
+  }
+
+  next();
+}
+
 export function requireRole(allowedRoles: UserRole[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {

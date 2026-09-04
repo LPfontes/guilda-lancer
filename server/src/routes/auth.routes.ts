@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller.js';
-import { authenticateJWT } from '../middlewares/auth.middleware.js';
+import { optionalAuthenticateJWT } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -10,8 +10,8 @@ router.get('/discord/login', AuthController.getDiscordAuthUrl);
 // Rota de retorno (Callback do Discord OAuth2)
 router.get('/discord/callback', AuthController.handleDiscordCallback);
 
-// Consultar operador autenticado atual
-router.get('/me', authenticateJWT, AuthController.getMe);
+// Consultar operador autenticado atual (suporta sessão ativa ou anônima com 200 OK)
+router.get('/me', optionalAuthenticateJWT, AuthController.getMe);
 
 // Encerrar sessão
 router.post('/logout', AuthController.logout);

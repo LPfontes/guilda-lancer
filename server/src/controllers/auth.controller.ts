@@ -195,18 +195,22 @@ export const AuthController = {
       // Define cookie seguro HttpOnly
       res.cookie('omninet_token', token, getAuthCookieOptions());
 
-      // Redireciona para o frontend 
-      return res.redirect(getClientCallbackUrl('/auth/callback'));
+      // Redireciona para o frontend com o token na URL (garante login em ambientes cross-domain)
+      return res.redirect(getClientCallbackUrl(`/auth/callback?token=${token}`));
     } catch (err: any) {
       console.error('[!] Falha na troca de credenciais do Discord:', err.response?.data || err.message);
       return res.redirect(getClientCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
     }
   },
 
-  // 3. Retorna os dados do usuário autenticado atual
+  // 3. Retorna os dados do usuário autenticado atual (ou null se visitante não autenticado)
   async getMe(req: Request, res: Response) {
     if (!req.user) {
-      return res.status(401).json({ error: 'UNAUTHORIZED' });
+      return res.json({
+        user: null,
+        pilots: [],
+        pilot: null
+      });
     }
 
     const pilots = await PilotModel.find({ user_id: req.user._id }).sort({ is_active: -1, updatedAt: -1 });
