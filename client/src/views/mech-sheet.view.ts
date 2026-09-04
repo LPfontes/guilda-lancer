@@ -78,7 +78,7 @@ export class MechSheetView {
     this.container.innerHTML = `
       <div class="sheet-loading-container">
         <div class="sheet-loading-spinner"></div>
-        <div class="sheet-loading-text">LENDO TELEMETRIA DO BANCO DE DADOS...</div>
+        <div class="sheet-loading-text">${localization.t('common.loading', 'LENDO TELEMETRIA DO BANCO DE DADOS...')}</div>
       </div>
     `;
 
@@ -128,7 +128,7 @@ export class MechSheetView {
         <div class="sheet-nav-bar">
           <a href="#/hangar" class="sheet-back-link">
             <i class="mdi mdi-arrow-left"></i>
-            <span>RETORNAR AO HANGAR</span>
+            <span>${localization.t('sheet.return_to_hangar', 'RETORNAR AO HANGAR')}</span>
           </a>
         </div>
 
@@ -138,16 +138,15 @@ export class MechSheetView {
               ${getCompconIcon('mech', 'compcon-icon-empty')}
             </div>
             <div class="sheet-empty-tag">
-              <i class="mdi mdi-alert-circle-outline"></i> NENHUM CHASSI NO BANCO DE DADOS
+              <i class="mdi mdi-alert-circle-outline"></i> ${localization.t('sheet.no_mech_title', 'NENHUM CHASSI NO BANCO DE DADOS')}
             </div>
-            <h2 class="sheet-empty-title">NENHUM MECHA ENCONTRADO</h2>
+            <h2 class="sheet-empty-title">${localization.t('sheet.no_mech_title', 'NENHUM MECHA ENCONTRADO')}</h2>
             <p class="sheet-empty-desc">
-              Não há fichas registradas para seu operador no banco de dados.
-              Sincronize sua ficha do COMP/CON no Hangar para carregar o chassi.
+              ${localization.t('sheet.no_mech_desc', 'Não há fichas registradas para seu operador no banco de dados. Sincronize sua ficha do COMP/CON no Hangar para carregar o chassi.')}
             </p>
             <a href="#/hangar" class="btn btn-primary">
               <i class="mdi mdi-download"></i>
-              <span>IMPORTAR NO HANGAR</span>
+              <span>${localization.t('hangar.import_btn', 'IMPORTAR NO HANGAR')}</span>
             </a>
           </div>
         </div>
@@ -274,10 +273,10 @@ export class MechSheetView {
           <div class="sheet-breadcrumbs">
             <a href="#/hangar" class="sheet-back-link">
               <i class="mdi mdi-arrow-left"></i>
-              <span>HANGAR</span>
+              <span>${localization.t('nav.hangar', 'HANGAR')}</span>
             </a>
             <span class="sheet-crumb-separator">//</span>
-            <span class="sheet-crumb-current">FICHA DO MECHA: ${mechName}</span>
+            <span class="sheet-crumb-current">${localization.t('sheet.mech_sheet', 'FICHA DO MECHA')}: ${mechName}</span>
           </div>
 
           <div class="sheet-top-actions">
@@ -286,19 +285,19 @@ export class MechSheetView {
                 ? `
               <button id="btn-full-repair" class="btn-full-repair sheet-action-btn" title="Descanso Completo: Restaura PV, Estrutura, Estresse, Reparos e repara Armas/Sistemas">
                 <i class="mdi mdi-wrench-clock"></i>
-                <span>REPARO COMPLETO</span>
+                <span>${localization.t('sheet.full_repair', 'REPARO COMPLETO')}</span>
               </button>
             `
                 : `
               <span class="sheet-readonly-badge" title="Ficha aberta em modo de leitura (apenas o operador proprietário e administradores podem alterar)">
                 <i class="mdi mdi-eye-outline"></i>
-                <span>MODO LEITURA // TELEMETRIA</span>
+                <span>${localization.t('sheet.readonly_mode', 'MODO LEITURA // TELEMETRIA')}</span>
               </span>
             `
             }
             <a href="#/pilot?id=${p._id}" class="btn btn-secondary sheet-action-btn" title="Ver Dossiê do Piloto">
               ${getCompconIcon('pilot', 'compcon-icon')}
-              <span>FICHA DO PILOTO</span>
+              <span>${localization.t('sheet.pilot_sheet', 'FICHA DO PILOTO')}</span>
             </a>
             ${
               p.share_code
@@ -310,13 +309,10 @@ export class MechSheetView {
             `
                 : ''
             }
-            <button id="btn-print-sheet" class="btn btn-secondary sheet-action-btn" title="Imprimir Ficha">
-              <i class="mdi mdi-printer"></i>
-              <span>IMPRIMIR</span>
-            </button>
+            
             <button id="btn-pilot-aar" class="btn btn-secondary sheet-action-btn" title="Copiar Modelo Oficial de Relatório de Missão">
               <i class="mdi mdi-clipboard-text-outline"></i>
-              <span>RELATÓRIO DE MISSÃO</span>
+              <span>${localization.t('sheet.mission_report', 'RELATÓRIO DE MISSÃO')}</span>
             </button>
           </div>
         </div>
@@ -337,10 +333,10 @@ export class MechSheetView {
                 }"></i>
                 <span>STATUS: ${
                   p.status === 'APPROVED'
-                    ? 'HOMOLOGADA // APROVADA'
+                    ? localization.t('sheet.status_approved', 'HOMOLOGADA // APROVADA')
                     : p.status === 'REJECTED'
-                    ? 'NÃO-CONFORME // REJEITADA'
-                    : 'AGUARDANDO HOMOLOGAÇÃO'
+                    ? localization.t('sheet.status_rejected', 'NÃO-CONFORME // REJEITADA')
+                    : localization.t('sheet.status_pending', 'AGUARDANDO HOMOLOGAÇÃO')
                 }</span>
               </span>
               ${
@@ -356,7 +352,7 @@ export class MechSheetView {
                   ? `
                 <button type="button" id="btn-admin-approve" class="btn-approve-sheet" title="Aprovar e homologar ficha">
                   <i class="mdi mdi-check"></i>
-                  <span>APROVAR FICHA</span>
+                  <span>${localization.t('sheet.approve_sheet', 'APROVAR FICHA')}</span>
                 </button>
               `
                   : ''
@@ -366,14 +362,14 @@ export class MechSheetView {
                   ? `
                 <button type="button" id="btn-admin-reject" class="btn-reject-sheet" title="Apontar pendência e rejeitar ficha">
                   <i class="mdi mdi-close"></i>
-                  <span>REJEITAR</span>
+                  <span>${localization.t('sheet.reject_sheet', 'REJEITAR')}</span>
                 </button>
               `
                   : ''
               }
               <a href="#/review" class="btn btn-secondary" title="Retornar à tela de avaliações">
                 <i class="mdi mdi-format-list-checks"></i>
-                <span>PAINEL DE AVALIAÇÃO</span>
+                <span>${localization.t('sheet.audit_panel', 'PAINEL DE AVALIAÇÃO')}</span>
               </a>
             </div>
           </div>
@@ -404,31 +400,31 @@ export class MechSheetView {
               <h1 class="sheet-mech-title">${mechName}</h1>
 
               <div class="sheet-pilot-dossier-line">
-                <span class="sheet-dossier-label">PILOTO RESPONSÁVEL:</span>
+                <span class="sheet-dossier-label">${localization.t('sheet.pilot_operator', 'PILOTO RESPONSÁVEL')}:</span>
                 <a href="#/pilot?id=${p._id}" class="sheet-operator-link">
                   <strong class="sheet-dossier-callsign">${p.callsign}</strong>
                 </a>
                 <span class="sheet-ll-badge">LL ${p.license_level}</span>
-                <span class="sheet-grit-badge">BRIO +${p.grit}</span>
-                ${p.is_active ? '<span class="sheet-active-tag">[ CHASSI ATIVO ]</span>' : ''}
+                <span class="sheet-grit-badge">${localization.t('sheet.grit', 'BRIO').toUpperCase()} +${p.grit}</span>
+                ${p.is_active ? `<span class="sheet-active-tag">[ ${localization.t('hangar.active_badge', 'CHASSI ATIVO')} ]</span>` : ''}
               </div>
 
               <!-- Atributos H.A.S.E. / C.A.S.E. Aplicados ao Chassi -->
               <div class="sheet-hase-bar">
                 <div class="sheet-hase-item hase-hull">
-                  <span class="hase-label">CASCO</span>
+                  <span class="hase-label">${localization.t('sheet.hull', 'CASCO').toUpperCase()}</span>
                   <span class="hase-val">${hullBonus}</span>
                 </div>
                 <div class="sheet-hase-item hase-agility">
-                  <span class="hase-label">AGILIDADE</span>
+                  <span class="hase-label">${localization.t('sheet.agility', 'AGILIDADE').toUpperCase()}</span>
                   <span class="hase-val">${agiBonus}</span>
                 </div>
                 <div class="sheet-hase-item hase-systems">
-                  <span class="hase-label">SISTEMAS</span>
+                  <span class="hase-label">${localization.t('sheet.systems_stat', 'SISTEMAS').toUpperCase()}</span>
                   <span class="hase-val">${sysBonus}</span>
                 </div>
                 <div class="sheet-hase-item hase-engineering">
-                  <span class="hase-label">ENGENHARIA</span>
+                  <span class="hase-label">${localization.t('sheet.engineering', 'ENGENHARIA').toUpperCase()}</span>
                   <span class="hase-val">${engBonus}</span>
                 </div>
               </div>
@@ -441,7 +437,7 @@ export class MechSheetView {
           <!-- Card de PV & Estrutura -->
           <div class="card sheet-vital-card">
             <div class="vital-card-header">
-              <span class="vital-title">PONTOS DE VIDA (PV)</span>
+              <span class="vital-title">${localization.t('sheet.hp', 'PONTOS DE VIDA (PV)')}</span>
               <span class="vital-counter">${cs.currentHp} / ${totalHp} PV</span>
             </div>
             <div class="vital-progress-bar">
@@ -465,7 +461,7 @@ export class MechSheetView {
                 : ''
             }
             <div class="vital-pips-container">
-              <span class="vital-pips-label">ESTRUTURA:</span>
+              <span class="vital-pips-label">${localization.t('sheet.structure', 'ESTRUTURA')}:</span>
               <div class="pips-row">
                 ${[1, 2, 3, 4]
                   .map((idx) =>
@@ -481,7 +477,7 @@ export class MechSheetView {
           <!-- Card de Calor & Estresse -->
           <div class="card sheet-vital-card">
             <div class="vital-card-header">
-              <span class="vital-title">CALOR / REATOR</span>
+              <span class="vital-title">${localization.t('sheet.heat', 'CALOR / REATOR')}</span>
               <div class="vital-counter-box">
                 ${cs.currentHeat >= totalHeat ? '<span class="badge-overheat"><i class="mdi mdi-fire-alert"></i></span>' : ''}
                 <span class="vital-counter">${cs.currentHeat} / ${totalHeat} CALOR</span>
@@ -508,7 +504,7 @@ export class MechSheetView {
                 : ''
             }
             <div class="vital-pips-container">
-              <span class="vital-pips-label">ESTRESSE DE REATOR:</span>
+              <span class="vital-pips-label">${localization.t('sheet.stress', 'ESTRESSE DE REATOR')}:</span>
               <div class="pips-row">
                 ${[1, 2, 3, 4]
                   .map((idx) =>
@@ -524,7 +520,7 @@ export class MechSheetView {
           <!-- Card de Reparos & Poder de Núcleo -->
           <div class="card sheet-vital-card sheet-vital-compact">
             <div class="vital-card-header">
-              <span class="vital-title">LOGÍSTICA & NÚCLEO</span>
+              <span class="vital-title">${localization.t('sheet.logistics_core', 'LOGÍSTICA & NÚCLEO')}</span>
               <span class="vital-counter">${cs.currentRepairs} / ${totalRepairs} REPAROS</span>
             </div>
             ${
@@ -539,7 +535,7 @@ export class MechSheetView {
                 : ''
             }
             <div class="vital-pips-container">
-              <span class="vital-pips-label">REPAROS DE CAMPO:</span>
+              <span class="vital-pips-label">${localization.t('sheet.repairs', 'REPAROS DE CAMPO')}:</span>
               <div class="pips-row">
                 ${Array.from({ length: Math.min(8, totalRepairs) })
                   .map((_, i) => {
@@ -552,19 +548,19 @@ export class MechSheetView {
               </div>
             </div>
             <div class="vital-pips-container">
-              <span class="vital-pips-label">PODER DE NÚCLEO:</span>
+              <span class="vital-pips-label">${localization.t('sheet.core_power', 'PODER DE NÚCLEO')}:</span>
               ${
                 this.canEdit
                   ? `
                 <button type="button" id="btn-toggle-core-power" class="core-power-pip ${cs.corePowerUsed ? 'depleted' : 'active'}" title="Clique para alternar disponibilidade do Poder de Núcleo">
                   <i class="mdi ${cs.corePowerUsed ? 'mdi-checkbox-blank-circle-outline' : 'mdi-checkbox-marked-circle'}"></i>
-                  <span>${cs.corePowerUsed ? 'UTILIZADO [0/1]' : 'DISPONÍVEL [1/1]'}</span>
+                  <span>${cs.corePowerUsed ? localization.t('sheet.core_power_used', 'UTILIZADO [0/1]') : localization.t('sheet.core_power_ready', 'DISPONÍVEL [1/1]')}</span>
                 </button>
               `
                   : `
                 <div class="core-power-pip core-power-static ${cs.corePowerUsed ? 'depleted' : 'active'}">
                   <i class="mdi ${cs.corePowerUsed ? 'mdi-checkbox-blank-circle-outline' : 'mdi-checkbox-marked-circle'}"></i>
-                  <span>${cs.corePowerUsed ? 'UTILIZADO [0/1]' : 'DISPONÍVEL [1/1]'}</span>
+                  <span>${cs.corePowerUsed ? localization.t('sheet.core_power_used', 'UTILIZADO [0/1]') : localization.t('sheet.core_power_ready', 'DISPONÍVEL [1/1]')}</span>
                 </div>
               `
               }
@@ -575,35 +571,35 @@ export class MechSheetView {
         <!-- Módulo 2: Matriz Estatística do Chassi (COMP/CON oficial) -->
         <div class="sheet-matrix-grid">
           <div class="matrix-box">
-            <span class="matrix-label">TAMANHO</span>
+            <span class="matrix-label">${localization.t('sheet.size', 'TAMANHO')}</span>
             <span class="matrix-val">${size}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">ARMADURA</span>
+            <span class="matrix-label">${localization.t('sheet.armor', 'ARMADURA')}</span>
             <span class="matrix-val">${armor}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">VELOCIDADE</span>
+            <span class="matrix-label">${localization.t('sheet.speed', 'VELOCIDADE')}</span>
             <span class="matrix-val">${totalSpeed}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">EVASÃO</span>
+            <span class="matrix-label">${localization.t('sheet.evasion', 'EVASÃO')}</span>
             <span class="matrix-val">${totalEvasion}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">DEFESA-E</span>
+            <span class="matrix-label">${localization.t('sheet.edefense', 'DEFESA-E')}</span>
             <span class="matrix-val">${totalEDefense}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">SENSORES</span>
+            <span class="matrix-label">${localization.t('sheet.sensors', 'SENSORES')}</span>
             <span class="matrix-val">${sensors}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">ATQ TEC</span>
+            <span class="matrix-label">${localization.t('sheet.tech_attack', 'ATQ TEC')}</span>
             <span class="matrix-val highlight-mint">${totalTechAttack}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">SALVAGUARDA</span>
+            <span class="matrix-label">${localization.t('sheet.save_target', 'SALVAGUARDA')}</span>
             <span class="matrix-val">${totalSaveTarget}</span>
           </div>
         </div>
@@ -613,7 +609,7 @@ export class MechSheetView {
           traits.length > 0
             ? `
           <div class="sheet-section-title">
-            <span>TRAÇOS DO CHASSI</span>
+            <span>${localization.t('sheet.traits', 'TRAÇOS DO CHASSI')}</span>
           </div>
           <div class="sheet-traits-grid">
             ${traits
@@ -639,11 +635,11 @@ export class MechSheetView {
             <div class="core-header">
               <div class="core-title-group">
                 <div>
-                  <div class="core-system-tag">// SISTEMA DE NÚCLEO DO CHASSI</div>
+                  <div class="core-system-tag">// ${localization.t('sheet.core_system', 'SISTEMA DE NÚCLEO DO CHASSI')}</div>
                   <h3 class="core-name">${coreSystem.name}</h3>
                 </div>
               </div>
-              <span class="core-activation-badge">1 CARGA DE NÚCLEO / MISSÃO</span>
+              <span class="core-activation-badge">${localization.t('sheet.core_charge_note', '1 CARGA DE NÚCLEO / MISSÃO')}</span>
             </div>
 
             <div class="core-content-body">
@@ -656,7 +652,7 @@ export class MechSheetView {
                 coreSystem.passiveName
                   ? `
                 <div class="core-trait-block">
-                  <strong class="core-trait-title">HABILIDADE PASSIVA: ${coreSystem.passiveName}</strong>
+                  <strong class="core-trait-title">${localization.t('sheet.passive_trait', 'HABILIDADE PASSIVA')}: ${coreSystem.passiveName}</strong>
                   <div class="core-trait-desc">${coreSystem.passiveEffect}</div>
                 </div>
               `
@@ -666,7 +662,7 @@ export class MechSheetView {
                 coreSystem.activeName
                   ? `
                 <div class="core-trait-block">
-                  <strong class="core-trait-title core-active-title"><span class="action-tag action-protocol">PROTOCOLO ATIVO:</span> ${coreSystem.activeName}</strong>
+                  <strong class="core-trait-title core-active-title"><span class="action-tag action-protocol">${localization.t('sheet.active_protocol', 'PROTOCOLO ATIVO')}:</span> ${coreSystem.activeName}</strong>
                   <div class="core-trait-desc">${coreSystem.activeEffect}</div>
                 </div>
               `
@@ -684,7 +680,7 @@ export class MechSheetView {
             ? `
           <div class="sheet-section-title">
             <i class="mdi mdi-star-shooting-outline"></i>
-            <span>BÔNUS DE NÚCLEO INSTALADOS</span>
+            <span>${localization.t('sheet.core_bonuses', 'BÔNUS DE NÚCLEO INSTALADOS')}</span>
             <span class="sheet-section-counter">[${coreBonuses.length}]</span>
           </div>
           <div class="sheet-traits-grid">
@@ -697,14 +693,14 @@ export class MechSheetView {
               <div class="card sheet-trait-card sheet-core-bonus-card">
                 <div class="core-bonus-card-header">
                   ${cb.source ? `<span class="sheet-corp-badge">${cb.source}</span>` : ''}
-                  <span class="core-bonus-type-tag">BÔNUS DE NÚCLEO</span>
+                  <span class="core-bonus-type-tag">${localization.t('sheet.core_bonuses', 'BÔNUS DE NÚCLEO')}</span>
                 </div>
                 <div class="sheet-trait-name">${name}</div>
                 ${
                   effect
                     ? `
                   <div class="core-bonus-effect-box">
-                    <div class="core-bonus-effect-label">EFEITO:</div>
+                    <div class="core-bonus-effect-label">${localization.t('sheet.effect', 'EFEITO')}:</div>
                     <div class="sheet-trait-desc core-bonus-effect-text">${effect}</div>
                   </div>
                 `
@@ -727,7 +723,7 @@ export class MechSheetView {
         <!-- Módulo 5: Arsenal Mobilizado (Weapon Mounts) -->
         <div class="sheet-section-title">
           ${getCompconIcon('weapon', 'compcon-icon')}
-          <span>ARSENAL MOBILIZADO // ENCAIXES DE ARMAS</span>
+          <span>${localization.t('sheet.weapons', 'ARSENAL MOBILIZADO // ENCAIXES DE ARMAS')}</span>
         </div>
 
         <div class="sheet-weapons-grid">
@@ -752,7 +748,7 @@ export class MechSheetView {
                 <span class="mount-tag">${w.mountType}</span>
                 ${
                   w.isEmpty
-                    ? '<span class="mount-status-empty">ENCAIXE LIVRE</span>'
+                    ? `<span class="mount-status-empty">${localization.t('sheet.free_mount', 'ENCAIXE LIVRE')}</span>`
                     : this.canEdit
                     ? `
                   <button type="button" class="weapon-status-btn ${
@@ -771,10 +767,10 @@ export class MechSheetView {
                     }"></i>
                     <span>${
                       wState === 'DESTROYED'
-                        ? 'DESTRUÍDA'
+                        ? localization.t('sheet.destroyed', 'DESTRUÍDA')
                         : wState === 'UNLOADED'
-                        ? 'DESCARREGADA'
-                        : 'OPERACIONAL'
+                        ? localization.t('sheet.unloaded', 'DESCARREGADA')
+                        : localization.t('sheet.operational', 'OPERACIONAL')
                     }</span>
                   </button>
                 `
@@ -795,10 +791,10 @@ export class MechSheetView {
                     }"></i>
                     <span>${
                       wState === 'DESTROYED'
-                        ? 'DESTRUÍDA'
+                        ? localization.t('sheet.destroyed', 'DESTRUÍDA')
                         : wState === 'UNLOADED'
-                        ? 'DESCARREGADA'
-                        : 'OPERACIONAL'
+                        ? localization.t('sheet.unloaded', 'DESCARREGADA')
+                        : localization.t('sheet.operational', 'OPERACIONAL')
                     }</span>
                   </span>
                 `
@@ -812,9 +808,9 @@ export class MechSheetView {
                 !w.isEmpty
                   ? `
                 <div class="mount-weapon-stats">
-                  ${w.range ? `<span class="weapon-stat">ALCANCE: <strong>${w.range}</strong></span>` : ''}
-                  ${w.damage ? `<span class="weapon-stat">DANO: <span class="dmg-pill ${w.damageType.toLowerCase().includes('ener') ? 'dmg-energy' : 'dmg-kinetic'}">${w.damage}</span></span>` : ''}
-                  ${w.weaponType ? `<span class="weapon-stat">TIPO: <strong>${w.weaponType}</strong></span>` : ''}
+                  ${w.range ? `<span class="weapon-stat">${localization.t('sheet.range', 'ALCANCE')}: <strong>${w.range}</strong></span>` : ''}
+                  ${w.damage ? `<span class="weapon-stat">${localization.t('sheet.damage', 'DANO')}: <span class="dmg-pill ${w.damageType.toLowerCase().includes('ener') ? 'dmg-energy' : 'dmg-kinetic'}">${w.damage}</span></span>` : ''}
+                  ${w.weaponType ? `<span class="weapon-stat">${localization.t('sheet.type', 'TIPO')}: <strong>${w.weaponType}</strong></span>` : ''}
                 </div>
                 ${
                   w.tags.length > 0
@@ -843,7 +839,7 @@ export class MechSheetView {
                 }
                 ${w.description ? `<div class="weapon-detail-desc">${w.description}</div>` : ''}
               `
-                  : '<p class="system-desc">Nenhuma arma instalada neste encaixe.</p>'
+                  : `<p class="system-desc">${localization.t('sheet.empty_weapons', 'Nenhuma arma instalada neste encaixe.')}</p>`
               }
             </div>
           `;
@@ -851,7 +847,7 @@ export class MechSheetView {
                   .join('')
               : `
             <div class="card sheet-mount-card">
-              <p class="system-desc">Nenhum encaixe ou arma configurada para este chassi no banco de dados.</p>
+              <p class="system-desc">${localization.t('sheet.empty_weapons', 'Nenhum encaixe ou arma configurada para este chassi no banco de dados.')}</p>
             </div>
           `
           }
@@ -860,7 +856,7 @@ export class MechSheetView {
         <!-- Módulo 6: Sistemas Instalados -->
         <div class="sheet-section-title">
           ${getCompconIcon('system', 'compcon-icon')}
-          <span>SISTEMAS EMBARCADOS // PONTOS DE SISTEMAS: ${totalSpUsed} / ${maxSp} SP</span>
+          <span>${localization.t('sheet.systems', 'SISTEMAS EMBARCADOS')} // ${localization.t('sheet.sp_points', 'PONTOS DE SISTEMAS')}: ${totalSpUsed} / ${maxSp} SP</span>
         </div>
 
         <div class="sheet-systems-grid">
@@ -884,7 +880,7 @@ export class MechSheetView {
                       isDestroyed ? 'system-status-destroyed' : 'system-status-operational'
                     }" data-system-idx="${idx}" title="Clique para alternar estado (Operacional / Destruído)">
                       <i class="mdi ${isDestroyed ? 'mdi-close-octagon' : 'mdi-check-circle'}"></i>
-                      <span>${isDestroyed ? 'DESTRUÍDO' : 'OPERACIONAL'}</span>
+                      <span>${isDestroyed ? localization.t('sheet.destroyed_masc', 'DESTRUÍDO') : localization.t('sheet.operational', 'OPERACIONAL')}</span>
                     </button>
                   `
                       : `
@@ -892,7 +888,7 @@ export class MechSheetView {
                       isDestroyed ? 'system-status-destroyed' : 'system-status-operational'
                     }">
                       <i class="mdi ${isDestroyed ? 'mdi-close-octagon' : 'mdi-check-circle'}"></i>
-                      <span>${isDestroyed ? 'DESTRUÍDO' : 'OPERACIONAL'}</span>
+                      <span>${isDestroyed ? localization.t('sheet.destroyed_masc', 'DESTRUÍDO') : localization.t('sheet.operational', 'OPERACIONAL')}</span>
                     </span>
                   `
                   }
@@ -928,7 +924,7 @@ export class MechSheetView {
                   .join('')
               : `
             <div class="card sheet-system-card">
-              <p class="system-desc">Nenhum sistema opcional instalado neste chassi no banco de dados.</p>
+              <p class="system-desc">${localization.t('sheet.empty_systems', 'Nenhum sistema opcional instalado neste chassi no banco de dados.')}</p>
             </div>
           `
           }
@@ -1138,10 +1134,7 @@ export class MechSheetView {
       }
     }, { signal });
 
-    const printBtn = this.container.querySelector('#btn-print-sheet');
-    printBtn?.addEventListener('click', () => {
-      window.print();
-    }, { signal });
+    
 
     const aarBtn = this.container.querySelector('#btn-pilot-aar');
     aarBtn?.addEventListener('click', async () => {
@@ -1305,11 +1298,11 @@ export class MechSheetView {
         <div class="sheet-error-icon">
           <i class="mdi mdi-alert-octagon-outline"></i>
         </div>
-        <h2 class="sheet-error-title">FALHA AO RECUPERAR FICHA DO MECHA</h2>
+        <h2 class="sheet-error-title">${localization.t('common.error', 'FALHA AO RECUPERAR FICHA DO MECHA')}</h2>
         <p class="sheet-error-msg">${message}</p>
         <a href="#/hangar" class="btn btn-secondary">
           <i class="mdi mdi-arrow-left"></i>
-          <span>VOLTAR AO HANGAR</span>
+          <span>${localization.t('sheet.return_to_hangar', 'VOLTAR AO HANGAR')}</span>
         </a>
       </div>
     `;

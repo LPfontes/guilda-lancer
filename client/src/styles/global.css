@@ -3,6 +3,7 @@
    Arquitetura modular dividida por domínios e componentes.
    ======================================================= */
 
+@import './variables.css';
 @import './base.css';
 @import './header.css';
 @import './components.css';

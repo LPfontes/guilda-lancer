@@ -1,4 +1,5 @@
 import { authService } from './services/auth.service.js';
+import { localization } from './services/localization.service.js';
 import { HeaderComponent } from './components/header.js';
 import { AuthHeroView } from './views/auth-hero.view.js';
 import { HangarView } from './views/hangar.view.js';
@@ -41,6 +42,12 @@ class OmninetApp {
     // 5. Escuta mudanças na autenticação e na rota (hash)
     // authService.subscribe já dispara o listener imediatamente na inicialização
     authService.subscribe(() => {
+      this.route();
+    });
+
+    // 6. Escuta mudanças de idioma / tradução e recarrega a visualização ativa
+    localization.subscribe(() => {
+      this.currentView = null;
       this.route();
     });
 

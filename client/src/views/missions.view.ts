@@ -7,6 +7,7 @@ import { IMission } from '../types/mission.types.js';
 import { IPilot } from '../types/pilot.types.js';
 import { buildMissionReportText } from '../services/mission-report.helper.js';
 import { chatService } from '../services/chat.service.js';
+import { localization } from '../services/localization.service.js';
 import { IChatMessage } from '../types/chat.types.js';
 
 export class MissionsView {
@@ -96,6 +97,69 @@ export class MissionsView {
     `;
   }
 
+  public static getContractorIcon(contractor: string = ''): string {
+    const norm = (contractor || '').toLowerCase().trim();
+    if (norm.includes('horus')) {
+      return getCompconIcon('horus', 'contractor-icon');
+    }
+    if (norm.includes('harrison') || norm.includes('ha ') || norm === 'ha' || norm.includes('arsenal harrison')) {
+      return getCompconIcon('ha', 'contractor-icon');
+    }
+    if (norm.includes('ips-n') || norm.includes('ipsn') || norm.includes('eipn') || norm.includes('eip-en') || norm.includes('northstar')) {
+      return getCompconIcon('ipsn', 'contractor-icon');
+    }
+    if (norm.includes('ssc') || norm.includes('smith-shimano') || norm.includes('smith shimano')) {
+      return getCompconIcon('ssc', 'contractor-icon');
+    }
+    if (norm.includes('union') || norm.includes('gms')) {
+      return getCompconIcon('union', 'contractor-icon');
+    }
+    return getCompconIcon('generic', 'contractor-icon');
+  }
+
+  public static getContractorFactionClass(contractor: string = ''): string {
+    const norm = (contractor || '').toLowerCase().trim();
+    if (norm.includes('horus')) return 'contractor-horus';
+    if (norm.includes('harrison') || norm.includes('ha ') || norm === 'ha' || norm.includes('arsenal harrison')) return 'contractor-ha';
+    if (norm.includes('ips-n') || norm.includes('ipsn') || norm.includes('eipn') || norm.includes('eip-en') || norm.includes('northstar')) return 'contractor-ipsn';
+    if (norm.includes('ssc') || norm.includes('smith-shimano') || norm.includes('smith shimano')) return 'contractor-ssc';
+    if (norm.includes('union') || norm.includes('gms')) return 'contractor-union';
+    return 'contractor-generic';
+  }
+
+  private renderContractorTag(contractor: string = 'Union / GMS'): string {
+    const icon = MissionsView.getContractorIcon(contractor);
+    const factionClass = MissionsView.getContractorFactionClass(contractor);
+    return `
+      <span class="mission-contractor-tag ${factionClass}">
+        ${icon}
+        <span>${contractor || 'Union / GMS'}</span>
+      </span>
+    `;
+  }
+
+  private updateContractorPreview(val: string) {
+    const previewContainer = this.container.querySelector('#mission-contractor-preview-tag');
+    if (previewContainer) {
+      previewContainer.innerHTML = this.renderContractorTag(val.trim() || 'Union / GMS');
+    }
+    const presets = this.container.querySelectorAll('.contractor-preset-btn');
+    presets.forEach((btn) => {
+      const target = (btn.getAttribute('data-contractor') || '').toLowerCase();
+      const current = val.trim().toLowerCase();
+      if (
+        target === current ||
+        (target === 'union / gms' && (current === 'union' || current === 'gms')) ||
+        (target === 'harrison armory' && (current === 'ha' || current === 'arsenal harrison')) ||
+        (target === 'genérico' && (current === 'genérico' || current === 'generico' || current === 'outro' || current === 'personalizado'))
+      ) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
   private renderContent() {
     const user = authService.currentUser;
     const isGmOrAdmin = user?.role === 'GM' || user?.role === 'ADMIN';
@@ -109,8 +173,8 @@ export class MissionsView {
               ${getCompconIcon('missions', 'compcon-icon-lg')}
             </div>
             <div>
-              <div class="missions-tagline">// QUADRO DE MISSÕES TÁTICAS</div>
-              <h1 class="missions-main-title">OPERAÇÕES DA GUILDA</h1>
+              <div class="missions-tagline">// ${localization.t('missions.subtitle', 'Omninet Tactical Dispatch')}</div>
+              <h1 class="missions-main-title">${localization.t('missions.title', 'OPERAÇÕES DA GUILDA')}</h1>
             </div>
           </div>
 
@@ -120,14 +184,14 @@ export class MissionsView {
                 ? `
               <button id="btn-open-create-mission" class="btn btn-primary" type="button">
                 <i class="mdi mdi-plus-box"></i>
-                <span>NOVA OPERAÇÃO</span>
+                <span>${localization.t('missions.new_mission', 'NOVA OPERAÇÃO')}</span>
               </button>
             `
                 : ''
             }
             <a href="#/hangar" class="btn btn-secondary" title="Voltar ao Hangar">
               ${getCompconIcon('hangar', 'compcon-icon')}
-              <span>HANGAR</span>
+              <span>${localization.t('nav.hangar', 'HANGAR')}</span>
             </a>
           </div>
         </div>
@@ -136,16 +200,16 @@ export class MissionsView {
         <div class="missions-filter-toolbar">
           <div class="filter-status-group">
             <button type="button" class="filter-btn ${this.currentFilters.status === 'ALL' ? 'active' : ''}" data-status="ALL">
-              TODAS
+              ${localization.t('missions.filter_all', 'TODAS')}
             </button>
             <button type="button" class="filter-btn ${this.currentFilters.status === 'OPEN' ? 'active' : ''}" data-status="OPEN">
-              ABERTAS
+              ${localization.t('missions.filter_open', 'ABERTAS')}
             </button>
             <button type="button" class="filter-btn ${this.currentFilters.status === 'IN_PROGRESS' ? 'active' : ''}" data-status="IN_PROGRESS">
-              EM CURSO
+              ${localization.t('missions.filter_in_progress', 'EM ANDAMENTO')}
             </button>
             <button type="button" class="filter-btn ${this.currentFilters.status === 'COMPLETED' ? 'active' : ''}" data-status="COMPLETED">
-              CONCLUÍDAS
+              ${localization.t('missions.filter_completed', 'CONCLUÍDAS')}
             </button>
           </div>
 
@@ -229,12 +293,12 @@ export class MissionsView {
     const statusClass = `status-${(m.status || 'OPEN').toLowerCase().replace('_', '-')}`;
     const statusLabel =
       m.status === 'OPEN'
-        ? 'INSCRIÇÕES ABERTAS'
+        ? localization.t('missions.status_open', 'INSCRIÇÕES ABERTAS')
         : m.status === 'IN_PROGRESS'
-        ? 'EM ANDAMENTO'
+        ? localization.t('missions.status_in_progress', 'EM ANDAMENTO')
         : m.status === 'COMPLETED'
-        ? 'CONCLUÍDA'
-        : 'CANCELADA';
+        ? localization.t('missions.status_completed', 'CONCLUÍDA')
+        : localization.t('missions.status_cancelled', 'CANCELADA');
 
     const user = authService.currentUser;
     const isOwnerGm = !!(
@@ -258,10 +322,7 @@ export class MissionsView {
     return `
       <div class="mission-card ${statusClass}">
         <div class="mission-card-header">
-          <span class="mission-contractor-tag">
-            <i class="mdi mdi-office-building"></i>
-            <span>${m.contractor || 'Union / GMS'}</span>
-          </span>
+          ${this.renderContractorTag(m.contractor)}
           <span class="mission-status-pill status-${m.status.toLowerCase()}">
             ${statusLabel}
           </span>
@@ -272,21 +333,21 @@ export class MissionsView {
             <h3 class="mission-title">${m.title}</h3>
             <div class="mission-date-badge" title="Data e Horário da Operação">
               <i class="mdi mdi-calendar-clock"></i>
-              <span>${this.formatDate(m.start_date)} às ${m.start_time} BRT</span>
+              <span>${this.formatDate(m.start_date)} ${localization.t('missions.date_time_at', 'às')} ${m.start_time} BRT</span>
             </div>
           </div>
 
           <div class="mission-telemetry-strip">
             <div class="telemetry-cell">
-              <span class="telemetry-label">NÍVEL LICENÇA</span>
+              <span class="telemetry-label">${localization.t('missions.license_level', 'NÍVEL LICENÇA')}</span>
               <span class="telemetry-val highlight-ll">LL ${m.min_ll} - ${m.max_ll}</span>
             </div>
             <div class="telemetry-cell">
-              <span class="telemetry-label">DIFICULDADE</span>
+              <span class="telemetry-label">${localization.t('missions.difficulty', 'DIFICULDADE')}</span>
               <span class="telemetry-val highlight-diff">${this.renderDifficultyStars(m.difficulty)}</span>
             </div>
             <div class="telemetry-cell">
-              <span class="telemetry-label">ESQUADRÃO</span>
+              <span class="telemetry-label">${localization.t('missions.squad', 'ESQUADRÃO')}</span>
               <span class="telemetry-val">${acceptedCount} / ${m.slots_total} (${totalApplicants} cand.)</span>
             </div>
           </div>
@@ -324,10 +385,10 @@ export class MissionsView {
                 }"></i>
                 <span>${
                   pilotApp.status === 'SELECTED'
-                    ? 'ESQUADRÃO ESCALADO'
+                    ? localization.t('missions.escalated_squad', 'ESQUADRÃO ESCALADO')
                     : pilotApp.status === 'WAITLIST'
-                    ? 'LISTA DE ESPERA'
-                    : 'CANDIDATURA SUBMETIDA'
+                    ? localization.t('missions.standby_list', 'LISTA DE ESPERA')
+                    : localization.t('missions.application_submitted', 'CANDIDATURA SUBMETIDA')
                 }</span>
               </span>
             </div>
@@ -351,7 +412,7 @@ export class MissionsView {
                       data-mission-id="${m._id}"
                       title="Editar parâmetros desta operação">
                 <i class="mdi mdi-pencil-outline"></i>
-                <span>EDITAR</span>
+                <span>${localization.t('common.edit', 'EDITAR')}</span>
               </button>
             `
                 : m.status === 'OPEN'
@@ -362,7 +423,7 @@ export class MissionsView {
                         data-mission-id="${m._id}"
                         title="Cancelar sua inscrição nesta missão">
                   <i class="mdi mdi-close-circle-outline"></i>
-                  <span>CANCELAR</span>
+                  <span>${localization.t('common.cancel', 'CANCELAR')}</span>
                 </button>
               `
                   : `
@@ -371,7 +432,7 @@ export class MissionsView {
                         data-mission-id="${m._id}"
                         title="Candidatar seu piloto ativo nesta missão">
                   <i class="mdi mdi-target-account"></i>
-                  <span>CANDIDATAR</span>
+                  <span>${localization.t('missions.apply_btn', 'CANDIDATAR')}</span>
                 </button>
               `
                 : ''
@@ -388,7 +449,7 @@ export class MissionsView {
                     data-mission-id="${m._id}"
                     title="Ver briefing completo e esquadrão">
               <i class="mdi mdi-eye-outline"></i>
-              <span>DETALHES</span>
+              <span>${localization.t('missions.details_btn', 'DETALHES')}</span>
             </button>
           </div>
         </div>
@@ -420,9 +481,41 @@ export class MissionsView {
             </div>
 
             <div class="form-row">
-              <div class="form-group">
+              <div class="form-group contractor-form-group">
                 <label class="form-label" for="mission-contractor-input">CONTRATANTE / FACÇÃO *</label>
-                <input type="text" id="mission-contractor-input" class="form-input" required placeholder="Ex:IPS-N, HORUS..." value="Union / GMS" />
+                <div class="contractor-presets" id="mission-contractor-presets">
+                  <button type="button" class="contractor-preset-btn" data-contractor="HORUS" title="Selecionar HORUS">
+                    ${getCompconIcon('horus', 'contractor-preset-icon')}
+                    <span>HORUS</span>
+                  </button>
+                  <button type="button" class="contractor-preset-btn" data-contractor="Harrison Armory" title="Selecionar Harrison Armory">
+                    ${getCompconIcon('ha', 'contractor-preset-icon')}
+                    <span>HA</span>
+                  </button>
+                  <button type="button" class="contractor-preset-btn" data-contractor="IPS-N" title="Selecionar Interplanetary Shipping-Northstar">
+                    ${getCompconIcon('ipsn', 'contractor-preset-icon')}
+                    <span>IPS-N</span>
+                  </button>
+                  <button type="button" class="contractor-preset-btn" data-contractor="SSC" title="Selecionar Smith-Shimano Corpro">
+                    ${getCompconIcon('ssc', 'contractor-preset-icon')}
+                    <span>SSC</span>
+                  </button>
+                  <button type="button" class="contractor-preset-btn active" data-contractor="Union / GMS" title="Selecionar Union / GMS">
+                    ${getCompconIcon('union', 'contractor-preset-icon')}
+                    <span>Union</span>
+                  </button>
+                  <button type="button" class="contractor-preset-btn" data-contractor="Genérico" title="Selecionar Contratante Genérico / Outro">
+                    ${getCompconIcon('generic', 'contractor-preset-icon')}
+                    <span>Genérico</span>
+                  </button>
+                </div>
+                <input type="text" id="mission-contractor-input" class="form-input" required placeholder="Ex: HORUS, Harrison Armory, IPS-N, Union..." value="Union / GMS" />
+                <div class="contractor-live-preview">
+                  <span class="preview-label">PRÉVIA:</span>
+                  <span id="mission-contractor-preview-tag">
+                    ${this.renderContractorTag('Union / GMS')}
+                  </span>
+                </div>
               </div>
 
               <div class="form-group">
@@ -671,6 +764,24 @@ export class MissionsView {
       await this.handleCreateMission(createForm);
     }, { signal });
 
+    // 7.1 Seleção de Facção / Contratante (Presets e Live Preview)
+    const contractorPresets = this.container.querySelectorAll('.contractor-preset-btn');
+    const contractorInput = this.container.querySelector('#mission-contractor-input') as HTMLInputElement;
+
+    contractorPresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-contractor') || 'Union / GMS';
+        if (contractorInput) {
+          contractorInput.value = val;
+        }
+        this.updateContractorPreview(val);
+      }, { signal });
+    });
+
+    contractorInput?.addEventListener('input', () => {
+      this.updateContractorPreview(contractorInput.value);
+    }, { signal });
+
     // 8. Fechamento do Modal de Relatório AAR
     const closeAarBtn = this.container.querySelector('#btn-close-aar-modal');
     closeAarBtn?.addEventListener('click', () => this.closeAarModal(), { signal });
@@ -890,6 +1001,12 @@ export class MissionsView {
       dateInput.value = tomorrow.toISOString().split('T')[0];
     }
 
+    const contractorInput = modal.querySelector('#mission-contractor-input') as HTMLInputElement;
+    if (contractorInput) {
+      contractorInput.value = 'Union / GMS';
+    }
+    this.updateContractorPreview('Union / GMS');
+
     modal.classList.remove('hidden');
   }
 
@@ -920,7 +1037,10 @@ export class MissionsView {
     const rulesInput = modal.querySelector('#mission-rules-input') as HTMLInputElement;
 
     if (titleInput) titleInput.value = mission.title || '';
-    if (contractorInput) contractorInput.value = mission.contractor || 'Union / GMS';
+    if (contractorInput) {
+      contractorInput.value = mission.contractor || 'Union / GMS';
+      this.updateContractorPreview(contractorInput.value);
+    }
     if (difficultyInput) {
       const numDiff = Math.max(1, Math.min(3, Number(mission.difficulty) || 1));
       difficultyInput.value = String(numDiff);
@@ -984,6 +1104,11 @@ export class MissionsView {
 
     if (bodyEl) {
       bodyEl.innerHTML = `
+        <div class="modal-contractor-header-row">
+          ${this.renderContractorTag(mission.contractor)}
+          <span class="mission-status-pill status-${mission.status.toLowerCase()}">${mission.status}</span>
+        </div>
+
         <div class="mission-telemetry-strip modal-telemetry-strip">
           <div class="telemetry-cell">
             <span class="telemetry-label">FAIXA DE LICENÇA</span>
@@ -1026,70 +1151,117 @@ export class MissionsView {
         }
 
         <div class="mission-roster-section">
-          <h4 class="mission-roster-title">
-            <i class="mdi mdi-account-group"></i>
-            <span>CANDIDATOS & ESQUADRÃO MOBILIZADO (${(mission.applications || []).length} PILOTOS)</span>
-          </h4>
+          <div class="mission-roster-header-row">
+            <h4 class="mission-roster-title">
+              <i class="mdi mdi-account-group"></i>
+              <span>CANDIDATOS & ESQUADRÃO MOBILIZADO (${(mission.applications || []).length} PILOTOS)</span>
+            </h4>
+            ${
+              canManageMission && mission.status === 'OPEN' && (mission.applications || []).length > 0
+                ? `
+              <button type="button" class="btn-auto-escalate-priority" id="btn-auto-escalate-priority" title="Escalar automaticamente os pilotos com maior score de prioridade">
+                <i class="mdi mdi-shield-star"></i>
+                <span>ESCALAR POR PRIORIDADE</span>
+              </button>
+            `
+                : ''
+            }
+          </div>
 
           <div class="mission-roster-list">
             ${
               (mission.applications || []).length > 0
                 ? (mission.applications || [])
-                    .map((app: any) => {
+                    .slice()
+                    .sort((a: any, b: any) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
+                    .map((app: any, idx: number) => {
                       const p = typeof app.pilot_id === 'object' && app.pilot_id !== null ? app.pilot_id : {};
                       const pilotCallsign = p.callsign || '';
-                      const pilotRealName = p.name ? ` (${p.name})` : '';
-                      const displayName = pilotCallsign ? `${pilotCallsign}${pilotRealName}` : (p.name || 'Piloto da Guilda');
                       const frameName = p.active_mech_name || p.active_mech_frame || 'Chassi Padrão GMS';
                       const llText = p.license_level !== undefined ? `LL ${p.license_level}` : 'LL ?';
                       const pilotId = p._id || (typeof app.pilot_id === 'string' ? app.pilot_id : '');
+                      const priorityScore = app.priority_score ?? 0;
+                      const isTopSlot = idx < (mission.slots_total || 4);
+
+                      const daysText = p.last_mission_date
+                        ? `${Math.floor((Date.now() - new Date(p.last_mission_date).getTime()) / (1000 * 60 * 60 * 24))}${localization.t('missions.days_inactive', 'd sem jogar')}`
+                        : localization.t('missions.rookie', 'Novato (sem missões)');
+                      const missionsPlayedText = `${p.total_missions_played ?? 0} ${localization.t('missions.missions_count', 'missões')}`;
 
                       return `
-                  <div class="roster-pilot-card">
-                    <div class="roster-pilot-info">
-                      <i class="mdi mdi-account-circle roster-pilot-avatar"></i>
-                      <div class="roster-pilot-details">
+                  <div class="roster-pilot-card ${isTopSlot ? 'roster-card-recommended' : ''}">
+                    <div class="roster-pilot-main">
+                      <div class="roster-priority-rank ${isTopSlot ? 'rank-top' : ''}" title="Posição no ranking: #${idx + 1}">
+                        <span class="rank-number">#${String(idx + 1).padStart(2, '0')}</span>
+                        <span class="rank-slot-type">${isTopSlot ? localization.t('missions.primary_slot', 'TITULAR') : localization.t('missions.standby_slot', 'ESPERA')}</span>
+                      </div>
+
+                      <div class="roster-pilot-info">
                         <div class="roster-pilot-title-row">
                           ${
                             pilotId
                               ? `
-                            <a href="#/mech?id=${pilotId}" class="roster-mech-link" title="Inspecionar Ficha de Combate do Mecha" target="_blank">
-                              <strong class="roster-pilot-name">${displayName}</strong>
+                            <a href="#/mech?id=${pilotId}" class="roster-callsign-link" title="Inspecionar Ficha de Combate do Mecha" target="_blank">
+                              <span class="roster-pilot-callsign">${pilotCallsign || p.name || 'PILOTO'}</span>
+                              <i class="mdi mdi-open-in-new roster-link-icon"></i>
                             </a>
                           `
-                              : ''
+                              : `
+                            <span class="roster-pilot-callsign">${pilotCallsign || p.name || 'PILOTO'}</span>
+                          `
                           }
+                          <span class="roster-priority-score ${priorityScore >= 100 ? 'score-high' : priorityScore >= 50 ? 'score-mid' : 'score-low'}" title="Score: ${priorityScore} pts">
+                            <i class="mdi mdi-shield-star"></i>
+                            <span>${localization.t('missions.score', 'SCORE')} ${priorityScore}</span>
+                          </span>
                         </div>
-                        <div class="roster-pilot-frame">
-                          <span class="roster-frame-label">Chassi:</span>
-                          <span class="roster-frame-highlight">${frameName}</span>
+
+                        <div class="roster-pilot-telemetry">
+                          <span class="roster-telemetry-item">
+                            <span class="roster-label">${localization.t('missions.chassis', 'CHASSI')}:</span>
+                            <span class="roster-value-bold">${frameName}</span>
+                          </span>
+                          <span class="roster-divider">//</span>
                           <span class="roster-ll-badge">${llText}</span>
+                          <span class="roster-divider">//</span>
+                          <span class="roster-telemetry-item" title="Histórico operacional">
+                            <i class="mdi mdi-crosshairs"></i>
+                            <span>${missionsPlayedText}</span>
+                          </span>
+                          <span class="roster-dot">•</span>
+                          <span class="roster-telemetry-item" title="Recência operacional">
+                            <i class="mdi mdi-clock-outline"></i>
+                            <span>${daysText}</span>
+                          </span>
                         </div>
                       </div>
                     </div>
+
                     <div class="roster-pilot-actions">
-                      <span class="mission-app-badge ${
-                        app.status === 'SELECTED'
-                          ? 'app-selected'
-                          : app.status === 'WAITLIST'
-                          ? 'app-waitlist'
-                          : 'app-pending'
-                      }">
-                        ${app.status === 'SELECTED' ? 'ESCALADO' : app.status === 'WAITLIST' ? 'ESPERA' : 'PENDENTE'}
-                      </span>
-                      ${
-                        pilotId
-                          ? `
-                        <button type="button"
-                                class="btn-roster-aar"
-                                data-pilot-id="${pilotId}"
-                                title="Gerar modelo de Relatório de Missão para este Piloto">
-                          <i class="mdi mdi-clipboard-text-outline"></i>
-                          <span>RELATÓRIO</span>
-                        </button>
-                      `
-                          : ''
-                      }
+                      <div class="roster-status-actions-row">
+                        <span class="mission-app-badge ${
+                          app.status === 'SELECTED'
+                            ? 'app-selected'
+                            : app.status === 'WAITLIST'
+                            ? 'app-waitlist'
+                            : 'app-pending'
+                        }">
+                          ${app.status === 'SELECTED' ? '<i class="mdi mdi-check"></i> ' + localization.t('missions.deployed', 'ESCALADO') : app.status === 'WAITLIST' ? '<i class="mdi mdi-timer-sand"></i> ' + localization.t('missions.waitlist', 'ESPERA') : '<i class="mdi mdi-clock-outline"></i> ' + localization.t('missions.pending', 'PENDENTE')}
+                        </span>
+                        ${
+                          pilotId
+                            ? `
+                          <button type="button"
+                                  class="btn-roster-aar"
+                                  data-pilot-id="${pilotId}"
+                                  title="Gerar modelo de Relatório de Missão para este Piloto">
+                            <i class="mdi mdi-clipboard-text-outline"></i>
+                            <span>${localization.t('common.report', 'RELATÓRIO')}</span>
+                          </button>
+                        `
+                            : ''
+                        }
+                      </div>
                       ${
                         canManageMission && mission.status === 'OPEN'
                           ? `
@@ -1099,14 +1271,14 @@ export class MissionsView {
                                   data-pilot-id="${pilotId}"
                                   data-status="SELECTED"
                                   title="Escalar para o esquadrão principal">
-                            <i class="mdi mdi-check"></i> ESCALAR
+                            <i class="mdi mdi-check"></i> ${localization.t('missions.deploy_btn', 'ESCALAR')}
                           </button>
                           <button type="button"
                                   class="btn-roster-action btn-roster-waitlist"
                                   data-pilot-id="${pilotId}"
                                   data-status="WAITLIST"
                                   title="Colocar na lista de espera">
-                            <i class="mdi mdi-clock-outline"></i> ESPERA
+                            <i class="mdi mdi-clock-outline"></i> ${localization.t('missions.waitlist_btn', 'ESPERA')}
                           </button>
                         </div>
                       `
@@ -1215,6 +1387,31 @@ export class MissionsView {
             }
           }
         });
+      });
+
+      // Evento de Auto-Escalação por Prioridade
+      const autoEscalateBtn = bodyEl.querySelector('#btn-auto-escalate-priority');
+      autoEscalateBtn?.addEventListener('click', async () => {
+        const sorted = (mission.applications || [])
+          .slice()
+          .sort((a: any, b: any) => (b.priority_score ?? 0) - (a.priority_score ?? 0));
+        const maxSlots = mission.slots_total || 4;
+        const selections = sorted.map((app: any, idx: number) => {
+          const aPilotId = typeof app.pilot_id === 'object' ? app.pilot_id?._id : app.pilot_id;
+          return {
+            pilot_id: String(aPilotId),
+            status: idx < maxSlots ? ('SELECTED' as const) : ('WAITLIST' as const)
+          };
+        });
+
+        try {
+          await missionService.selectPilots(mission._id, selections);
+          ToastService.success(`Esquadrão auto-escalado por prioridade! (${Math.min(sorted.length, maxSlots)} titulares)`);
+          await this.fetchMissions();
+          this.openMissionDetailModal(mission._id);
+        } catch (err: any) {
+          ToastService.error(err.message || 'Falha ao auto-escalar esquadrão.');
+        }
       });
 
       // Eventos dos botões do GM no modal

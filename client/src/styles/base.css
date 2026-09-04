@@ -13,17 +13,19 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   overflow-x: hidden;
-  background-image: 
+  background-image:
     radial-gradient(circle at 50% 0%, rgba(120, 192, 145, 0.08), transparent 45%),
     radial-gradient(circle at 10% 90%, rgba(128, 41, 50, 0.08), transparent 35%),
     linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
 }
-.dashboard-subtitle{
+
+.dashboard-subtitle {
   margin-top: 0.4rem;
   margin-bottom: 0.4rem;
 }
+
 /* Base Terminal Layout */
 .omninet-terminal {
   display: flex;
@@ -51,15 +53,11 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%, 
-    rgba(0, 0, 0, 0.35) 50%
-  ), linear-gradient(
-    90deg,
-    rgba(0, 240, 255, 0.015),
-    rgba(255, 107, 0, 0.01),
-    rgba(0, 240, 255, 0.015)
-  );
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg,
+      rgba(0, 240, 255, 0.015),
+      rgba(255, 107, 0, 0.01),
+      rgba(0, 240, 255, 0.015));
   background-size: 100% 4px, 8px 100%;
   opacity: 0.75;
 }
@@ -89,7 +87,11 @@ body {
 }
 
 /* Typography Utilities */
-h1, h2, h3, h4, .font-display {
+h1,
+h2,
+h3,
+h4,
+.font-display {
   font-family: var(--font-display);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -100,14 +102,14 @@ h1, h2, h3, h4, .font-display {
 }
 
 /* Buttons & Interactive Elements */
-button, .btn {
+button,
+.btn {
   font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.6rem 1.4rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
@@ -119,7 +121,7 @@ button, .btn {
 
 .btn-primary {
   background: var(--accent-crimson);
-  color: #fff;
+  color: var(--text-bright);
   text-decoration: none;
 }
 
@@ -148,7 +150,6 @@ button, .btn {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
   padding: 1.5rem;
   transition: all var(--transition-normal);
 }
@@ -179,17 +180,17 @@ button, .btn {
    ======================================================= */
 code.horus {
   font-family: var(--font-mono);
-  font-size: 1.05em;
+  font-size: 1em;
   line-height: 1.6;
   padding: 8px 14px;
-  background-color: #000000b3 !important;
-  color: #00ffff;
+  background-color: #000000 !important;
+  color: var(--corp-horus);
   box-shadow: none;
   font-style: normal;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   border-radius: 0;
   display: inline-block;
-  border-left: 3px solid #ff00ff;
+  border-left: 3px solid var(--corp-horus);
   animation: distort-subtle 4s infinite;
   transition: all 0.2s ease;
   user-select: all;
@@ -211,21 +212,25 @@ code.horus:hover {
     transform: translate(-1px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
     cursor: crosshair;
   }
+
   25% {
     text-shadow: -2px -3px #ff00ff, 2px 1px #00ffff;
     transform: translate(2px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
     cursor: cell;
   }
+
   50% {
     text-shadow: 2px -1px #ff00ff, -4px 1px #00ffff;
     transform: translate(-2px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
     cursor: col-resize;
   }
+
   75% {
     text-shadow: -4px -1px #ff00ff, -2px -1px #00ffff;
     transform: translate(3px, 1px) translate3d(-10px, 0, 0) rotate(-0.1deg);
     cursor: move;
   }
+
   to {
     text-shadow: -2px 0 #ff00ff, 2px -1px #00ffff;
     transform: translate(-2px) translate3d(-10px, 0, 0) rotate(-0.1deg);
@@ -234,37 +239,51 @@ code.horus:hover {
 }
 
 @keyframes distort-subtle {
-  0%, 25% {
+
+  0%,
+  25% {
     text-shadow: none;
   }
+
   26% {
     text-shadow: 2px -1px #ff0000, -2px 3px #00ffff;
   }
+
   27% {
     text-shadow: -2px -3px #ff0000, 2px 1px #00ffff;
   }
+
   28% {
     text-shadow: 2px 1px #ff0000, -4px 1px #00ffff;
   }
+
   29% {
     text-shadow: -4px 1px #ff0000, -2px -1px #00ffff;
   }
-  30%, 75% {
+
+  30%,
+  75% {
     text-shadow: none;
   }
+
   76% {
     text-shadow: -4px 1px #ff0000, -2px -1px #00ffff;
   }
+
   77% {
     text-shadow: -2px -3px #ff0000, 2px 1px #00ffff;
   }
+
   78% {
     text-shadow: 2px -1px #ff0000, -2px 3px #00ffff;
   }
+
   79% {
     text-shadow: 2px 1px #ff0000, -4px 1px #00ffff;
   }
-  80%, 100% {
+
+  80%,
+  100% {
     text-shadow: none;
   }
 }

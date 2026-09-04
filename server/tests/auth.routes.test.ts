@@ -80,7 +80,14 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     expect(postSpy).toHaveBeenCalled();
     expect(getSpy).toHaveBeenCalled();
     expect(res.status).toBe(302);
-    expect(res.headers.location).toContain('/auth/callback?token=');
+    expect(res.headers.location).toContain('/auth/callback');
+    expect(res.headers.location).not.toContain('token=');
+    expect(res.headers['set-cookie']).toBeDefined();
+    const cookieHeader = Array.isArray(res.headers['set-cookie'])
+      ? res.headers['set-cookie'].join(';')
+      : res.headers['set-cookie'] || '';
+    expect(cookieHeader).toContain('omninet_token=');
+    expect(cookieHeader.toLowerCase()).toContain('httponly');
 
     // Verify user was registered in MongoDB Atlas with ADMIN role
     const createdUser = await UserModel.findOne({ discord_id: fakeDiscordId });
@@ -99,7 +106,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     expect(res.status).toBe(401);
   });
 
-  it('GET /api/auth/me - should return user profile from MongoDB when authenticated with JWT', async () => {
+  it('GET /api/auth/me - should return user profile from MongoDB when authenticated with HttpOnly cookie', async () => {
     const user = await UserModel.create({
       discord_id: `discord_test_me_${Date.now()}`,
       name: 'Operador Logado Atlas',
@@ -114,7 +121,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
 
     const res = await request(app)
       .get('/api/auth/me')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', `omninet_token=${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.user._id).toBe(user._id.toString());

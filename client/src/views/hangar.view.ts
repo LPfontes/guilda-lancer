@@ -23,20 +23,20 @@ export class HangarView {
         <div class="hangar-header">
           <div>
             <a href="#/" class="placeholder-back-link">
-              <i class="mdi mdi-arrow-left"></i> RETORNAR AO HUB
+              <i class="mdi mdi-arrow-left"></i> ${localizationService.t('hangar.return_hub', 'RETORNAR AO HUB')}
             </a>
             <h1 class="hangar-title">
               ${getCompconIcon('hangar', 'compcon-icon hangar-title-icon')}
-              <span>HANGAR DE CHASSIS</span>
+              <span>${localizationService.t('hangar.title', 'HANGAR DE CHASSIS')}</span>
             </h1>
             <p class="hangar-subtitle">
-              Sincronização tática com o COMP/CON. Mobilize e gerencie seus chassis autorizados na guilda.
+              ${localizationService.t('hangar.subtitle', 'Sincronização tática com o COMP/CON. Mobilize e gerencie seus chassis autorizados na guilda.')}
             </p>
           </div>
           <div class="hangar-actions">
             <button id="btn-open-import" class="btn btn-primary hangar-import-btn" type="button">
               <i class="mdi mdi-plus-box-outline"></i>
-              <span>IMPORTAR FICHA COMP/CON</span>
+              <span>${localizationService.t('hangar.import_btn', 'IMPORTAR FICHA COMP/CON')}</span>
             </button>
           </div>
         </div>
@@ -44,7 +44,7 @@ export class HangarView {
         <div id="hangar-content-area" class="hangar-content-area">
           <div class="hangar-loading-state">
             <div class="terminal-spinner"></div>
-            <span>CONECTANDO À TELEMETRIA DO HANGAR...</span>
+            <span>${localizationService.t('hangar.loading', 'CONECTANDO À TELEMETRIA DO HANGAR...')}</span>
           </div>
         </div>
 
@@ -408,30 +408,30 @@ export class HangarView {
               <!-- Telemetria H.A.S.E. -->
               <div class="mech-stats-row">
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">Casco</span>
+                  <span class="mech-stat-label">${localizationService.t('sheet.hull', 'Casco')}</span>
                   <span class="mech-stat-val">${pilot.hull || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">Agilidade</span>
+                  <span class="mech-stat-label">${localizationService.t('sheet.agility', 'Agilidade')}</span>
                   <span class="mech-stat-val">${pilot.agility || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">Sistemas</span>
+                  <span class="mech-stat-label">${localizationService.t('sheet.systems_stat', 'Sistemas')}</span>
                   <span class="mech-stat-val">${pilot.systems || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">Engenharia</span>
+                  <span class="mech-stat-label">${localizationService.t('sheet.engineering', 'Engenharia')}</span>
                   <span class="mech-stat-val">${pilot.engineering || 0}</span>
                 </div>
                 <div class="mech-stat-col">
-                  <span class="mech-stat-label">Brio</span>
+                  <span class="mech-stat-label">${localizationService.t('sheet.grit', 'Brio')}</span>
                   <span class="mech-stat-val">+${pilot.grit || 0}</span>
                 </div>
               </div>
 
               <!-- Talentos / Configuração Resumida -->
               <div class="mech-meta-section">
-                <div class="mech-meta-label">TALENTOS:</div>
+                <div class="mech-meta-label">${localizationService.t('sheet.talents', 'TALENTOS')}:</div>
                 <div class="mech-meta-content">${talentsList}</div>
               </div>
 
@@ -440,11 +440,11 @@ export class HangarView {
                 <div class="mech-card-actions-left">
                   <a href="#/mech?id=${pilot._id}" class="btn btn-secondary btn-view-full-sheet" title="Inspecionar Ficha do Mecha">
                     ${getCompconIcon('mech', 'compcon-icon')}
-                    <span>FICHA DO MECHA</span>
+                    <span>${localizationService.t('hangar.mech_sheet_btn', 'FICHA DO MECHA')}</span>
                   </a>
                   <a href="#/pilot?id=${pilot._id}" class="btn btn-secondary btn-view-full-sheet" title="Dossiê do Piloto">
                     ${getCompconIcon('pilot', 'compcon-icon')}
-                    <span>PILOTO</span>
+                    <span>${localizationService.t('hangar.pilot_sheet_btn', 'FICHA DO PILOTO')}</span>
                   </a>
 
                   ${
@@ -452,12 +452,12 @@ export class HangarView {
                       ? `
                     <button class="btn btn-secondary btn-activate-chassis" data-id="${pilot._id}" type="button">
                       <i class="mdi mdi-check"></i>
-                      <span>DEFINIR COMO ATIVO</span>
+                      <span>${localizationService.t('hangar.set_active_btn', 'DEFINIR COMO ATIVO')}</span>
                     </button>
                   `
                       : `
                     <span class="mech-active-notice">
-                      <i class="mdi mdi-radio-tower"></i> CHASSI PRINCIPAL
+                      <i class="mdi mdi-radio-tower"></i> ${localizationService.t('hangar.active_badge', 'CHASSI ATIVO')}
                     </span>
                   `
                   }

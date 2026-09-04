@@ -35,12 +35,21 @@ class SocketService {
     // Middleware de autenticação via JWT
     this.io.use((socket: AuthenticatedSocket, next) => {
       try {
-        const token =
-          socket.handshake.auth?.token ||
-          socket.handshake.headers?.cookie
-            ?.split(';')
-            .find((c) => c.trim().startsWith('token='))
-            ?.split('=')[1];
+        let token = socket.handshake.auth?.token;
+
+        // Extrai token do cookie HttpOnly enviado pelo navegador
+        if (!token && socket.handshake.headers?.cookie) {
+          const cookieHeader = socket.handshake.headers.cookie;
+          const match = cookieHeader.match(/(?:^|;\s*)omninet_token=([^;]+)/);
+          if (match) {
+            token = decodeURIComponent(match[1]);
+          } else {
+            const fallbackMatch = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+            if (fallbackMatch) {
+              token = decodeURIComponent(fallbackMatch[1]);
+            }
+          }
+        }
 
         if (token) {
           const decoded = jwt.verify(token, ENV.JWT_SECRET) as any;

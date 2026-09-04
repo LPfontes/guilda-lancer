@@ -30,7 +30,7 @@ export class PilotSheetView {
     this.container.innerHTML = `
       <div class="sheet-loading-container">
         <div class="sheet-loading-spinner"></div>
-        <div class="sheet-loading-text">CARREGANDO DOSSIÊ DO PILOTO...</div>
+        <div class="sheet-loading-text">${localization.t('common.loading', 'CARREGANDO DOSSIÊ DO PILOTO...')}</div>
       </div>
     `;
 
@@ -80,7 +80,7 @@ export class PilotSheetView {
         <div class="sheet-nav-bar">
           <a href="#/hangar" class="sheet-back-link">
             <i class="mdi mdi-arrow-left"></i>
-            <span>RETORNAR AO HANGAR</span>
+            <span>${localization.t('sheet.return_to_hangar', 'RETORNAR AO HANGAR')}</span>
           </a>
         </div>
 
@@ -90,16 +90,15 @@ export class PilotSheetView {
               ${getCompconIcon('pilot', 'compcon-icon-empty')}
             </div>
             <div class="sheet-empty-tag">
-              <i class="mdi mdi-alert-circle-outline"></i> NENHUM OPERADOR VINCULADO
+              <i class="mdi mdi-alert-circle-outline"></i> ${localization.t('sheet.no_pilot_title', 'NENHUM OPERADOR VINCULADO')}
             </div>
-            <h2 class="sheet-empty-title">NENHUM PILOTO NO BANCO DE DADOS</h2>
+            <h2 class="sheet-empty-title">${localization.t('sheet.no_pilot_title', 'NENHUM PILOTO NO BANCO DE DADOS')}</h2>
             <p class="sheet-empty-desc">
-              Você ainda não possui um operador registrado no seu terminal.
-              Importe sua ficha do COMP/CON no Hangar para carregar seu perfil de piloto.
+              ${localization.t('sheet.no_pilot_desc', 'Você ainda não possui um operador registrado no seu terminal. Importe sua ficha do COMP/CON no Hangar para carregar seu perfil de piloto.')}
             </p>
             <a href="#/hangar" class="btn btn-primary">
               <i class="mdi mdi-download"></i>
-              <span>IMPORTAR FICHA NO HANGAR</span>
+              <span>${localization.t('hangar.import_btn', 'IMPORTAR FICHA NO HANGAR')}</span>
             </a>
           </div>
         </div>
@@ -163,16 +162,16 @@ export class PilotSheetView {
           <div class="sheet-breadcrumbs">
             <a href="#/hangar" class="sheet-back-link">
               <i class="mdi mdi-arrow-left"></i>
-              <span>HANGAR</span>
+              <span>${localization.t('nav.hangar', 'HANGAR')}</span>
             </a>
             <span class="sheet-crumb-separator">//</span>
-            <span class="sheet-crumb-current">DOSSIÊ DO PILOTO: ${callsign}</span>
+            <span class="sheet-crumb-current">${localization.t('sheet.pilot_sheet', 'DOSSIÊ DO PILOTO')}: ${callsign}</span>
           </div>
 
           <div class="sheet-top-actions">
             <a href="#/mech?id=${p._id}" class="btn btn-secondary sheet-action-btn" title="Acessar Ficha do Mecha">
               ${getCompconIcon('mech', 'compcon-icon')}
-              <span>FICHA DO MECHA</span>
+              <span>${localization.t('sheet.mech_sheet', 'FICHA DO MECHA')}</span>
             </a>
             ${
               p.share_code
@@ -184,24 +183,21 @@ export class PilotSheetView {
             `
                 : ''
             }
-            <button id="btn-print-sheet" class="btn btn-secondary sheet-action-btn" title="Imprimir Dossiê">
-              <i class="mdi mdi-printer"></i>
-              <span>IMPRIMIR</span>
-            </button>
+           
             <button id="btn-pilot-aar" class="btn btn-secondary sheet-action-btn" title="Copiar Modelo Oficial de Relatório de Missão">
               <i class="mdi mdi-clipboard-text-outline"></i>
-              <span>RELATÓRIO DE MISSÃO</span>
+              <span>${localization.t('sheet.mission_report', 'RELATÓRIO DE MISSÃO')}</span>
             </button>
             ${
               canManage
                 ? `
               <button id="btn-sync-pilot" class="btn btn-secondary sheet-action-btn sheet-action-btn-sync" title="Sincronizar Dossiê com o COMP/CON">
                 <i class="mdi mdi-cloud-sync-outline"></i>
-                <span>SINCRONIZAR COMP/CON</span>
+                <span>${localization.t('sheet.sync_compcon', 'SINCRONIZAR COMP/CON')}</span>
               </button>
               <button id="btn-delete-pilot" class="btn btn-secondary sheet-action-btn sheet-action-btn-danger" title="Excluir Ficha do Hangar">
                 <i class="mdi mdi-delete-alert-outline"></i>
-                <span>EXCLUIR FICHA</span>
+                <span>${localization.t('sheet.delete_sheet', 'EXCLUIR FICHA')}</span>
               </button>
             `
                 : ''
@@ -225,10 +221,10 @@ export class PilotSheetView {
                 }"></i>
                 <span>STATUS: ${
                   p.status === 'APPROVED'
-                    ? 'HOMOLOGADA // APROVADA'
+                    ? localization.t('sheet.status_approved', 'HOMOLOGADA // APROVADA')
                     : p.status === 'REJECTED'
-                    ? 'NÃO-CONFORME // REJEITADA'
-                    : 'AGUARDANDO HOMOLOGAÇÃO'
+                    ? localization.t('sheet.status_rejected', 'NÃO-CONFORME // REJEITADA')
+                    : localization.t('sheet.status_pending', 'AGUARDANDO HOMOLOGAÇÃO')
                 }</span>
               </span>
               ${
@@ -244,7 +240,7 @@ export class PilotSheetView {
                   ? `
                 <button type="button" id="btn-admin-approve-pilot" class="btn-approve-sheet" title="Aprovar e homologar ficha">
                   <i class="mdi mdi-check"></i>
-                  <span>APROVAR FICHA</span>
+                  <span>${localization.t('sheet.approve_sheet', 'APROVAR FICHA')}</span>
                 </button>
               `
                   : ''
@@ -254,14 +250,14 @@ export class PilotSheetView {
                   ? `
                 <button type="button" id="btn-admin-reject-pilot" class="btn-reject-sheet" title="Apontar pendência e rejeitar ficha">
                   <i class="mdi mdi-close"></i>
-                  <span>REJEITAR</span>
+                  <span>${localization.t('sheet.reject_sheet', 'REJEITAR')}</span>
                 </button>
               `
                   : ''
               }
               <a href="#/review" class="btn btn-secondary" title="Retornar à tela de avaliações">
                 <i class="mdi mdi-format-list-checks"></i>
-                <span>PAINEL DE AVALIAÇÃO</span>
+                <span>${localization.t('sheet.audit_panel', 'PAINEL DE AVALIAÇÃO')}</span>
               </a>
             </div>
           </div>
@@ -281,7 +277,7 @@ export class PilotSheetView {
               }
               <div class="sheet-portrait-frame-tag">
                 <i class="mdi mdi-account-badge-outline"></i>
-                <span>PILOTO REGISTRADO</span>
+                <span>${localization.t('sheet.pilot_operator', 'PILOTO REGISTRADO')}</span>
               </div>
             </div>
 
@@ -292,34 +288,34 @@ export class PilotSheetView {
               </div>
 
               <h1 class="sheet-mech-title">${callsign}</h1>
-              ${realName ? `<div class="pilot-real-name">NOME CIVIL: ${realName}</div>` : ''}
-              ${background ? `<div class="pilot-background-tag">ANTECEDENTE: <strong>${background}</strong></div>` : ''}
-              ${history ? `<div class="pilot-background-tag">HISTÓRICO / NOTAS: <strong>${history}</strong></div>` : ''}
+              ${realName ? `<div class="pilot-real-name">${localization.t('sheet.real_name', 'NOME CIVIL')}: ${realName}</div>` : ''}
+              ${background ? `<div class="pilot-background-tag">${localization.t('sheet.background', 'ANTECEDENTE')}: <strong>${background}</strong></div>` : ''}
+              ${history ? `<div class="pilot-background-tag">${localization.t('sheet.history_notes', 'HISTÓRICO / NOTAS')}: <strong>${history}</strong></div>` : ''}
 
               <div class="sheet-pilot-dossier-line">
-                <span class="sheet-ll-badge">NÍVEL DE LICENÇA: <strong>LL ${p.license_level}</strong></span>
-                <span class="sheet-grit-badge">BRIO: <strong>+${p.grit}</strong></span>
+                <span class="sheet-ll-badge">${localization.t('sheet.license_level', 'NÍVEL DE LICENÇA')}: <strong>LL ${p.license_level}</strong></span>
+                <span class="sheet-grit-badge">${localization.t('sheet.grit', 'BRIO').toUpperCase()}: <strong>+${p.grit}</strong></span>
                 <span class="sheet-status-pill status-${p.status.toLowerCase().replace('_', '-')}">
-                  ${p.status === 'APPROVED' ? 'APROVADO // COMBATE' : p.status === 'REJECTED' ? 'REJEITADO' : 'PENDENTE // AVALIAÇÃO'}
+                  ${p.status === 'APPROVED' ? localization.t('sheet.status_approved', 'APROVADO // COMBATE') : p.status === 'REJECTED' ? localization.t('sheet.status_rejected', 'REJEITADO') : localization.t('sheet.status_pending', 'PENDENTE // AVALIAÇÃO')}
                 </span>
               </div>
 
               <!-- Atributos H.A.S.E. / C.A.S.E. do Piloto -->
               <div class="sheet-hase-bar">
                 <div class="sheet-hase-item hase-hull">
-                  <span class="hase-label">CASCO</span>
+                  <span class="hase-label">${localization.t('sheet.hull', 'CASCO').toUpperCase()}</span>
                   <span class="hase-val">${p.hull || 0}</span>
                 </div>
                 <div class="sheet-hase-item hase-agility">
-                  <span class="hase-label">AGILIDADE</span>
+                  <span class="hase-label">${localization.t('sheet.agility', 'AGILIDADE').toUpperCase()}</span>
                   <span class="hase-val">${p.agility || 0}</span>
                 </div>
                 <div class="sheet-hase-item hase-systems">
-                  <span class="hase-label">SISTEMAS</span>
+                  <span class="hase-label">${localization.t('sheet.systems_stat', 'SISTEMAS').toUpperCase()}</span>
                   <span class="hase-val">${p.systems || 0}</span>
                 </div>
                 <div class="sheet-hase-item hase-engineering">
-                  <span class="hase-label">ENGENHARIA</span>
+                  <span class="hase-label">${localization.t('sheet.engineering', 'ENGENHARIA').toUpperCase()}</span>
                   <span class="hase-val">${p.engineering || 0}</span>
                 </div>
               </div>
@@ -329,48 +325,48 @@ export class PilotSheetView {
 
         <div class="sheet-section-title">
           <i class="mdi mdi-heart-pulse"></i>
-          <span>ESTATÍSTICAS DO PILOTO</span>
+          <span>${localization.t('sheet.telemetry', 'ESTATÍSTICAS DO PILOTO')}</span>
         </div>
 
         <div class="sheet-matrix-grid pilot-vitals-matrix">
           <div class="matrix-box">
-            <span class="matrix-label">PV</span>
+            <span class="matrix-label">${localization.t('sheet.hp', 'PV')}</span>
             <span class="matrix-val highlight-mint">${pilotHp}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">ARMADURA</span>
+            <span class="matrix-label">${localization.t('sheet.armor', 'ARMADURA')}</span>
             <span class="matrix-val">${pilotArmor}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">EVASÃO</span>
+            <span class="matrix-label">${localization.t('sheet.evasion', 'EVASÃO')}</span>
             <span class="matrix-val">${pilotEvasion}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">DEFESA-E</span>
+            <span class="matrix-label">${localization.t('sheet.edefense', 'DEFESA-E')}</span>
             <span class="matrix-val">${pilotEDefense}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">VELOCIDADE</span>
+            <span class="matrix-label">${localization.t('sheet.speed', 'VELOCIDADE')}</span>
             <span class="matrix-val">${pilotSpeed}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">BRIO</span>
+            <span class="matrix-label">${localization.t('sheet.grit', 'BRIO').toUpperCase()}</span>
             <span class="matrix-val">+${p.grit}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">MISSÕES</span>
+            <span class="matrix-label">${localization.t('missions.missions_count', 'MISSÕES').toUpperCase()}</span>
             <span class="matrix-val">${p.total_missions_played || 0}</span>
           </div>
           <div class="matrix-box">
-            <span class="matrix-label">ESTADO</span>
-            <span class="matrix-val highlight-mint">${p.is_active ? 'ATIVO' : 'RESERVA'}</span>
+            <span class="matrix-label">${localization.t('common.status', 'ESTADO')}</span>
+            <span class="matrix-val highlight-mint">${p.is_active ? localization.t('common.active', 'ATIVO') : localization.t('common.reserve', 'RESERVA')}</span>
           </div>
         </div>
 
         <!-- Seção 2: Chassis Registrados do Piloto -->
         <div class="sheet-section-title">
           ${getCompconIcon('mech', 'compcon-icon')}
-          <span>CHASSIS REGISTRADOS NO HANGAR (${mechsList.length})</span>
+          <span>${localization.t('sheet.registered_chassis', 'CHASSIS REGISTRADOS NO HANGAR')} (${mechsList.length})</span>
         </div>
 
         <div class="pilot-mechs-grid">
@@ -398,14 +394,14 @@ export class PilotSheetView {
                     <div class="mech-frame-tag">
                       ${getCompconIcon('mech', 'compcon-icon-sm')}
                       <span>${mFrame}</span>
-                      ${isMechActive ? '<span class="mech-badge-active">ATIVO</span>' : ''}
+                      ${isMechActive ? `<span class="mech-badge-active">${localization.t('common.active', 'ATIVO')}</span>` : ''}
                     </div>
                     <h3 class="assigned-mech-title">${mName}</h3>
                   </div>
                   <div class="assigned-mech-action">
                     <a href="#/mech?id=${p._id}" class="btn btn-primary">
                       <i class="mdi mdi-card-bulleted-settings-outline"></i>
-                      <span>ABRIR FICHA DO MECHA</span>
+                      <span>${localization.t('sheet.open_mech_sheet', 'ABRIR FICHA DO MECHA')}</span>
                     </a>
                   </div>
                 </div>
@@ -427,7 +423,7 @@ export class PilotSheetView {
             ? `
           <div class="sheet-section-title">
             <i class="mdi mdi-star-shooting-outline"></i>
-            <span>BÔNUS DE NÚCLEO</span>
+            <span>${localization.t('sheet.core_bonuses', 'BÔNUS DE NÚCLEO')}</span>
             <span class="sheet-section-counter">[${coreBonuses.length}]</span>
           </div>
           <div class="sheet-traits-grid">
@@ -440,14 +436,14 @@ export class PilotSheetView {
               <div class="card sheet-trait-card sheet-core-bonus-card">
                 <div class="core-bonus-card-header">
                   ${cb.source ? `<span class="sheet-corp-badge">${cb.source}</span>` : ''}
-                  <span class="core-bonus-type-tag">BÔNUS DE NÚCLEO</span>
+                  <span class="core-bonus-type-tag">${localization.t('sheet.core_bonuses', 'BÔNUS DE NÚCLEO')}</span>
                 </div>
                 <div class="sheet-trait-name">${name}</div>
                 ${
                   effect
                     ? `
                   <div class="core-bonus-effect-box">
-                    <div class="core-bonus-effect-label">EFEITO:</div>
+                    <div class="core-bonus-effect-label">${localization.t('sheet.effect', 'EFEITO')}:</div>
                     <div class="sheet-trait-desc core-bonus-effect-text">${effect}</div>
                   </div>
                 `
@@ -473,7 +469,7 @@ export class PilotSheetView {
           <div class="card sheet-subcard">
             <h3 class="sheet-subcard-title">
               ${getCompconIcon('pilot', 'compcon-icon')}
-              <span>TALENTOS DE PILOTO</span>
+              <span>${localization.t('sheet.talents', 'TALENTOS DE PILOTO')}</span>
             </h3>
             <div class="sheet-talents-list">
               ${
@@ -486,7 +482,7 @@ export class PilotSheetView {
                             class="sheet-talent-item talent-btn-trigger"
                             data-talent-index="${idx}"
                             title="Clique para ver a descrição completa do talento ${translated.name}">
-                      <div class="talent-title-line">
+                       <div class="talent-title-line">
                         <div class="talent-name-group">
                           <i class="mdi mdi-star-shooting-outline talent-lead-icon"></i>
                           <strong class="talent-name">${translated.name}</strong>
@@ -510,7 +506,7 @@ export class PilotSheetView {
           <div class="card sheet-subcard">
             <h3 class="sheet-subcard-title">
               <i class="mdi mdi-target-account"></i>
-              <span>GATILHOS DE PILOTO</span>
+              <span>${localization.t('sheet.skills', 'GATILHOS DE PILOTO')}</span>
             </h3>
             <div class="sheet-skills-list">
               ${
@@ -534,7 +530,7 @@ export class PilotSheetView {
           <div class="card sheet-subcard">
             <h3 class="sheet-subcard-title">
               <i class="mdi mdi-certificate-outline"></i>
-              <span>LICENÇAS</span>
+              <span>${localization.t('sheet.licenses', 'LICENÇAS')}</span>
             </h3>
             <div class="sheet-licenses-list">
               ${
@@ -562,7 +558,7 @@ export class PilotSheetView {
               <div class="talent-modal-title-group">
                 <i class="mdi mdi-star-shooting-outline talent-modal-icon"></i>
                 <div>
-                  <div class="talent-modal-tag">// DOSSIÊ DE TALENTO // COMP/CON</div>
+                  <div class="talent-modal-tag">${localization.t('sheet.talent_modal_tag', '// DOSSIÊ DE TALENTO // COMP/CON')}</div>
                   <h3 id="talent-modal-title" class="talent-modal-name">NOME DO TALENTO</h3>
                 </div>
               </div>
@@ -575,7 +571,7 @@ export class PilotSheetView {
               <div class="talent-modal-subline">
                 <span id="talent-modal-rank-badge" class="talent-rank-badge-status badge-unlocked">
                   <i class="mdi mdi-lock-open-variant-outline"></i>
-                  <span>RANK 3 ATIVO</span>
+                  <span>${localization.t('sheet.active_rank', 'RANK ATIVO')}</span>
                 </span>
                 <span id="talent-modal-terse" class="talent-modal-terse-text"></span>
               </div>
@@ -595,7 +591,7 @@ export class PilotSheetView {
             <div class="import-modal-header">
               <div class="import-modal-title">
                 ${getCompconIcon('hangar', 'compcon-icon')}
-                <span>LNC://SYNC_MODULE.02 // SINCRONIZAÇÃO COMP/CON</span>
+                <span>${localization.t('sheet.sync_module_title', 'LNC://SYNC_MODULE.02 // SINCRONIZAÇÃO COMP/CON')}</span>
               </div>
               <button id="btn-close-sync-modal" class="import-modal-close" type="button" aria-label="Fechar">
                 <i class="mdi mdi-close"></i>
@@ -607,11 +603,11 @@ export class PilotSheetView {
                 p.share_code
                   ? `
                 <div class="pilot-sync-current-badge">
-                  <span class="pilot-sync-current-label">SHARE CODE VINCULADO:</span>
+                  <span class="pilot-sync-current-label">${localization.t('sheet.linked_sharecode', 'SHARE CODE VINCULADO')}:</span>
                   <span class="pilot-sync-current-code">${p.share_code}</span>
                   <button id="btn-sync-use-current" class="pilot-sync-btn-use-current" type="button">
                     <i class="mdi mdi-refresh"></i>
-                    <span>PREENCHER CÓDIGO ATUAL</span>
+                    <span>${localization.t('sheet.fill_current_code', 'PREENCHER CÓDIGO ATUAL')}</span>
                   </button>
                 </div>
               `
@@ -619,22 +615,22 @@ export class PilotSheetView {
               }
 
               <div class="import-instructions">
-                Atualize o dossiê do piloto enviando o arquivo <code>.json</code> exportado do COMP/CON v3 ou informando o Share Code de 12 dígitos:
+                ${localization.t('sheet.sync_instructions', 'Atualize o dossiê do piloto enviando o arquivo .json exportado do COMP/CON v3 ou informando o Share Code de 12 dígitos:')}
               </div>
 
               <!-- Dropzone para arquivo JSON -->
               <div id="sync-dropzone" class="import-dropzone">
                 <i class="mdi mdi-file-upload-outline import-dropzone-icon"></i>
-                <div class="import-dropzone-text">ARRASTE O ARQUIVO .JSON DO COMP/CON AQUI</div>
-                <div class="import-dropzone-sub">ou clique para selecionar do dispositivo</div>
+                <div class="import-dropzone-text">${localization.t('sheet.dropzone_drag', 'ARRASTE O ARQUIVO .JSON DO COMP/CON AQUI')}</div>
+                <div class="import-dropzone-sub">${localization.t('sheet.dropzone_click', 'ou clique para selecionar do dispositivo')}</div>
                 <input id="sync-file-input" type="file" accept=".json,application/json" class="hidden-file-input" />
               </div>
 
               <!-- Entrada de Share Code com Caixas para Cada Dígito -->
               <div class="import-manual-section">
                 <div class="sharecode-header-row">
-                  <label class="import-label">INFORME O SHARE CODE DO COMP/CON (12 DÍGITOS):</label>
-                  <button id="btn-sync-toggle-raw" class="btn-link-toggle" type="button">Alternar para JSON bruto</button>
+                  <label class="import-label">${localization.t('sheet.enter_sharecode', 'INFORME O SHARE CODE DO COMP/CON (12 DÍGITOS):')}</label>
+                  <button id="btn-sync-toggle-raw" class="btn-link-toggle" type="button">${localization.t('sheet.toggle_raw_json', 'Alternar para JSON bruto')}</button>
                 </div>
 
                 <div class="sharecode-boxes-container" id="sync-sharecode-boxes">
@@ -673,15 +669,15 @@ export class PilotSheetView {
               <div class="import-action-row">
                 <button id="btn-sync-validate-preview" class="btn btn-secondary" type="button">
                   <i class="mdi mdi-magnify-scan"></i>
-                  <span>ANALISAR ATUALIZAÇÃO</span>
+                  <span>${localization.t('sheet.analyze_update', 'ANALISAR ATUALIZAÇÃO')}</span>
                 </button>
               </div>
 
               <!-- Painel de Pré-Visualização / Preview da Ficha -->
               <div id="sync-preview-box" class="import-preview-box hidden">
                 <div class="preview-header">
-                  <span class="preview-tag">[ TELEMETRIA DETECTADA ]</span>
-                  <span id="sync-preview-status-badge" class="preview-status-valid">FICHA VÁLIDA</span>
+                  <span class="preview-tag">${localization.t('sheet.detected_telemetry', '[ TELEMETRIA DETECTADA ]')}</span>
+                  <span id="sync-preview-status-badge" class="preview-status-valid">${localization.t('sheet.valid_sheet', 'FICHA VÁLIDA')}</span>
                 </div>
 
                 <div class="preview-grid">
@@ -708,7 +704,7 @@ export class PilotSheetView {
                 <div class="preview-confirm-bar">
                   <button id="btn-confirm-sync" class="btn btn-primary" type="button">
                     <i class="mdi mdi-cloud-sync"></i>
-                    <span>CONFIRMAR SINCRONIZAÇÃO</span>
+                    <span>${localization.t('sheet.sync_compcon', 'CONFIRMAR SINCRONIZAÇÃO')}</span>
                   </button>
                 </div>
               </div>
@@ -745,7 +741,7 @@ export class PilotSheetView {
                 </div>
                 <div class="pilot-delete-footer">
                   <button id="btn-cancel-delete-modal" class="btn btn-secondary" type="button">
-                    <span>FECHAR</span>
+                    <span>${localization.t('common.close', 'FECHAR')}</span>
                   </button>
                 </div>
               `
@@ -777,11 +773,11 @@ export class PilotSheetView {
 
                 <div class="pilot-delete-footer">
                   <button id="btn-cancel-delete-modal" class="btn btn-secondary" type="button">
-                    <span>CANCELAR</span>
+                    <span>${localization.t('common.cancel', 'CANCELAR')}</span>
                   </button>
                   <button id="btn-confirm-delete" class="btn-danger-confirm" type="button" disabled>
                     <i class="mdi mdi-delete-forever"></i>
-                    <span>CONFIRMAR EXCLUSÃO</span>
+                    <span>${localization.t('sheet.delete_sheet', 'CONFIRMAR EXCLUSÃO')}</span>
                   </button>
                 </div>
               `
@@ -802,10 +798,7 @@ export class PilotSheetView {
       }
     });
 
-    const printBtn = this.container.querySelector('#btn-print-sheet');
-    printBtn?.addEventListener('click', () => {
-      window.print();
-    });
+    
 
     const aarBtn = this.container.querySelector('#btn-pilot-aar');
     aarBtn?.addEventListener('click', async () => {
@@ -1309,11 +1302,11 @@ export class PilotSheetView {
         <div class="sheet-error-icon">
           <i class="mdi mdi-alert-octagon-outline"></i>
         </div>
-        <h2 class="sheet-error-title">FALHA AO RECUPERAR DOSSIÊ DO PILOTO</h2>
+        <h2 class="sheet-error-title">${localization.t('common.error', 'FALHA AO RECUPERAR DOSSIÊ DO PILOTO')}</h2>
         <p class="sheet-error-msg">${message}</p>
         <a href="#/hangar" class="btn btn-secondary">
           <i class="mdi mdi-arrow-left"></i>
-          <span>VOLTAR AO HANGAR</span>
+          <span>${localization.t('sheet.return_to_hangar', 'VOLTAR AO HANGAR')}</span>
         </a>
       </div>
     `;

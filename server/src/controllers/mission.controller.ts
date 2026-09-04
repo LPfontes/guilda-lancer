@@ -115,7 +115,7 @@ export const MissionController = {
         .populate('gm_id', 'name username avatar')
         .populate({
           path: 'applications.pilot_id',
-          select: 'callsign name license_level grit active_mech_name active_mech_frame status user_id',
+          select: 'callsign name license_level grit active_mech_name active_mech_frame status user_id total_missions_played last_mission_date',
           populate: { path: 'user_id', select: 'name username avatar' }
         })
         .sort({ createdAt: -1 })
@@ -149,7 +149,7 @@ export const MissionController = {
       .populate('gm_id', 'name username avatar')
       .populate({
         path: 'applications.pilot_id',
-        select: 'callsign name license_level grit active_mech_name active_mech_frame status user_id',
+        select: 'callsign name license_level grit active_mech_name active_mech_frame status user_id total_missions_played last_mission_date',
         populate: { path: 'user_id', select: 'name username avatar' }
       });
 

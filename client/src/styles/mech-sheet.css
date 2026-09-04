@@ -13,7 +13,7 @@
 .sheet-loading-spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #21262d;
+  border: 3px solid var(--border-muted);
   border-top-color: var(--accent-mint);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -21,7 +21,7 @@
 
 .sheet-loading-text {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--accent-mint);
   letter-spacing: 0.1em;
 }
@@ -47,24 +47,24 @@
   align-items: center;
   gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .sheet-back-link {
-  color: #8b949e;
+  color: var(--text-muted);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   transition: color var(--transition-fast);
 }
 
 .sheet-back-link:hover {
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .sheet-crumb-separator {
-  color: #30363d;
+  color: var(--border-default);
 }
 
 .sheet-crumb-current {
@@ -75,20 +75,19 @@
 .sheet-top-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .sheet-action-btn {
-  padding: 0.45rem 0.9rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
 }
 
 /* Banner Hero do Mecha */
 .sheet-hero-banner {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: var(--radius-sm);
-  margin-bottom: 1.5rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  margin-bottom: 1rem;
   overflow: hidden;
   padding: 0;
 }
@@ -96,7 +95,7 @@
 .sheet-hero-main {
   display: flex;
   gap: 2rem;
-  padding: 1.75rem;
+  padding: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -110,10 +109,9 @@
   min-height: 260px;
   position: relative;
   flex-shrink: 0;
-  border: 1px solid #30363d;
-  background: #0d1117;
+  border: 1px solid var(--border-default);
+  background: var(--bg-dark);
   overflow: hidden;
-  border-radius: var(--radius-sm);
 }
 
 .sheet-mech-img {
@@ -129,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #30363d;
+  color: var(--border-default);
 }
 
 .compcon-icon-hero {
@@ -143,7 +141,7 @@
   left: 0;
   right: 0;
   background: rgba(13, 17, 23, 0.92);
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--border-default);
   padding: 4px 8px;
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -168,24 +166,35 @@
 
 .sheet-corp-badge {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  margin-bottom: 4px;
+  font-size: 1rem;
 }
 
 .badge-horus {
-  color: #00ffff;
+  color: var(--corp-horus);
 }
 
 .badge-gms {
-  color: #8b949e;
-  letter-spacing: 0.08em;
+  color: var(--corp-gms);
+  letter-spacing: 0.1em;
+}
+
+.badge-ssc {
+  color: var(--corp-ssc);
+}
+
+.badge-ipsn {
+  color: var(--corp-ipsn);
+}
+
+.badge-ha {
+  color: var(--corp-ha);
 }
 
 .sheet-mech-title {
   font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-size: 2rem;
   letter-spacing: 0.06em;
-  color: #f0f6fc;
+  color: var(--text-bright);
   margin: 0 0 0.4rem 0;
   line-height: 1.1;
 }
@@ -193,7 +202,7 @@
 .sheet-pilot-dossier-line {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #8b949e;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -202,22 +211,22 @@
 }
 
 .sheet-dossier-label {
-  color: #6e7681;
+  color: var(--text-dark);
 }
 
 .sheet-dossier-callsign {
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .sheet-dossier-realname {
-  color: #6e7681;
+  color: var(--text-dark);
 }
 
 .sheet-ll-badge,
 .sheet-grit-badge {
   padding: 2px 6px;
-  border: 1px solid #30363d;
-  background: #0d1117;
+  border: 1px solid var(--border-default);
+  background: var(--bg-dark);
   font-size: 1rem;
   color: var(--text-main);
 }
@@ -233,23 +242,21 @@
   font-family: var(--font-mono);
   font-size: 0.8rem;
   padding: 2px 8px;
-  border-radius: 2px;
 }
 
 .sheet-active-tag {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--accent-mint);
 }
 
 .sheet-hase-bar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  background: #0d1117;
-  border: 1px solid #21262d;
-  padding: 0.75rem 1rem;
-  border-radius: 2px;
+  gap: 0.5rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
+  padding: 0.5rem 1rem;
 }
 
 .sheet-hase-item {
@@ -329,7 +336,7 @@
 .sheet-tabs-bar {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border-default);
   margin-bottom: 1.75rem;
 }
 
@@ -337,7 +344,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-bottom: 2px solid transparent;
-  color: #8b949e;
+  color: var(--text-muted);
   padding: 0.65rem 1.4rem;
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -350,14 +357,14 @@
 }
 
 .sheet-tab-btn:hover {
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .sheet-tab-btn.active {
   color: var(--accent-mint);
-  border-color: #30363d;
+  border-color: var(--border-default);
   border-bottom-color: var(--accent-mint);
-  background: #161b22;
+  background: var(--bg-panel);
 }
 
 /* Combat Vitals Grid */
@@ -369,10 +376,9 @@
 }
 
 .sheet-vital-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1.25rem;
-  border-radius: var(--radius-sm);
 }
 
 .vital-card-header {
@@ -380,39 +386,38 @@
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  margin-bottom: 0.6rem;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .vital-title {
-  color: #8b949e;
-  letter-spacing: 0.05em;
+  font-weight: bold;
+  letter-spacing: 0.1em;
 }
 
 .vital-counter {
-  color: #f0f6fc;
+  color: var(--text-bright);
   font-weight: bold;
 }
 
 .vital-progress-bar {
   height: 8px;
-  background: #0d1117;
-  border: 1px solid #21262d;
-  border-radius: 2px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
   overflow: hidden;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.8rem;
 }
 
 .vital-fill-hp {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #238636, #3fb950);
+  background: linear-gradient(90deg, var(--border-success), var(--vital-hp));
 }
 
 .vital-fill-heat {
   width: 10%;
   height: 100%;
-  background: linear-gradient(90deg, #d29922, #f85149);
+  background: linear-gradient(90deg, var(--vital-heat), var(--vital-structure));
 }
 
 .vital-pips-container {
@@ -435,26 +440,26 @@
 .pip {
   width: 22px;
   height: 12px;
-  border: 1px solid #30363d;
-  background: #0d1117;
+  border: 1px solid var(--border-default);
+  background: var(--bg-dark);
   border-radius: 1px;
 }
 
 .pip-structure.active {
-  background: #3fb950;
-  border-color: #2ea043;
+  background: var(--vital-hp);
+  border-color: var(--border-success);
   box-shadow: 0 0 6px rgba(63, 185, 80, 0.4);
 }
 
 .pip-stress.active {
-  background: #d29922;
-  border-color: #bb8009;
+  background: var(--vital-stress);
+  border-color: var(--border-warning);
   box-shadow: 0 0 6px rgba(210, 153, 34, 0.4);
 }
 
 .pip-repairs.active {
-  background: #58a6ff;
-  border-color: #388bfd;
+  background: var(--vital-overshield);
+  border-color: var(--border-focus);
   box-shadow: 0 0 6px rgba(88, 166, 255, 0.4);
 }
 
@@ -485,14 +490,13 @@
 }
 
 .matrix-box {
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-default);
   padding: 0.75rem 0.5rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border-radius: 2px;
 }
 
 .matrix-label {
@@ -505,7 +509,7 @@
   font-family: var(--font-mono);
   font-size: 1.5rem;
   font-weight: bold;
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .highlight-mint {
@@ -513,13 +517,12 @@
 }
 
 /* Sistema Central (Core System) */
+/* Sistema Central (Core System) */
 .sheet-core-system-card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-left: 4px solid var(--accent-mint);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border-radius: var(--radius-sm);
 }
 
 .core-header {
@@ -544,13 +547,13 @@
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--accent-mint);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .core-name {
   font-family: var(--font-display);
   font-size: 1.35rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   margin: 0;
 }
 
@@ -558,7 +561,7 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   padding: 3px 8px;
-  border: 1px solid #d29922;
+  border: 1px solid var(--accent-gold);
   background: rgba(210, 153, 34, 0.15);
 }
 
@@ -569,10 +572,9 @@
 }
 
 .core-trait-block {
-  background: #0d1117;
+  background: var(--bg-dark);
   padding: 0.8rem 1.1rem;
-  border: 1px solid #21262d;
-  border-radius: 2px;
+  border: 1px solid var(--border-muted);
 }
 
 .core-trait-title {
@@ -584,7 +586,7 @@
 }
 
 .core-active-title {
-  color: #d29922;
+  color: var(--accent-gold);
 }
 
 .core-trait-desc {
@@ -597,7 +599,7 @@
   font-family: var(--font-display);
   font-size: 1rem;
   letter-spacing: 0.1em;
-  color: #f0f6fc;
+  color: var(--text-bright);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -606,16 +608,14 @@
 
 .sheet-weapons-grid {
   display: grid;
-  
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
 .sheet-mount-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1rem;
-  border-radius: var(--radius-sm);
 }
 
 .mount-header {
@@ -632,20 +632,20 @@
 }
 
 .mount-status-ok {
-  color: #3fb950;
+  color: var(--status-approved);
 }
 
 .mount-weapon-name {
   display: flex;
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
+  margin-bottom: 0.25rem;
 }
 
 .mount-weapon-stats {
   font-family: var(--font-mono);
   font-size: 1rem;
-  color: #8b949e;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -653,26 +653,22 @@
 }
 
 .weapon-stat strong {
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .dmg-pill {
   padding: 2px 6px;
-  border-radius: 2px;
   font-weight: bold;
 }
 
-.dmg-kinetic {
-  background: rgba(248, 81, 73, 0.15);
-  color: #f85149;
-  border: 1px solid rgba(248, 81, 73, 0.4);
+.dmg-kinetic,
+.dmg-energy,
+.dmg-explosive,
+.dmg-burn {
+  background: var(--accent-crimson);
 }
 
-.dmg-energy {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-}
+
 
 .weapon-tags-list {
   display: flex;
@@ -704,14 +700,13 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: #161b22;
+  background: var(--bg-panel);
   border: 1px solid var(--accent-crimson);
-  color: #f0f6fc;
-  font-family: var(--font-body);
+  color: var(--text-bright);
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: normal;
   padding: 0.5rem 0.8rem;
-  border-radius: 4px;
   white-space: normal;
   width: max-content;
   max-width: 630px;
@@ -746,10 +741,9 @@
 }
 
 .sheet-system-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1.2rem;
-  border-radius: var(--radius-sm);
 }
 
 .system-top-line {
@@ -762,15 +756,13 @@
 .system-name {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .system-sp-cost {
   font-family: var(--font-mono);
   font-size: 1rem;
   padding: 2px 6px;
-  border: 1px solid #30363d;
-  background: #0d1117;
 }
 
 .system-desc {
@@ -785,10 +777,9 @@
 }
 
 .sheet-trait-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1rem 1.2rem;
-  border-radius: var(--radius-sm);
 }
 
 .sheet-trait-name {
@@ -800,7 +791,7 @@
 
 .sheet-trait-desc {
   font-size: 1rem;
-  color: #c9d1d9;
+  color: var(--text-normal);
   line-height: 1.5;
 }
 
@@ -808,11 +799,9 @@
    BÔNUS DE NÚCLEO (CORE BONUSES) ESTILOS TÁTICOS
    ======================================================= */
 .sheet-core-bonus-card {
-  border-left: 3px solid var(--accent-mint);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background: #111520;
   transition: all var(--transition-fast);
 }
 
@@ -826,16 +815,16 @@
 .core-bonus-type-tag {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: #8b949e;
-  letter-spacing: 0.08em;
-  background: #161b22;
-  border: 1px solid #30363d;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1px 6px;
 }
 
 .core-bonus-effect-box {
-  background: #0d1117;
-  border: 1px solid #21262d;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
   border-left: 2px solid var(--accent-mint);
   padding: 0.6rem 0.8rem;
   margin-top: 0.2rem;
@@ -845,23 +834,22 @@
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--accent-mint);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 700;
   margin-bottom: 0.25rem;
 }
 
 .core-bonus-effect-text {
   font-size: 0.88rem;
-  color: #e6edf3;
+  color: var(--text-bright);
   line-height: 1.45;
 }
 
 .core-bonus-lore {
-  font-size: 0.78rem;
-  color: #8b949e;
+  font-size: 1rem;
   font-style: italic;
   line-height: 1.4;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
   padding-top: 0.4rem;
   margin-top: 0.2rem;
 }
@@ -874,7 +862,6 @@
   background: rgba(120, 192, 145, 0.12);
   border: 1px solid var(--accent-mint);
   padding: 2px 6px;
-  border-radius: 2px;
   margin-left: 6px;
 }
 
@@ -882,7 +869,7 @@
   font-size: 1rem;
   line-height: 1.4;
   margin-top: 0.6rem;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
   padding-top: 0.5rem;
 }
 
@@ -892,7 +879,7 @@
 }
 
 .mount-status-empty {
-  color: #8b949e;
+  color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.8rem;
 }
@@ -901,9 +888,8 @@
 .system-actions-box {
   margin-top: 0.8rem;
   padding: 0.6rem 0.8rem;
-  background: #0d1117;
+  background: var(--bg-dark);
   border-left: 2px solid var(--accent-mint);
-  border-radius: 2px;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -925,27 +911,89 @@
    ========================================================================== */
 
 /* Classes de largura utilitárias (0% a 100% em passos de 5%) */
-.vital-fill-w-0   { width: 0%; }
-.vital-fill-w-5   { width: 5%; }
-.vital-fill-w-10  { width: 10%; }
-.vital-fill-w-15  { width: 15%; }
-.vital-fill-w-20  { width: 20%; }
-.vital-fill-w-25  { width: 25%; }
-.vital-fill-w-30  { width: 30%; }
-.vital-fill-w-35  { width: 35%; }
-.vital-fill-w-40  { width: 40%; }
-.vital-fill-w-45  { width: 45%; }
-.vital-fill-w-50  { width: 50%; }
-.vital-fill-w-55  { width: 55%; }
-.vital-fill-w-60  { width: 60%; }
-.vital-fill-w-65  { width: 65%; }
-.vital-fill-w-70  { width: 70%; }
-.vital-fill-w-75  { width: 75%; }
-.vital-fill-w-80  { width: 80%; }
-.vital-fill-w-85  { width: 85%; }
-.vital-fill-w-90  { width: 90%; }
-.vital-fill-w-95  { width: 95%; }
-.vital-fill-w-100 { width: 100%; }
+.vital-fill-w-0 {
+  width: 0%;
+}
+
+.vital-fill-w-5 {
+  width: 5%;
+}
+
+.vital-fill-w-10 {
+  width: 10%;
+}
+
+.vital-fill-w-15 {
+  width: 15%;
+}
+
+.vital-fill-w-20 {
+  width: 20%;
+}
+
+.vital-fill-w-25 {
+  width: 25%;
+}
+
+.vital-fill-w-30 {
+  width: 30%;
+}
+
+.vital-fill-w-35 {
+  width: 35%;
+}
+
+.vital-fill-w-40 {
+  width: 40%;
+}
+
+.vital-fill-w-45 {
+  width: 45%;
+}
+
+.vital-fill-w-50 {
+  width: 50%;
+}
+
+.vital-fill-w-55 {
+  width: 55%;
+}
+
+.vital-fill-w-60 {
+  width: 60%;
+}
+
+.vital-fill-w-65 {
+  width: 65%;
+}
+
+.vital-fill-w-70 {
+  width: 70%;
+}
+
+.vital-fill-w-75 {
+  width: 75%;
+}
+
+.vital-fill-w-80 {
+  width: 80%;
+}
+
+.vital-fill-w-85 {
+  width: 85%;
+}
+
+.vital-fill-w-90 {
+  width: 90%;
+}
+
+.vital-fill-w-95 {
+  width: 95%;
+}
+
+.vital-fill-w-100 {
+  width: 100%;
+}
 
 /* Controles de incremento/decremento de vitais */
 .vital-tracker-controls {
@@ -954,10 +1002,9 @@
   gap: 4px;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  background: #090d13;
+  background: var(--bg-inset);
   padding: 4px 6px;
-  border: 1px solid #21262d;
-  border-radius: 2px;
+  border: 1px solid var(--border-muted);
   justify-content: space-between;
 }
 
@@ -970,10 +1017,9 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: bold;
-  background: #161b22;
-  color: #c9d1d9;
-  border: 1px solid #30363d;
-  border-radius: 2px;
+  background: var(--bg-panel);
+  color: var(--text-normal);
+  border: 1px solid var(--border-default);
   padding: 3px 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -981,14 +1027,14 @@
 }
 
 .btn-vital-step:hover {
-  background: #21262d;
-  color: #f0f6fc;
-  border-color: #58a6ff;
+  background: var(--bg-surface-elevated);
+  color: var(--text-bright);
+  border-color: var(--border-focus);
 }
 
 .btn-vital-step.btn-vital-minus:hover {
   border-color: var(--accent-crimson);
-  color: #ff7b72;
+  color: var(--dmg-burn);
 }
 
 .btn-vital-step.btn-vital-plus:hover {
@@ -1000,7 +1046,7 @@
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: bold;
-  color: #f0f6fc;
+  color: var(--text-bright);
   padding: 0 4px;
 }
 
@@ -1014,7 +1060,7 @@ button.pip.pip-interactive {
 
 button.pip.pip-interactive:hover {
   transform: scale(1.15);
-  border-color: #f0f6fc;
+  border-color: var(--text-bright);
 }
 
 /* Alerta de Superaquecimento / Zona Crítica */
@@ -1025,21 +1071,25 @@ button.pip.pip-interactive:hover {
   font-family: var(--font-mono);
   font-size: 0.5rem;
   font-weight: bold;
-  color: #f85149;
+  color: var(--accent-danger);
   padding: 2px 6px;
-  border-radius: 2px;
   letter-spacing: 0.05em;
 }
 
 @keyframes pulse-danger {
-  0% { opacity: 0.7; }
-  100% { opacity: 1; box-shadow: 0 0 8px rgba(248, 81, 73, 0.6); }
+  0% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(248, 81, 73, 0.6);
+  }
 }
 
 /* Botão Interativo de Ponto de Núcleo (Core Power) */
 button.core-power-pip {
   cursor: pointer;
-  border-radius: 2px;
   transition: all 0.2s ease;
 }
 
@@ -1056,15 +1106,15 @@ button.core-power-pip.active:hover {
 
 button.core-power-pip.depleted {
   background: rgba(248, 81, 73, 0.1);
-  color: #8b949e;
-  border-color: #30363d;
+  color: var(--text-muted);
+  border-color: var(--border-default);
   text-decoration: line-through;
 }
 
 button.core-power-pip.depleted:hover {
   background: rgba(248, 81, 73, 0.2);
-  color: #c9d1d9;
-  border-color: #8b949e;
+  color: var(--text-normal);
+  border-color: var(--text-muted);
 }
 
 /* Botões e Badges de Estado de Armas e Sistemas */
@@ -1077,7 +1127,6 @@ button.core-power-pip.depleted:hover {
   font-weight: bold;
   letter-spacing: 0.05em;
   padding: 3px 8px;
-  border-radius: 2px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1097,9 +1146,9 @@ button.core-power-pip.depleted:hover {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 600;
-  color: #8b949e;
-  background: #161b22;
-  border: 1px solid #30363d;
+  color: var(--text-muted);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 0.35rem 0.65rem;
   letter-spacing: 0.05em;
 }
@@ -1117,8 +1166,8 @@ button.core-power-pip.depleted:hover {
 .weapon-status-operational,
 .system-status-operational {
   background: rgba(63, 185, 80, 0.15);
-  color: #3fb950;
-  border: 1px solid #2ea043;
+  color: var(--status-approved);
+  border: 1px solid var(--border-success);
 }
 
 .weapon-status-operational:hover,
@@ -1129,8 +1178,8 @@ button.core-power-pip.depleted:hover {
 
 .weapon-status-unloaded {
   background: rgba(210, 153, 34, 0.2);
-  color: #d29922;
-  border: 1px solid #bb8009;
+  color: var(--accent-gold);
+  border: 1px solid var(--border-warning);
 }
 
 .weapon-status-unloaded:hover {
@@ -1141,8 +1190,8 @@ button.core-power-pip.depleted:hover {
 .weapon-status-destroyed,
 .system-status-destroyed {
   background: rgba(248, 81, 73, 0.2);
-  color: #f85149;
-  border: 1px solid #da3633;
+  color: var(--accent-danger);
+  border: 1px solid var(--border-danger);
 }
 
 .weapon-status-destroyed:hover,
@@ -1153,40 +1202,39 @@ button.core-power-pip.depleted:hover {
 
 /* Estados Visuais nos Cards de Encaixes e Sistemas Avariados */
 .mount-card-unloaded {
-  border-color: #bb8009;
+  border-color: var(--border-warning);
 }
 
 .mount-card-destroyed {
-  border-color: #da3633;
+  border-color: var(--border-danger);
   opacity: 0.75;
 }
 
 .mount-card-destroyed .mount-weapon-name,
 .mount-card-destroyed .mount-weapon-stats {
   text-decoration: line-through;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .system-card-destroyed {
-  border-color: #da3633;
+  border-color: var(--border-danger);
   opacity: 0.75;
 }
 
 .system-card-destroyed .system-name,
 .system-card-destroyed .system-desc {
   text-decoration: line-through;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .destroyed-notice {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #f85149;
+  color: var(--accent-danger);
   font-weight: bold;
   background: rgba(248, 81, 73, 0.1);
   padding: 4px 8px;
-  border: 1px dashed #da3633;
-  border-radius: 2px;
+  border: 1px dashed var(--border-danger);
   margin-top: 0.5rem;
   display: flex;
   align-items: center;
@@ -1196,12 +1244,11 @@ button.core-power-pip.depleted:hover {
 .unloaded-notice {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #d29922;
+  color: var(--accent-gold);
   font-weight: bold;
   background: rgba(210, 153, 34, 0.1);
   padding: 4px 8px;
-  border: 1px dashed #bb8009;
-  border-radius: 2px;
+  border: 1px dashed var(--border-warning);
   margin-top: 0.5rem;
   display: flex;
   align-items: center;
@@ -1211,13 +1258,12 @@ button.core-power-pip.depleted:hover {
 /* Botão de Reparo Completo (Descanso / Reset de Combate) */
 .btn-full-repair {
   background: rgba(88, 166, 255, 0.12);
-  color: #58a6ff;
-  border: 1px solid #388bfd;
+  color: var(--accent-blue);
+  border: 1px solid var(--border-focus);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: bold;
   padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1228,5 +1274,5 @@ button.core-power-pip.depleted:hover {
 .btn-full-repair:hover {
   background: rgba(88, 166, 255, 0.25);
   box-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
-  color: #f0f6fc;
+  color: var(--text-bright);
 }

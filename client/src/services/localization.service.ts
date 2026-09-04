@@ -1,30 +1,87 @@
 import compconLocales from '../locales/compcon-pt-br.json';
+import { i18n } from './i18n.service.js';
 
 const locales: Record<string, string> = compconLocales as Record<string, string>;
 
+export type SupportedLang = 'pt' | 'en';
+
 /**
  * Serviço de Localização Oficial do COMP/CON para LANCER
- * Baseado no repositório oficial https://github.com/massif-press/compcon-locales (pt_BR)
+ * Utiliza i18next exclusivamente para a interface e desativa a tradução de dados no modo inglês.
  */
 class LocalizationService {
+  private currentLanguage: SupportedLang = (localStorage.getItem('lancer_lang') as SupportedLang) || 'pt';
+  private listeners: Array<(lang: SupportedLang) => void> = [];
+
+  get isTranslationEnabled(): boolean {
+    return this.currentLanguage === 'pt';
+  }
+
+  getLanguage(): SupportedLang {
+    return this.currentLanguage;
+  }
+
+  setLanguage(lang: SupportedLang): void {
+    if (this.currentLanguage === lang) return;
+    this.currentLanguage = lang;
+    try {
+      localStorage.setItem('lancer_lang', lang);
+      i18n.changeLanguage(lang);
+    } catch {
+      // ignore
+    }
+    this.notify();
+  }
+
+  toggleLanguage(): SupportedLang {
+    const nextLang: SupportedLang = this.currentLanguage === 'pt' ? 'en' : 'pt';
+    this.setLanguage(nextLang);
+    return nextLang;
+  }
+
+  subscribe(cb: (lang: SupportedLang) => void): () => void {
+    this.listeners.push(cb);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== cb);
+    };
+  }
+
+  private notify(): void {
+    this.listeners.forEach((cb) => {
+      try {
+        cb(this.currentLanguage);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
+
   /**
-   * Traduz uma chave arbitrária do compcon-locales
+   * Traduz a interface usando i18next, com fallback para compcon-locales (se PT)
    */
   t(key: string, fallback?: string): string {
-    if (locales[key]) {
+    // 1. Traduz interface via i18next
+    const i18nVal = i18n.t(key);
+    if (i18nVal && i18nVal !== key) {
+      return i18nVal;
+    }
+
+    // 2. Se tradução estiver ativa (PT), tenta compcon-pt-br.json
+    if (this.isTranslationEnabled && locales[key]) {
       return locales[key];
     }
+
     return fallback !== undefined ? fallback : key;
   }
 
   /**
    * Traduz o nome de um item pelo seu ID do COMP/CON
-   * Ex: mw_assault_rifle -> "Fuzil de Assalto"
-   * Ex: mw_hammer_u_rpl -> "Martelo LU-PR"
-   * Ex: ms_ferrous_lash -> "Chicote Ferroso"
    */
   translateItemName(id?: string, fallback?: string): string {
     if (!id) return fallback || '';
+    if (!this.isTranslationEnabled) {
+      return fallback || id;
+    }
 
     // Procura chave id.name
     const nameKey = `${id}.name`;
@@ -44,6 +101,7 @@ class LocalizationService {
    */
   translateCoreBonusEffect(id?: string, fallback?: string): string {
     if (!id) return fallback || '';
+    if (!this.isTranslationEnabled) return fallback || '';
 
     const effectKeys = [
       `${id}.effect`,
@@ -64,6 +122,7 @@ class LocalizationService {
    */
   translateCoreBonusDescription(id?: string, fallback?: string): string {
     if (!id) return fallback || '';
+    if (!this.isTranslationEnabled) return fallback || '';
 
     const descKeys = [
       `${id}.description`,
@@ -84,6 +143,7 @@ class LocalizationService {
    */
   translateItemDesc(id?: string, fallback?: string): string {
     if (!id) return fallback || '';
+    if (!this.isTranslationEnabled) return fallback || '';
 
     const descKeys = [
       `${id}.description`,
@@ -112,12 +172,23 @@ class LocalizationService {
   } {
     if (!frameId && !core) {
       return {
-        name: 'Sistema de Núcleo',
+        name: this.isTranslationEnabled ? 'Sistema de Núcleo' : 'Core System',
         description: '',
-        activeName: 'Sobrecarga de Núcleo',
+        activeName: this.isTranslationEnabled ? 'Poder do Núcleo' : 'Core Active',
         activeEffect: '',
         passiveName: '',
         passiveEffect: ''
+      };
+    }
+
+    if (!this.isTranslationEnabled) {
+      return {
+        name: core?.name || 'Core System',
+        description: core?.description || '',
+        activeName: core?.active_name || 'Core Active',
+        activeEffect: core?.active_effect || core?.active_actions?.[0]?.detail || '',
+        passiveName: core?.passive_name || '',
+        passiveEffect: core?.passive_effect || ''
       };
     }
 
@@ -148,7 +219,21 @@ class LocalizationService {
     actions: Array<{ name: string; detail: string; activation: string }>;
   } {
     if (!systemId && !data) {
-      return { name: 'Sistema', description: '', actions: [] };
+      return { name: this.isTranslationEnabled ? 'Sistema' : 'System', description: '', actions: [] };
+    }
+
+    if (!this.isTranslationEnabled) {
+      const rawActions: any[] = data?.actions || [];
+      const actions = rawActions.map((a: any) => ({
+        name: a.name || 'Action',
+        detail: a.detail || a.description || '',
+        activation: a.activation || 'Action'
+      }));
+      return {
+        name: data?.name || systemId || 'System',
+        description: data?.effect || data?.description || '',
+        actions
+      };
     }
 
     const sid = systemId || data?.id || '';
@@ -201,7 +286,14 @@ class LocalizationService {
    * Traduz um Traço (Trait) nativo do Chassi
    */
   translateTrait(frameId?: string, trait?: any): { name: string; description: string } {
-    if (!trait) return { name: 'Traço', description: '' };
+    if (!trait) return { name: this.isTranslationEnabled ? 'Traço' : 'Trait', description: '' };
+
+    if (!this.isTranslationEnabled) {
+      return {
+        name: trait.name || 'Trait',
+        description: trait.description || trait.detail || ''
+      };
+    }
 
     const rawName = trait.name || '';
     const cleanName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -240,12 +332,53 @@ class LocalizationService {
   }
 
   /**
-   * Traduz uma Tag de arma/sistema (ex: tg_loading -> "Recarga", tg_knockback com val 2 -> "Repulsão 2")
+   * Traduz uma Tag de arma/sistema
    */
   translateTag(tagId?: string, val?: any): string {
     if (!tagId) return '';
 
     const cleanId = tagId.toLowerCase().replace(/^tg_/, '');
+
+    if (!this.isTranslationEnabled) {
+      const defaultTagMapEn: Record<string, string> = {
+        loading: 'Loading',
+        accurate: 'Accurate',
+        inaccurate: 'Inaccurate',
+        arcing: 'Arcing',
+        knockback: 'Knockback {VAL}',
+        overkill: 'Overkill',
+        armor_piercing: 'Armor-Piercing',
+        ap: 'AP',
+        seeking: 'Seeking',
+        smart: 'Smart',
+        reliable: 'Reliable {VAL}',
+        heat: 'Heat {VAL}',
+        burn: 'Burn {VAL}',
+        unique: 'Unique',
+        limited: 'Limited {VAL}',
+        ai: 'AI',
+        no_cascade: 'No Cascade',
+        gear: 'Gear',
+        protocol: 'Protocol',
+        reaction: 'Reaction',
+        full_action: 'Full Action',
+        quick_action: 'Quick Action',
+        threat: 'Threat {VAL}',
+        thrown: 'Thrown {VAL}',
+        blast: 'Blast {VAL}',
+        burst: 'Burst {VAL}',
+        line: 'Line {VAL}',
+        cone: 'Cone {VAL}'
+      };
+
+      let translated = defaultTagMapEn[cleanId] || cleanId.toUpperCase();
+      if (val !== undefined && val !== null) {
+        if (translated.includes('{VAL}')) return translated.replace('{VAL}', String(val));
+        return `${translated} ${val}`;
+      }
+      return translated.replace(' {VAL}', '').replace('{VAL}', '');
+    }
+
     const candidateKeys = [
       `tg_${cleanId}.name`,
       `tag_${cleanId}.name`,
@@ -306,13 +439,17 @@ class LocalizationService {
   }
 
   /**
-   * Retorna a etiqueta traduzida e a descrição oficial completa de uma Tag (para Tooltips/Toolbox)
+   * Retorna a etiqueta traduzida e a descrição oficial completa de uma Tag
    */
   translateTagInfo(tagId?: string, val?: any): { label: string; description: string } {
     if (!tagId) return { label: '', description: '' };
 
     const cleanId = tagId.toLowerCase().replace(/^tg_/, '');
     const label = this.translateTag(tagId, val);
+
+    if (!this.isTranslationEnabled) {
+      return { label, description: label };
+    }
 
     const descKeys = [
       `tg_${cleanId}.description`,
@@ -344,8 +481,17 @@ class LocalizationService {
    * Traduz o tipo de dano oficial do LANCER
    */
   translateDamageType(dmgType?: string): string {
-    if (!dmgType) return 'Cinético';
+    if (!dmgType) return this.isTranslationEnabled ? 'Cinético' : 'Kinetic';
     const clean = dmgType.trim().toLowerCase();
+
+    if (!this.isTranslationEnabled) {
+      if (clean.includes('kin') || clean.includes('cin')) return 'Kinetic';
+      if (clean.includes('exp')) return 'Explosive';
+      if (clean.includes('ene')) return 'Energy';
+      if (clean.includes('burn') || clean.includes('queim')) return 'Burn';
+      if (clean.includes('heat') || clean.includes('calor')) return 'Heat';
+      return dmgType;
+    }
 
     if (clean.includes('kin') || clean.includes('cin')) return 'Cinético';
     if (clean.includes('exp')) return 'Explosivo';
@@ -360,8 +506,18 @@ class LocalizationService {
    * Traduz o tipo de alcance oficial do LANCER
    */
   translateRangeType(rangeType?: string): string {
-    if (!rangeType) return 'Alcance';
+    if (!rangeType) return this.isTranslationEnabled ? 'Alcance' : 'Range';
     const clean = rangeType.trim().toLowerCase();
+
+    if (!this.isTranslationEnabled) {
+      if (clean.includes('range') || clean.includes('alcance')) return 'Range';
+      if (clean.includes('threat') || clean.includes('ameaça')) return 'Threat';
+      if (clean.includes('blast') || clean.includes('explosão')) return 'Blast';
+      if (clean.includes('burst') || clean.includes('rajada')) return 'Burst';
+      if (clean.includes('line') || clean.includes('linha')) return 'Line';
+      if (clean.includes('cone')) return 'Cone';
+      return rangeType;
+    }
 
     if (clean.includes('range') || clean.includes('alcance')) return 'Alcance';
     if (clean.includes('threat') || clean.includes('ameaça')) return 'Ameaça';
@@ -377,8 +533,12 @@ class LocalizationService {
    * Traduz o tipo de montagem / encaixe oficial do LANCER
    */
   translateMountType(mountType?: string): string {
-    if (!mountType) return 'Encaixe';
+    if (!mountType) return this.isTranslationEnabled ? 'Encaixe' : 'Mount';
     const clean = mountType.trim();
+
+    if (!this.isTranslationEnabled) {
+      return clean;
+    }
 
     const mountMap: Record<string, string> = {
       'Aux/Aux': 'Auxiliar / Auxiliar',
@@ -397,8 +557,18 @@ class LocalizationService {
    * Traduz o tipo de ativação de ação
    */
   translateActivation(activation?: string): string {
-    if (!activation) return 'Ação';
+    if (!activation) return this.isTranslationEnabled ? 'Ação' : 'Action';
     const clean = activation.trim().toLowerCase();
+
+    if (!this.isTranslationEnabled) {
+      if (clean.includes('quick') || clean.includes('rápida') || clean.includes('rapida')) return 'Quick Action';
+      if (clean.includes('full') || clean.includes('completa')) return 'Full Action';
+      if (clean.includes('protocol')) return 'Protocol';
+      if (clean.includes('reaction') || clean.includes('reação') || clean.includes('reacao')) return 'Reaction';
+      if (clean.includes('free') || clean.includes('livre')) return 'Free Action';
+      if (clean.includes('downtime') || clean.includes('intermissão') || clean.includes('intermissao')) return 'Downtime';
+      return activation;
+    }
 
     if (clean.includes('quick')) return 'Ação Rápida';
     if (clean.includes('full')) return 'Ação Completa';
@@ -433,6 +603,12 @@ class LocalizationService {
     if (!source) return 'GMS';
     const clean = source.trim().toUpperCase();
 
+    if (!this.isTranslationEnabled) {
+      if (clean === 'EIP-EN' || clean === 'IPSN') return 'IPS-N';
+      if (clean === 'AH') return 'HA';
+      return clean;
+    }
+
     if (clean === 'IPS-N' || clean === 'IPSN') return 'EIP-EN';
     if (clean === 'SSC') return 'SSC';
     if (clean === 'HORUS') return 'HORUS';
@@ -456,96 +632,101 @@ class LocalizationService {
       name: string;
       description: string;
       isActive: boolean;
+      actions: Array<{ name: string; detail: string; trigger: string; activation: string }>;
     }>;
   } {
-    if (!id && !data) {
+    const tid = id || data?.id || '';
+    const cleanId = tid.toLowerCase().replace(/^ta_/, '');
+
+    if (!this.isTranslationEnabled) {
+      const rawRanks: any[] = data?.ranks || [];
+      const ranks = rawRanks.map((r: any, idx: number) => {
+        const rawActions: any[] = r.actions || [];
+        const actions = rawActions.map((a: any) => ({
+          name: a.name || 'Action',
+          detail: a.detail || a.description || '',
+          trigger: a.trigger || '',
+          activation: this.translateActivation(a.activation)
+        }));
+        return {
+          rankLevel: idx + 1,
+          name: r.name || `Rank ${idx + 1}`,
+          description: r.description || r.detail || '',
+          isActive: idx + 1 <= currentRank,
+          actions
+        };
+      });
+
       return {
-        id: '',
-        name: 'Talento',
-        description: '',
-        terse: '',
+        id: tid,
+        name: data?.name || tid || 'Talent',
+        description: data?.description || '',
+        terse: data?.terse || '',
         currentRank,
-        ranks: []
+        ranks
       };
     }
 
-    const tid = id || data?.id || '';
-    const cleanId = tid.replace(/^(t_|ta_|mf_)/, '').toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const nameCandidate = (data?.name || (typeof id === 'string' && !id.startsWith('t_') ? id : '')).toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const prefixes = [
-      tid,
-      `t_${cleanId}`,
-      `mf_${cleanId}`,
-      `ta_${cleanId}`,
-      cleanId,
-      nameCandidate ? `t_${nameCandidate}` : '',
-      nameCandidate ? `mf_${nameCandidate}` : '',
-      nameCandidate
-    ].filter(Boolean);
+    const prefixes = [`ta_${cleanId}`, cleanId, tid];
 
     let name = '';
-    for (const p of prefixes) {
-      if (locales[`${p}.name`]) {
-        name = locales[`${p}.name`];
-        break;
-      }
-    }
-    if (!name) name = data?.name || tid;
-
     let description = '';
-    for (const p of prefixes) {
-      if (locales[`${p}.description`]) {
-        description = locales[`${p}.description`];
-        break;
-      }
-    }
-    if (!description) description = data?.description || '';
-
     let terse = '';
-    for (const p of prefixes) {
-      if (locales[`${p}.terse`]) {
-        terse = locales[`${p}.terse`];
-        break;
-      }
+
+    // Nome e descrições base
+    for (const pfx of prefixes) {
+      if (!name && locales[`${pfx}.name`]) name = locales[`${pfx}.name`];
+      if (!description && locales[`${pfx}.description`]) description = locales[`${pfx}.description`];
+      if (!terse && locales[`${pfx}.terse`]) terse = locales[`${pfx}.terse`];
     }
+
+    if (!name) name = data?.name || tid;
+    if (!description) description = data?.description || '';
     if (!terse) terse = data?.terse || '';
 
+    // Ranques (I, II, III)
     const rawRanks: any[] = data?.ranks || [];
     const ranks = rawRanks.map((r: any, idx: number) => {
-      const cleanRank = (r.name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
-      let rName = '';
-      for (const pfx of prefixes) {
-        const k = `${pfx}.rank_${cleanRank}.name`;
-        const ki = `${pfx}.rank_${idx}.name`;
-        if (locales[k]) {
-          rName = locales[k];
-          break;
-        }
-        if (locales[ki]) {
-          rName = locales[ki];
-          break;
-        }
-      }
-      if (!rName) rName = r.name || `Rank ${idx + 1}`;
+      const rankNum = idx + 1;
+      const cleanRank = rankNum === 1 ? 'i' : rankNum === 2 ? 'ii' : 'iii';
 
+      let rName = '';
       let rDesc = '';
+
       for (const pfx of prefixes) {
-        const k = `${pfx}.rank_${cleanRank}.description`;
-        const kd = `${pfx}.rank_${cleanRank}.detail`;
-        const ki = `${pfx}.rank_${idx}.description`;
-        if (locales[k]) {
-          rDesc = locales[k];
-          break;
+        const candidateKeys = [
+          `${pfx}.rank_${cleanRank}.name`,
+          `${pfx}.rank_${rankNum}.name`,
+          `${pfx}.${cleanRank}.name`,
+          `rank_${cleanRank}.name`
+        ];
+        for (const k of candidateKeys) {
+          if (locales[k]) {
+            rName = locales[k];
+            break;
+          }
         }
-        if (locales[kd]) {
-          rDesc = locales[kd];
-          break;
-        }
-        if (locales[ki]) {
-          rDesc = locales[ki];
-          break;
-        }
+        if (rName) break;
       }
+
+      for (const pfx of prefixes) {
+        const candidateDescKeys = [
+          `${pfx}.rank_${cleanRank}.description`,
+          `${pfx}.rank_${cleanRank}.detail`,
+          `${pfx}.rank_${rankNum}.description`,
+          `${pfx}.${cleanRank}.description`,
+          `rank_${cleanRank}.description`
+        ];
+        for (const k of candidateDescKeys) {
+          if (locales[k]) {
+            rDesc = locales[k];
+            break;
+          }
+        }
+        if (rDesc) break;
+      }
+
+      if (!rName) rName = r.name || `Ranque ${cleanRank.toUpperCase()}`;
       if (!rDesc) rDesc = r.description || r.detail || '';
 
       // Sub-ações e poderes concedidos por este ranque

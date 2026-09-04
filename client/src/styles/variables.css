@@ -1,65 +1,167 @@
 :root {
-  /* Color Palette - Deep Omninet Space */
+  /* =======================================================
+     SUPERFÍCIES & PAINÉIS (LANCER / COMP/CON CARBON PALETTE)
+     ======================================================= */
   --bg-primary: #090b10;
   --bg-secondary: #111520;
   --bg-tertiary: #181e2e;
+  --bg-dark: #0d1117;           /* Fundo base escuro de containers internos, matrix e inputs */
+  --bg-panel: #161b22;          /* Fundo padrão de painéis, cartões e cabeçalhos */
+  --bg-panel-alt: #11151c;      /* Variação alternativa de painel (chat, formulários) */
+  --bg-inset: #090d13;          /* Insets profundos, barras de progresso, tags escuras */
+  --bg-surface-elevated: #21262d;
   --bg-card: rgba(17, 21, 32, 0.85);
   --bg-card-hover: rgba(24, 30, 46, 0.95);
   --bg-glass: rgba(17, 21, 32, 0.7);
 
-  /* Borders & Glow */
+  /* =======================================================
+     BORDAS TÁTICAS & MILITARES (1px DEFINIDAS)
+     ======================================================= */
+  --border-default: #30363d;    /* Borda primária de 1px definida */
+  --border-muted: #21262d;      /* Borda secundária / divisores internos */
+  --border-hover: #484f58;      /* Borda ativa no hover de cards/inputs */
+  --border-focus: #58a6ff;      /* Borda de foco em inputs */
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-active: rgba(120, 192, 145, 0.35);
   --border-lancer: rgba(128, 41, 50, 0.5);
+  --border-danger: #da3633;
+  --border-warning: #bb8009;
+  --border-success: #2ea043;
 
-  /* Primary Accent - Crimson (#802932) & Mint Terminal (#78C091) */
+  /* =======================================================
+     ACENTOS PRIMÁRIOS (LANCER / COMP/CON)
+     ======================================================= */
   --accent-crimson: #aa3440;
   --accent-crimson-hover: #96323c;
   --accent-crimson-glow: rgba(128, 41, 50, 0.4);
   --accent-mint: #78C091;
   --accent-mint-hover: #8ad0a3;
   --accent-mint-glow: rgba(120, 192, 145, 0.3);
+  --accent-gold: #d29922;       /* Ouro tático */
+  --accent-gold-glow: rgba(210, 153, 34, 0.35);
+  --accent-amber: #e3b341;      /* Âmbar tático */
+  --accent-blue: #58a6ff;       /* Azul tático */
+  --accent-purple: #bc8cff;     /* Púrpura tático */
+  --accent-danger: #f85149;     /* Perigo / Alarme crítico */
+  --accent-danger-glow: rgba(248, 81, 73, 0.35);
+  --accent-success: #3fb950;    /* Integridade / Sucesso */
+  --accent-success-glow: rgba(63, 185, 80, 0.35);
 
-  /* Action Activation Colors (LANCER / COMP/CON) */
+  /* Badges e Pílulas de Status */
+  --badge-green-bg: rgba(63, 185, 80, 0.15);
+  --badge-green-text: #3fb950;
+  --badge-gold-bg: rgba(210, 153, 34, 0.15);
+  --badge-gold-text: #d29922;
+  --badge-amber-bg: rgba(227, 179, 65, 0.15);
+  --badge-amber-text: #e3b341;
+  --badge-crimson-bg: rgba(170, 52, 64, 0.15);
+  --badge-crimson-text: #f85149;
+  --badge-blue-bg: rgba(88, 166, 255, 0.15);
+  --badge-blue-text: #58a6ff;
+
+  /* =======================================================
+     FABRICANTES OFICIAIS DE MECHA (LANCER CORPS)
+     ======================================================= */
+  --corp-gms: #991E2A;
+  --corp-gms-bg: rgba(153, 30, 42, 0.15);
+  --corp-gms-border: rgba(153, 30, 42, 0.45);
+
+  --corp-horus: #046E3C;
+  --corp-horus-bg: rgba(4, 110, 60, 0.15);
+  --corp-horus-border: rgba(4, 110, 60, 0.45);
+
+  --corp-ssc: #B57E07;
+  --corp-ssc-bg: rgba(181, 126, 7, 0.15);
+  --corp-ssc-border: rgba(181, 126, 7, 0.45);
+
+  --corp-ipsn: #0C4D99;
+  --corp-ipsn-bg: rgba(12, 77, 153, 0.15);
+  --corp-ipsn-border: rgba(12, 77, 153, 0.45);
+
+  --corp-ha: #6E4373;
+  --corp-ha-bg: rgba(110, 67, 115, 0.15);
+  --corp-ha-border: rgba(110, 67, 115, 0.45);
+
+  --corp-generic: #8b949e;
+  --corp-generic-bg: rgba(139, 148, 158, 0.15);
+  --corp-generic-border: rgba(139, 148, 158, 0.45);
+
+  
+
+
+  /* =======================================================
+     MEDIDORES DE VITAIS (COMBAT TRACKER)
+     ======================================================= */
+  --vital-hp: #3fb950;
+  --vital-heat: #f0883e;
+  --vital-structure: #f85149;
+  --vital-stress: #d29922;
+  --vital-overshield: #38bdf8;
+  --vital-core: #78C091;
+
+  /* =======================================================
+     AÇÕES DE COMBATE (LANCER / COMP/CON)
+     ======================================================= */
   --action-protocol: #bc8cff;
   --action-quick: #e3b341;
   --action-full: #f85149;
   --action-reaction: #38bdf8;
   --action-free: #78c091;
 
-  /* Atributos H.A.S.E. / C.A.S.E. (LANCER / COMP/CON) */
+  /* =======================================================
+     ATRIBUTOS H.A.S.E. / C.A.S.E.
+     ======================================================= */
   --hase-hull: #3fb950;         /* Casco: Verde Esmeralda Tático */
   --hase-agility: #58a6ff;      /* Agilidade: Azul Elétrico Tático */
   --hase-systems: #bc8cff;      /* Sistemas: Lilás / Violeta Tático */
   --hase-engineering: #f0883e;  /* Engenharia: Laranja / Âmbar Tático */
 
-  /* Typography Colors */
+  /* =======================================================
+     HIERARQUIA DE TIPOGRAFIA & TEXTOS
+     ======================================================= */
+  --text-bright: #f0f6fc;       /* Primário (alto contraste) */
+  --text-normal: #c9d1d9;       /* Secundário de leitura */
+  --text-muted: #8b949e;        /* Metadados técnicos / labels */
+  --text-dark: #6e7681;         /* Desativado / profundo */
   --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
   --text-dim: #ebebeb;
   --text-mint: #78C091;
   --text-crimson: #c04652;
+  --text-gold: #d29922;
 
-  /* Status Colors */
+  /* =======================================================
+     STATUS GLOBAIS DE OPERAÇÃO
+     ======================================================= */
   --status-approved: #10b981;
   --status-pending: #f59e0b;
   --status-rejected: #ef4444;
   --status-active: #00f0ff;
   --status-completed: #3b82f6;
 
-  /* Typography Families */
+  /* =======================================================
+     FAMÍLIAS TIPOGRÁFICAS
+     ======================================================= */
   --font-display: 'Orbitron', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Layout & Spacing */
+  /* =======================================================
+     LAYOUT & ESPAÇAMENTO
+     ======================================================= */
   --header-height: 68px;
   --max-width: 1400px;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  /* Transitions */
+  /* =======================================================
+     TRANSIÇÕES & GLOWS TÁTICOS
+     ======================================================= */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --glow-mint: 0 0 10px rgba(120, 192, 145, 0.35);
+  --glow-crimson: 0 0 10px rgba(170, 52, 64, 0.4);
+  --glow-gold: 0 0 10px rgba(210, 153, 34, 0.4);
+  --glow-danger: 0 0 10px rgba(248, 81, 73, 0.4);
 }

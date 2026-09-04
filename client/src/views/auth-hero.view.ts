@@ -1,6 +1,7 @@
 import { authService } from '../services/auth.service.js';
 import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
+import { localization } from '../services/localization.service.js';
 
 /**
  * Tela de Autenticação / Entrada do Terminal da Guilda.
@@ -26,33 +27,36 @@ export class AuthHeroView {
             </div>
             <div class="terminal-status-indicator">
               <span class="status-box-indicator"></span>
-              <span>AGUARDANDO_CREDENCIAL</span>
+              <span>${localization.t('auth.awaiting_credential', 'AGUARDANDO_CREDENCIAL')}</span>
             </div>
           </div>
 
           <!-- Corpo do Terminal -->
           <div class="terminal-box-body">
             <div class="terminal-brand-header">
-              <h1 class="terminal-brand-title">GUILDA LANCER</h1>
-              <div class="terminal-brand-sub">SISTEMA TÁTICO OPERACIONAL</div>
+              <h1 class="terminal-brand-title">${localization.t('auth.brand_title', 'GUILDA LANCER')}</h1>
+              <div class="terminal-brand-sub">${localization.t('auth.brand_sub', 'SISTEMA TÁTICO OPERACIONAL')}</div>
             </div>
 
             <p class="terminal-description">
-              Autentique sua conta do Discord para acessar o hangar de mechas, sincronizar fichas do COMP/CON e participar das operações da Guilda.
+              ${localization.t(
+                'auth.description',
+                'Autentique sua conta do Discord para acessar o hangar de mechas, sincronizar fichas do COMP/CON e participar das operações da Guilda.'
+              )}
             </p>
 
             <!-- Ação Principal de Login -->
             <div class="terminal-action-area">
               <button id="btn-discord-login" class="terminal-btn terminal-btn-discord" type="button">
                 <i class="mdi mdi-discord discord-btn-icon"></i>
-                <span>ENTRAR COM O DISCORD</span>
+                <span>${localization.t('auth.discord_login', 'ENTRAR COM O DISCORD')}</span>
               </button>
             </div>
 
             <!-- Separador Técnico -->
             <div class="terminal-divider">
               <span class="divider-line"></span>
-              <span class="divider-tag">ACESSO LOCAL (DEV)</span>
+              <span class="divider-tag">${localization.t('auth.dev_access', 'ACESSO LOCAL (DEV)')}</span>
               <span class="divider-line"></span>
             </div>
 
@@ -60,17 +64,17 @@ export class AuthHeroView {
             <div class="terminal-dev-grid">
               <button id="btn-dev-pilot" class="dev-quick-btn" type="button">
                 ${getCompconIcon('pilot', 'compcon-icon dev-icon dev-icon-pilot')}
-                <span class="dev-quick-role">PILOTO</span>
+                <span class="dev-quick-role">${localization.t('auth.role_pilot', 'PILOTO')}</span>
                 <span class="dev-quick-sub">@operador_piloto</span>
               </button>
               <button id="btn-dev-gm" class="dev-quick-btn dev-quick-gm" type="button">
                 ${getCompconIcon('review', 'compcon-icon dev-icon dev-icon-gm')}
-                <span class="dev-quick-role">MESTRE</span>
+                <span class="dev-quick-role">${localization.t('auth.role_gm', 'MESTRE')}</span>
                 <span class="dev-quick-sub">@mestre_operacoes</span>
               </button>
               <button id="btn-dev-admin" class="dev-quick-btn dev-quick-admin" type="button">
                 ${getCompconIcon('missions', 'compcon-icon dev-icon dev-icon-admin')}
-                <span class="dev-quick-role">ADMIN</span>
+                <span class="dev-quick-role">${localization.t('auth.role_admin', 'ADMIN')}</span>
                 <span class="dev-quick-sub">@admin_omninet</span>
               </button>
             </div>
@@ -78,8 +82,8 @@ export class AuthHeroView {
 
           <!-- Rodapé do Box -->
           <div class="terminal-box-footer">
-            <span>TERMINAL: LOCALHOST</span>
-            <span>BUILD: v1.0.0</span>
+            <span>${localization.t('auth.terminal_host', 'TERMINAL: LOCALHOST')}</span>
+            <span>${localization.t('auth.build', 'BUILD: v1.0.0')}</span>
           </div>
         </div>
       </div>

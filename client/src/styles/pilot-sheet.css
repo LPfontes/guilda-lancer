@@ -6,43 +6,43 @@
 }
 
 .sheet-subcard {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1.5rem;
-  border-radius: var(--radius-sm);
 }
 
 .sheet-subcard-title {
   font-family: var(--font-display);
   font-size: 1rem;
-  letter-spacing: 0.06em;
-  color: #f0f6fc;
+  letter-spacing: 0.1em;
+  color: var(--text-bright);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #21262d;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-muted);
 }
 
-.sheet-talents-list, .sheet-skills-list, .sheet-licenses-list {
+.sheet-talents-list,
+.sheet-skills-list,
+.sheet-licenses-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.sheet-skill-item, .sheet-license-item {
-  background: #0d1117;
-  border: 1px solid #21262d;
+.sheet-skill-item,
+.sheet-license-item {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
   padding: 0.75rem 1rem;
-  border-radius: 2px;
 }
 
 .sheet-talent-item {
   appearance: none;
-  background: #0d1117;
-  border: 1px solid #21262d;
-  padding: 0.85rem 1rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
+  padding: 1rem 1rem;
   border-radius: 3px;
   width: 100%;
   text-align: left;
@@ -55,7 +55,7 @@
 
 .sheet-talent-item:hover,
 .sheet-talent-item:focus-visible {
-  background: #161b22;
+  background: var(--bg-panel);
   border-color: var(--accent-mint);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
@@ -78,7 +78,7 @@
 
 .talent-lead-icon {
   color: var(--hase-agility);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .talent-badge-group {
@@ -88,7 +88,7 @@
 }
 
 .talent-inspect-icon {
-  color: #6e7681;
+  color: var(--text-dark);
   font-size: 1rem;
   transition: color var(--transition-fast);
 }
@@ -98,7 +98,7 @@
 }
 
 .talent-name {
-  color: #f0f6fc;
+  color: var(--text-bright);
   font-size: 1rem;
 }
 
@@ -129,14 +129,13 @@
 }
 
 .talent-modal-box {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   max-width: 800px;
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
-  border-radius: var(--radius-sm);
 }
 
 .talent-modal-header {
@@ -144,8 +143,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1rem;
-  border-bottom: 1px solid #30363d;
-  background: #0d1117;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-dark);
 }
 
 .talent-modal-title-group {
@@ -169,14 +168,14 @@
 .talent-modal-name {
   font-family: var(--font-display);
   font-size: 1.2rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   margin: 0;
 }
 
 .talent-modal-close {
   background: transparent;
   border: none;
-  color: #8b949e;
+  color: var(--text-muted);
   font-size: 1.4rem;
   cursor: pointer;
   line-height: 1;
@@ -185,7 +184,7 @@
 }
 
 .talent-modal-close:hover {
-  color: #ffffff;
+  color: var(--text-bright);
 }
 
 .talent-modal-body {
@@ -207,11 +206,9 @@
 }
 
 .talent-modal-lore-box {
-  background: #0d1117;
-  border-left: 3px solid var(--accent-mint);
+  background: var(--bg-dark);
   padding: 0.8rem 1rem;
   margin-bottom: 1.2rem;
-  border-radius: 2px;
 }
 
 .talent-modal-lore-text {
@@ -240,8 +237,8 @@
 }
 
 .talent-rank-card {
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-default);
   padding: 0.8rem 1rem;
   border-radius: 3px;
 }
@@ -266,7 +263,7 @@
 .talent-rank-card-title {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .talent-rank-badge-status {
@@ -293,14 +290,14 @@
 }
 
 .talent-rank-badge-status.badge-locked {
-  background: #21262d;
-  color: #8b949e;
-  border: 1px solid #30363d;
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
 }
 
 .talent-rank-desc {
   font-size: 1rem;
-  color: #c9d1d9;
+  color: var(--text-normal);
   line-height: 1.5;
   padding-left: 1rem;
 }
@@ -308,9 +305,8 @@
 .talent-rank-actions-box {
   margin-top: 0.5rem;
   padding: 0.5rem 0.5rem;
-  background: #161b22;
+  background: var(--bg-panel);
   border-left: 2px solid var(--accent-mint);
-  border-radius: 2px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -328,20 +324,20 @@
 }
 
 .talent-action-title {
-  color: #f0f6fc;
+  color: var(--text-bright);
   font-size: 1rem;
 }
 
 .talent-action-trigger {
   font-family: var(--font-mono);
   font-size: 1rem;
-  color: #d29922;
+  color: var(--accent-gold);
   margin-bottom: 3px;
 }
 
 .talent-action-detail {
   font-size: 1rem;
-  color: #c9d1d9;
+  color: var(--text-normal);
   line-height: 1.5;
 }
 
@@ -352,7 +348,7 @@
 }
 
 .skill-name {
-  color: #c9d1d9;
+  color: var(--text-normal);
   font-size: 1rem;
 }
 
@@ -368,13 +364,13 @@
 }
 
 .license-name {
-  color: #c9d1d9;
+  color: var(--text-normal);
   font-size: 1.2rem;
 }
 
 .license-rank {
   font-family: var(--font-mono);
-  color: #d29922;
+  color: var(--accent-gold);
   font-size: 1rem;
 }
 
@@ -390,17 +386,17 @@
 
 .sheet-error-icon {
   font-size: 3rem;
-  color: #f85149;
+  color: var(--accent-danger);
 }
 
 .sheet-error-title {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .sheet-error-msg {
-  color: #8b949e;
+  color: var(--text-muted);
   max-width: 500px;
   margin-bottom: 1rem;
 }
@@ -408,10 +404,9 @@
 /* Empty State do Dossiê */
 .sheet-empty-card {
   padding: 3rem 2rem;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   text-align: center;
-  border-radius: var(--radius-sm);
 }
 
 .sheet-empty-content {
@@ -424,7 +419,7 @@
 }
 
 .sheet-empty-icon {
-  color: #6e7681;
+  color: var(--text-dark);
   margin-bottom: 0.5rem;
 }
 
@@ -436,7 +431,7 @@
 .sheet-empty-tag {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #d29922;
+  color: var(--accent-gold);
   letter-spacing: 0.1em;
   display: flex;
   align-items: center;
@@ -446,12 +441,12 @@
 .sheet-empty-title {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   margin: 0;
 }
 
 .sheet-empty-desc {
-  color: #8b949e;
+  color: var(--text-muted);
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 0.5rem;
@@ -460,10 +455,6 @@
 /* =======================================================
    ESTILOS ESPECÍFICOS DA FICHA DO PILOTO / OPERADOR
    ======================================================= */
-.pilot-dossier-hero {
-  border-left: 4px solid var(--accent-mint);
-}
-
 .pilot-avatar-box {
   width: 300px;
   min-height: 300px;
@@ -473,15 +464,15 @@
   font-family: var(--font-mono);
   font-size: 1rem;
   color: var(--text-dim);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
 }
 
 .pilot-vitals-matrix .matrix-box {
-  background: #161b22;
+  background: var(--bg-panel);
 }
 
 .sheet-operator-link {
-  color: #f0f6fc;
+  color: var(--text-bright);
   text-decoration: underline;
   text-decoration-color: var(--accent-mint);
   text-underline-offset: 3px;
@@ -494,27 +485,25 @@
 
 /* Card de Mecha Vinculado ao Piloto */
 .pilot-assigned-mech-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1rem 1rem;
   margin-bottom: 1rem;
-  border-radius: var(--radius-sm);
 }
 
 .assigned-mech-layout {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .assigned-mech-img-box {
   width: 140px;
   height: 140px;
-  border: 1px solid #30363d;
-  background: #0d1117;
+  border: 1px solid var(--border-default);
+  background: var(--bg-dark);
   overflow: hidden;
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -535,13 +524,13 @@
 .assigned-mech-title {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   margin: 0.2rem 0;
 }
 
 .assigned-mech-desc {
   font-size: 1rem;
-  color: #8b949e;
+  color: var(--text-muted);
   line-height: 1.4;
   margin: 0;
 }
@@ -560,7 +549,7 @@
 }
 
 .pilot-background-tag strong {
-  color: #f0f6fc;
+  color: var(--text-bright);
 }
 
 .pilot-mechs-grid {
@@ -581,7 +570,7 @@
 .sheet-action-btn-sync:hover {
   background: rgba(120, 192, 145, 0.12) !important;
   border-color: var(--accent-mint) !important;
-  color: #ffffff !important;
+  color: var(--text-bright) !important;
 }
 
 .sheet-action-btn-danger {
@@ -592,7 +581,7 @@
 .sheet-action-btn-danger:hover {
   background: rgba(248, 81, 73, 0.15) !important;
   border-color: var(--accent-crimson) !important;
-  color: #ffffff !important;
+  color: var(--text-bright) !important;
 }
 
 /* Modal de Exclusão Tática */
@@ -609,12 +598,11 @@
 }
 
 .pilot-delete-modal-box {
-  background: #161b22;
+  background: var(--bg-panel);
   border: 1px solid rgba(248, 81, 73, 0.5);
   max-width: 540px;
   width: 100%;
   box-shadow: 0 16px 48px rgba(248, 81, 73, 0.2), 0 16px 48px rgba(0, 0, 0, 0.85);
-  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -624,7 +612,7 @@
   align-items: center;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid rgba(248, 81, 73, 0.3);
-  background: #0d1117;
+  background: var(--bg-dark);
 }
 
 .pilot-delete-title {
@@ -634,7 +622,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 700;
 }
 
@@ -649,10 +637,9 @@
   background: rgba(248, 81, 73, 0.08);
   border: 1px solid rgba(248, 81, 73, 0.3);
   padding: 1rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   line-height: 1.5;
 }
 
@@ -669,10 +656,9 @@
   background: rgba(210, 153, 34, 0.1);
   border: 1px solid rgba(210, 153, 34, 0.4);
   padding: 1rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   line-height: 1.5;
 }
 
@@ -680,7 +666,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #d29922;
+  color: var(--accent-gold);
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
@@ -703,14 +689,13 @@
 
 .pilot-delete-confirm-input {
   width: 100%;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  color: #ffffff;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-default);
+  color: var(--text-bright);
   font-family: var(--font-mono);
   font-size: 0.9rem;
   font-weight: 700;
   padding: 0.65rem 0.85rem;
-  border-radius: var(--radius-sm);
   box-sizing: border-box;
   text-transform: uppercase;
   transition: all var(--transition-fast);
@@ -727,18 +712,17 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
 }
 
 .btn-danger-confirm {
-  background: #da3633;
-  border: 1px solid #f85149;
-  color: #ffffff;
+  background: var(--border-danger);
+  border: 1px solid var(--accent-danger);
+  color: var(--text-bright);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 700;
   padding: 0.6rem 1.25rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -748,7 +732,7 @@
 }
 
 .btn-danger-confirm:hover:not(:disabled) {
-  background: #b62324;
+  background: var(--accent-crimson-hover);
   box-shadow: 0 0 14px rgba(248, 81, 73, 0.4);
 }
 
@@ -759,10 +743,9 @@
 }
 
 .pilot-sync-current-badge {
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-default);
   padding: 0.5rem 0.85rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--accent-mint);
@@ -779,19 +762,18 @@
 }
 
 .pilot-sync-current-code {
-  color: #ffffff;
+  color: var(--text-bright);
   font-weight: 700;
   letter-spacing: 0.1em;
 }
 
 .pilot-sync-btn-use-current {
-  background: #161b22;
+  background: var(--bg-panel);
   border: 1px solid var(--accent-mint);
   color: var(--accent-mint);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -801,6 +783,5 @@
 
 .pilot-sync-btn-use-current:hover {
   background: rgba(120, 192, 145, 0.15);
-  color: #ffffff;
+  color: var(--text-bright);
 }
-

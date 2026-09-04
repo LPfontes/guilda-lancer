@@ -3,6 +3,7 @@ import { pilotService } from '../services/pilot.service.js';
 import { missionService } from '../services/mission.service.js';
 import { authService } from '../services/auth.service.js';
 import { ToastService } from '../components/toast.js';
+import { localization } from '../services/localization.service.js';
 import { IChatMessage, IReportData } from '../types/chat.types.js';
 import { IPilot } from '../types/pilot.types.js';
 import { IMission } from '../types/mission.types.js';
@@ -24,7 +25,7 @@ export class ReportsView {
     this.container.innerHTML = `
       <div class="sheet-loading-container">
         <div class="sheet-loading-spinner"></div>
-        <div class="sheet-loading-text">CARREGANDO FEED DE RELATÓRIOS OMNINET...</div>
+        <div class="sheet-loading-text">${localization.t('common.loading', 'CARREGANDO FEED DE RELATÓRIOS OMNINET...')}</div>
       </div>
     `;
 
@@ -109,32 +110,32 @@ export class ReportsView {
         <!-- Header da Seção de Relatórios -->
         <div class="reports-header-bar">
           <div class="reports-header-info">
-            <span class="reports-header-tag">// CANAL DE PÓS-AÇÃO</span>
+            <span class="reports-header-tag">${localization.t('reports.channel_tag', '// CANAL DE PÓS-AÇÃO')}</span>
             <h1 class="reports-header-title">
               <i class="mdi mdi-clipboard-text-outline"></i>
-              <span>FEED DE RELATÓRIOS DE MISSÃO</span>
+              <span>${localization.t('reports.title', 'FEED DE RELATÓRIOS DE MISSÃO')}</span>
             </h1>
             <p class="reports-header-desc">
-              Registro público das telemetrias de combate, avarias de chassi, ações de recesso e homologações do Mestre.
+              ${localization.t('reports.desc', 'Registro público das telemetrias de combate, avarias de chassi, ações de recesso e homologações do Mestre.')}
             </p>
           </div>
 
           <button type="button" id="btn-open-submit-modal" class="btn-submit-report" title="Submeter Relatório de Missão">
             <i class="mdi mdi-plus-box-outline"></i>
-            <span>SUBMETER NOVO RELATÓRIO</span>
+            <span>${localization.t('reports.new_report', 'SUBMETER NOVO RELATÓRIO')}</span>
           </button>
         </div>
 
         <!-- Filtros Rápidos -->
         <div class="reports-filter-bar">
           <button type="button" class="reports-filter-tab ${this.currentFilter === 'ALL' ? 'active' : ''}" data-filter="ALL">
-            TODOS OS RELATÓRIOS (${this.reports.length})
+            ${localization.t('reports.filter_all', 'TODOS OS RELATÓRIOS')} (${this.reports.length})
           </button>
           <button type="button" class="reports-filter-tab ${this.currentFilter === 'PENDING' ? 'active' : ''}" data-filter="PENDING">
-            <i class="mdi mdi-clock-outline"></i> AGUARDANDO HOMOLOGAÇÃO
+            <i class="mdi mdi-clock-outline"></i> ${localization.t('reports.filter_pending', 'AGUARDANDO HOMOLOGAÇÃO')}
           </button>
           <button type="button" class="reports-filter-tab ${this.currentFilter === 'VALIDATED' ? 'active' : ''}" data-filter="VALIDATED">
-            <i class="mdi mdi-check-decagram"></i> HOMOLOGADOS PELO GM
+            <i class="mdi mdi-check-decagram"></i> ${localization.t('reports.filter_validated', 'HOMOLOGADOS PELO GM')}
           </button>
         </div>
 
@@ -146,8 +147,8 @@ export class ReportsView {
               : `
             <div class="card reports-empty-card">
               <div class="reports-empty-icon"><i class="mdi mdi-clipboard-outline"></i></div>
-              <h3 class="reports-empty-title">NENHUM RELATÓRIO REGISTRADO</h3>
-              <p>Nenhum relatório de missão foi arquivado ainda com os filtros atuais.</p>
+              <h3 class="reports-empty-title">${localization.t('reports.no_reports_title', 'NENHUM RELATÓRIO REGISTRADO')}</h3>
+              <p>${localization.t('reports.no_reports_desc', 'Nenhum relatório de missão foi arquivado ainda com os filtros atuais.')}</p>
             </div>
           `
           }
@@ -159,8 +160,8 @@ export class ReportsView {
         <div class="report-modal-box">
           <div class="mission-chat-header">
             <div class="mission-chat-title-group">
-              <span class="mission-chat-sub">// TRANSMISSÃO DE PÓS-AÇÃO</span>
-              <h2 class="mission-chat-title">SUBMETER RELATÓRIO DE MISSÃO</h2>
+              <span class="mission-chat-sub">${localization.t('reports.modal_tag', '// TRANSMISSÃO DE PÓS-AÇÃO')}</span>
+              <h2 class="mission-chat-title">${localization.t('reports.modal_title', 'SUBMETER RELATÓRIO DE MISSÃO')}</h2>
             </div>
             <button type="button" id="btn-close-submit-modal" class="mission-chat-close-btn" title="Fechar">
               <i class="mdi mdi-close"></i>
@@ -170,7 +171,7 @@ export class ReportsView {
           <form id="form-submit-report" class="report-modal-body">
             <!-- Piloto & Chassi Identificados -->
             <div class="report-live-preview-box">
-              <div class="report-live-preview-title">// DADOS VINCULADOS DO CHASSI ATIVO</div>
+              <div class="report-live-preview-title">${localization.t('reports.linked_data', '// DADOS VINCULADOS DO CHASSI ATIVO')}</div>
               <div class="report-active-pilot-info">
                 <strong>Piloto:</strong> ${this.activePilot?.callsign || 'Sem Piloto'} 
                 (${this.activePilot?.name || 'Não informado'}) — 
@@ -181,9 +182,9 @@ export class ReportsView {
 
             <!-- Seleção de Missão -->
             <div class="report-form-group">
-              <label class="report-form-label">OPERAÇÃO VINCULADA:</label>
+              <label class="report-form-label">${localization.t('reports.linked_operation', 'OPERAÇÃO VINCULADA:')}</label>
               <select id="report-mission-select" class="report-form-select">
-                <option value="">-- Missão Livre / Sem Vínculo Específico --</option>
+                <option value="">${localization.t('reports.select_free_mission', '-- Missão Livre / Sem Vínculo Específico --')}</option>
                 ${this.missionsList
                   .map(
                     (m) => `
@@ -196,30 +197,30 @@ export class ReportsView {
 
             <!-- Ação de Recesso Escolhida -->
             <div class="report-form-group">
-              <label class="report-form-label">AÇÃO DE RECESSO ESCOLHIDA:</label>
+              <label class="report-form-label">${localization.t('reports.downtime_action', 'AÇÃO DE RECESSO ESCOLHIDA:')}</label>
               <input type="text" id="report-downtime-action" class="report-form-input" 
                 placeholder="Ex: Aquisição de Recursos, Modificar Mecha, Treinamento..." required />
             </div>
 
             <!-- Resultado da Ação de Recesso -->
             <div class="report-form-group">
-              <label class="report-form-label">RESULTADO DO DADO & RECURSO OBTIDO:</label>
+              <label class="report-form-label">${localization.t('reports.downtime_result', 'RESULTADO DO DADO & RECURSO OBTIDO:')}</label>
               <input type="text" id="report-downtime-result" class="report-form-input" 
                 placeholder="Ex: Sucesso Total (Rolagem 21) - Obtido Recurso 'Contatos no Subsolo'" required />
             </div>
 
             <!-- Observações & Avarias -->
             <div class="report-form-group">
-              <label class="report-form-label">OBSERVAÇÕES ADICIONAIS & REPAROS:</label>
+              <label class="report-form-label">${localization.t('reports.damaged_notes', 'OBSERVAÇÕES ADICIONAIS & REPAROS:')}</label>
               <textarea id="report-notes" class="report-form-textarea" 
                 placeholder="Descreva que itens foram destruídos, reparos gastos ou eventos narrativos marcantes..."></textarea>
             </div>
 
             <div class="report-modal-actions">
-              <button type="button" id="btn-cancel-submit-modal" class="btn btn-secondary">CANCELAR</button>
+              <button type="button" id="btn-cancel-submit-modal" class="btn btn-secondary">${localization.t('common.cancel', 'CANCELAR')}</button>
               <button type="submit" class="btn btn-primary">
                 <i class="mdi mdi-send"></i>
-                <span>PUBLICAR NO FEED</span>
+                <span>${localization.t('reports.publish_feed', 'PUBLICAR NO FEED')}</span>
               </button>
             </div>
           </form>
@@ -272,8 +273,8 @@ export class ReportsView {
           <div>
             ${
               isPending
-                ? `<span class="report-stamp report-stamp-pending"><i class="mdi mdi-clock-outline"></i> AGUARDANDO GM</span>`
-                : `<span class="report-stamp report-stamp-validated"><i class="mdi mdi-check-decagram"></i> HOMOLOGADO // RECURSO CONCEDIDO</span>`
+                ? `<span class="report-stamp report-stamp-pending"><i class="mdi mdi-clock-outline"></i> ${localization.t('reports.awaiting_gm', 'AGUARDANDO GM')}</span>`
+                : `<span class="report-stamp report-stamp-validated"><i class="mdi mdi-check-decagram"></i> ${localization.t('reports.gm_approved', 'HOMOLOGADO // RECURSO CONCEDIDO')}</span>`
             }
           </div>
         </div>
@@ -284,28 +285,28 @@ export class ReportsView {
             ? `
           <div class="report-vitals-strip">
             <div class="report-vital-item">
-              <span class="report-vital-label">PONTOS DE VIDA</span>
+              <span class="report-vital-label">${localization.t('reports.hp', 'PONTOS DE VIDA')}</span>
               <span class="report-vital-value ${rd.current_hp < rd.max_hp ? 'vital-damaged' : ''}">${rd.current_hp} / ${rd.max_hp} PV</span>
             </div>
             <div class="report-vital-item">
-              <span class="report-vital-label">ESTRUTURA</span>
+              <span class="report-vital-label">${localization.t('reports.structure', 'ESTRUTURA')}</span>
               <span class="report-vital-value ${rd.current_structure < 4 ? 'vital-damaged' : ''}">${rd.current_structure} / 4</span>
             </div>
             <div class="report-vital-item">
-              <span class="report-vital-label">ESTRESSE REATOR</span>
+              <span class="report-vital-label">${localization.t('reports.stress', 'ESTRESSE REATOR')}</span>
               <span class="report-vital-value ${rd.current_stress < 4 ? 'vital-damaged' : ''}">${rd.current_stress} / 4</span>
             </div>
             <div class="report-vital-item">
-              <span class="report-vital-label">CALOR</span>
+              <span class="report-vital-label">${localization.t('reports.heat', 'CALOR')}</span>
               <span class="report-vital-value">${rd.current_heat} / ${rd.total_heat}</span>
             </div>
             <div class="report-vital-item">
-              <span class="report-vital-label">REPAROS DE CAMPO</span>
+              <span class="report-vital-label">${localization.t('reports.repairs', 'REPAROS DE CAMPO')}</span>
               <span class="report-vital-value">${rd.current_repairs} / ${rd.max_repairs}</span>
             </div>
             <div class="report-vital-item">
-              <span class="report-vital-label">PODER DE NÚCLEO</span>
-              <span class="report-vital-value">${rd.core_power_used ? 'UTILIZADO [0/1]' : 'DISPONÍVEL [1/1]'}</span>
+              <span class="report-vital-label">${localization.t('reports.core_power', 'PODER DE NÚCLEO')}</span>
+              <span class="report-vital-value">${rd.core_power_used ? localization.t('sheet.core_power_used', 'UTILIZADO [0/1]') : localization.t('sheet.core_power_ready', 'DISPONÍVEL [1/1]')}</span>
             </div>
           </div>
         `
@@ -316,7 +317,7 @@ export class ReportsView {
         <div class="report-downtime-section">
           <div class="report-downtime-title">
             <i class="mdi mdi-dice-multiple-outline"></i>
-            <span>AÇÃO DE RECESSO: ${rd?.downtime_action || 'Não especificada'}</span>
+            <span>${localization.t('reports.downtime_action', 'AÇÃO DE RECESSO:')} ${rd?.downtime_action || 'Não especificada'}</span>
           </div>
           <div class="report-downtime-content">
             <strong>Resultado:</strong> 
@@ -339,7 +340,7 @@ export class ReportsView {
             ? `
           <div class="report-gm-dispatch-box">
             <i class="mdi mdi-check-circle-outline"></i> 
-            <strong>DESPACHO DO MESTRE (${rd.validated_by_name || 'GM'}):</strong> ${rd.gm_notes}
+            <strong>${localization.t('reports.gm_dispatch', 'DESPACHO DO MESTRE')} (${rd.validated_by_name || 'GM'}):</strong> ${rd.gm_notes}
           </div>
         `
             : ''
@@ -349,7 +350,7 @@ export class ReportsView {
         <div class="report-gm-actions-bar">
           <button type="button" class="btn-toggle-comments btn btn-secondary" data-report-id="${rep._id}">
             <i class="mdi mdi-comment-text-multiple-outline"></i>
-            <span>${isCommentsOpen ? 'OCULTAR COMENTÁRIOS' : 'DEBATE / COMENTÁRIOS'} (${comments.length})</span>
+            <span>${isCommentsOpen ? localization.t('reports.hide_comments', 'OCULTAR COMENTÁRIOS') : localization.t('reports.comments', 'DEBATE / COMENTÁRIOS')} (${comments.length})</span>
           </button>
 
           <!-- Ação do GM para homologar -->
@@ -358,7 +359,7 @@ export class ReportsView {
               ? `
             <button type="button" class="btn-validate-downtime" data-report-id="${rep._id}" title="Homologar Recesso e Conceder Recursos">
               <i class="mdi mdi-check"></i>
-              <span>HOMOLOGAR RECESSO</span>
+              <span>${localization.t('reports.validate_downtime', 'HOMOLOGAR RECESSO')}</span>
             </button>
           `
               : ''
@@ -370,7 +371,7 @@ export class ReportsView {
           isCommentsOpen
             ? `
           <div class="report-comments-box">
-            <div class="report-comments-title">// DISCUSSÃO OPERACIONAL DE DEBRIEFING</div>
+            <div class="report-comments-title">${localization.t('reports.comments_title', '// DISCUSSÃO OPERACIONAL DE DEBRIEFING')}</div>
             <div class="report-comments-list">
               ${
                 comments.length > 0
@@ -387,15 +388,15 @@ export class ReportsView {
                   `
                       )
                       .join('')
-                  : '<div class="report-comments-empty">Nenhum comentário ainda neste relatório.</div>'
+                  : `<div class="report-comments-empty">${localization.t('reports.no_comments', 'Nenhum comentário ainda neste relatório.')}</div>`
               }
             </div>
 
             <!-- Input de Comentário -->
             <div class="report-comment-input-row">
-              <input type="text" class="input-report-comment" data-report-id="${rep._id}" placeholder="Escrever comentário..." />
+              <input type="text" class="input-report-comment" data-report-id="${rep._id}" placeholder="${localization.t('reports.write_comment', 'Escrever comentário...')}" />
               <button type="button" class="btn-send-report-comment btn btn-primary" data-report-id="${rep._id}">
-                ENVIAR
+                ${localization.t('reports.send', 'ENVIAR')}
               </button>
             </div>
           </div>

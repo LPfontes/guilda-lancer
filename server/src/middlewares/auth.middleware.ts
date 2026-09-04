@@ -19,15 +19,16 @@ declare global {
 }
 
 export async function authenticateJWT(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
   const cookieToken = req.cookies?.omninet_token;
+  const authHeader = req.headers.authorization;
 
   let token: string | undefined;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.split(' ')[1];
-  } else if (cookieToken) {
+  // Prioriza o cookie seguro HttpOnly omninet_token, mantendo Authorization Bearer como fallback
+  if (cookieToken) {
     token = cookieToken;
+  } else if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
   }
 
   if (!token) {

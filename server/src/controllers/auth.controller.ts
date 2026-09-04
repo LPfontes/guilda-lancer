@@ -1,8 +1,29 @@
-import { Request, Response } from 'express';
+import { Request, Response, CookieOptions } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
 import { UserModel, PilotModel, IUser, UserRole } from '../database/db.js';
+
+export function getAuthCookieOptions(): CookieOptions {
+  const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
+  return {
+    httpOnly: true,
+    secure: ENV.NODE_ENV === 'production',
+    sameSite: isCrossDomain ? 'none' : 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  };
+}
+
+export function getClearAuthCookieOptions(): CookieOptions {
+  const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
+  return {
+    httpOnly: true,
+    secure: ENV.NODE_ENV === 'production',
+    sameSite: isCrossDomain ? 'none' : 'lax',
+    path: '/'
+  };
+}
 
 function resolveRoleFromDiscord(discordRoles: string[]): UserRole {
   if (ENV.ROLE_ID_ADMIN && discordRoles.includes(ENV.ROLE_ID_ADMIN)) {
@@ -171,17 +192,11 @@ export const AuthController = {
       // Passo D: Gera o JWT de sessão da aplicação
       const token = createToken(user!);
 
-      // Define cookie seguro (suporta cross-domain se frontend estiver na Vercel e backend na VPS)
-      const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
-      res.cookie('omninet_token', token, {
-        httpOnly: true,
-        secure: ENV.NODE_ENV === 'production',
-        sameSite: isCrossDomain ? 'none' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
+      // Define cookie seguro HttpOnly
+      res.cookie('omninet_token', token, getAuthCookieOptions());
 
-      // Redireciona para o frontend com o token
-      return res.redirect(getClientCallbackUrl(`/auth/callback?token=${token}`));
+      // Redireciona para o frontend 
+      return res.redirect(getClientCallbackUrl('/auth/callback'));
     } catch (err: any) {
       console.error('[!] Falha na troca de credenciais do Discord:', err.response?.data || err.message);
       return res.redirect(getClientCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
@@ -206,7 +221,7 @@ export const AuthController = {
 
   // 4. Encerra a sessão
   logout(req: Request, res: Response) {
-    res.clearCookie('omninet_token');
+    res.clearCookie('omninet_token', getClearAuthCookieOptions());
     return res.json({ message: '[+] Sessão de terminal encerrada.' });
   },
 
@@ -240,17 +255,10 @@ export const AuthController = {
 
     const token = createToken(user);
 
-    const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
-    res.cookie('omninet_token', token, {
-      httpOnly: true,
-      secure: ENV.NODE_ENV === 'production',
-      sameSite: isCrossDomain ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('omninet_token', token, getAuthCookieOptions());
 
     return res.json({
       message: `[+] Autenticado via Terminal Dev como @${user.username} [${user.role}].`,
-      token,
       user
     });
   }

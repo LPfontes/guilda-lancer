@@ -13,7 +13,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--border-muted);
   padding-bottom: 1.25rem;
 }
 
@@ -70,7 +70,6 @@
   border: 1px dashed var(--border-active);
   padding: 4.5rem 2rem;
   text-align: center;
-  border-radius: var(--radius-sm);
 }
 
 .hangar-empty-icon-box {
@@ -96,18 +95,17 @@
   border: 1px solid rgba(248, 81, 73, 0.4);
   padding: 3rem 2rem;
   text-align: center;
-  border-radius: var(--radius-sm);
 }
 
 .hangar-error-icon {
   font-size: 2.75rem;
-  color: #f85149;
+  color: var(--accent-danger);
   margin-bottom: 0.75rem;
 }
 
 .hangar-error-title {
   font-size: 1.25rem;
-  color: #f85149;
+  color: var(--accent-danger);
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
@@ -125,16 +123,15 @@
 }
 
 .mech-card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   padding: 1.5rem;
   position: relative;
   transition: all var(--transition-fast);
 }
 
 .mech-card:hover {
-  border-color: #484f58;
+  border-color: var(--border-hover);
 }
 
 .mech-card-active {
@@ -176,13 +173,11 @@
 .mech-visual-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(13, 17, 23, 0.95) 0%,
-    rgba(13, 17, 23, 0.25) 30%,
-    rgba(13, 17, 23, 0.4) 65%,
-    rgba(13, 17, 23, 0.95) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(13, 17, 23, 0.95) 0%,
+      rgba(13, 17, 23, 0.25) 30%,
+      rgba(13, 17, 23, 0.4) 65%,
+      rgba(13, 17, 23, 0.95) 100%);
 }
 
 .mech-hover-hint {
@@ -200,9 +195,8 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   padding: 0.35rem 0.8rem;
-  border-radius: var(--radius-sm);
   backdrop-filter: blur(6px);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   transition: all var(--transition-fast);
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -278,7 +272,7 @@
 
 .mech-name {
   font-size: 1.2rem;
-  color: #ffffff;
+  color: var(--text-bright);
   margin: 0 0 4px 0;
   font-family: var(--font-display);
 }
@@ -290,7 +284,7 @@
 }
 
 .mech-pilot-callsign {
-  color: #f0f6fc;
+  color: var(--text-bright);
   font-weight: bold;
 }
 
@@ -314,7 +308,6 @@
   font-size: 0.7rem;
   font-family: var(--font-mono);
   padding: 2px 6px;
-  border-radius: 2px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -324,24 +317,23 @@
   font-family: var(--font-mono);
   font-size: 1rem;
   padding: 2px 6px;
-  border-radius: 2px;
 }
 
 .status-approved {
   background: rgba(63, 185, 80, 0.15);
-  color: #3fb950;
+  color: var(--badge-green-text);
   border: 1px solid rgba(63, 185, 80, 0.4);
 }
 
 .status-pending {
   background: rgba(210, 153, 34, 0.15);
-  color: #d29922;
+  color: var(--accent-gold);
   border: 1px solid rgba(210, 153, 34, 0.4);
 }
 
 .status-rejected {
   background: rgba(248, 81, 73, 0.15);
-  color: #f85149;
+  color: var(--accent-danger);
   border: 1px solid rgba(248, 81, 73, 0.4);
 }
 
@@ -350,24 +342,22 @@
   border: 1px solid rgba(248, 81, 73, 0.3);
   padding: 0.6rem 0.8rem;
   font-size: 0.8rem;
-  color: #f85149;
+  color: var(--accent-danger);
   margin-bottom: 1rem;
   display: flex;
   gap: 0.5rem;
   align-items: flex-start;
-  border-radius: 2px;
 }
 
 .mech-stats-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.5rem;
-  background: #0d1117;
+  background: var(--bg-dark);
   padding: 0.75rem 0.5rem;
-  border: 1px solid #21262d;
+  border: 1px solid var(--border-muted);
   margin-bottom: 1rem;
   text-align: center;
-  border-radius: 2px;
 }
 
 .mech-stat-col {
@@ -393,8 +383,7 @@
   margin-bottom: 1rem;
   background: rgba(13, 17, 23, 0.5);
   padding: 0.6rem 0.8rem;
-  border: 1px solid #21262d;
-  border-radius: 2px;
+  border: 1px solid var(--border-muted);
 }
 
 .mech-meta-label {
@@ -406,7 +395,7 @@
 
 .mech-meta-content {
   font-size: 1rem;
-  color: #f0f6fc;
+  color: var(--text-bright);
   line-height: 1.4;
 }
 
@@ -414,7 +403,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
   padding-top: 0.8rem;
 }
 
@@ -430,28 +419,25 @@
 .btn-mech-delete {
   background: transparent;
   border: 1px solid transparent;
-  color: #6e7681;
+  color: var(--text-dark);
   font-size: 1rem;
   padding: 0.5rem 0.5rem;
   cursor: pointer;
-  border-radius: 2px;
   transition: all var(--transition-fast);
 }
 
 .btn-mech-delete:hover {
-  color: #f85149;
+  color: var(--accent-danger);
   border-color: rgba(248, 81, 73, 0.4);
   background: rgba(248, 81, 73, 0.1);
 }
 
-
 /* Painel de Prévia Técnica */
 .import-preview-box {
-  background: #0d1117;
+  background: var(--bg-dark);
   border: 1px solid var(--border-active);
   padding: 1rem;
   margin-top: 1rem;
-  border-radius: var(--radius-sm);
 }
 
 .preview-header {
@@ -459,7 +445,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--border-muted);
   padding-bottom: 0.5rem;
 }
 
@@ -473,21 +459,19 @@
 .preview-status-valid {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #3fb950;
+  color: var(--badge-green-text);
   background: rgba(63, 185, 80, 0.15);
   padding: 2px 8px;
   border: 1px solid rgba(63, 185, 80, 0.35);
-  border-radius: 2px;
 }
 
 .preview-status-warning {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #d29922;
+  color: var(--accent-gold);
   background: rgba(210, 153, 34, 0.15);
   padding: 2px 8px;
   border: 1px solid rgba(210, 153, 34, 0.35);
-  border-radius: 2px;
 }
 
 .preview-grid {
@@ -512,7 +496,7 @@
 .preview-value {
   font-family: var(--font-mono);
   font-size: 1rem;
-  color: #ffffff;
+  color: var(--text-bright);
   font-weight: bold;
 }
 
@@ -522,8 +506,7 @@
   padding: 1rem;
   margin-bottom: 1rem;
   font-size: 1rem;
-  color: #d29922;
-  border-radius: 2px;
+  color: var(--accent-gold);
 }
 
 .warnings-title {
@@ -545,7 +528,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
   padding-top: 1rem;
 }
 

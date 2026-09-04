@@ -2,6 +2,7 @@ import { pilotService } from '../services/pilot.service.js';
 import { authService } from '../services/auth.service.js';
 import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
+import { localization } from '../services/localization.service.js';
 import { IPilot } from '../types/pilot.types.js';
 
 export class ReviewView {
@@ -20,7 +21,7 @@ export class ReviewView {
     this.container.innerHTML = `
       <div class="sheet-loading-container">
         <div class="sheet-loading-spinner"></div>
-        <div class="sheet-loading-text">CARREGANDO FICHAS PARA HOMOLOGAÇÃO...</div>
+        <div class="sheet-loading-text">${localization.t('common.loading', 'CARREGANDO FICHAS PARA HOMOLOGAÇÃO...')}</div>
       </div>
     `;
 
@@ -57,7 +58,7 @@ export class ReviewView {
             </div>
             <div>
               <div class="review-tagline">// TERMINAL DE AUDITORIA & COMPLIANCE // COMP/CON V3</div>
-              <h1 class="review-main-title">HOMOLOGAÇÃO DE PILOTOS</h1>
+              <h1 class="review-main-title">${localization.t('review.title', 'HOMOLOGAÇÃO DE PILOTOS')}</h1>
               
             </div>
           </div>
@@ -65,11 +66,11 @@ export class ReviewView {
           <div class="missions-top-actions">
             <a href="#/missions" class="btn btn-secondary">
               ${getCompconIcon('missions', 'compcon-icon')}
-              <span>QUADRO DE MISSÕES</span>
+              <span>${localization.t('nav.missions', 'MISSÕES')}</span>
             </a>
             <a href="#/hangar" class="btn btn-secondary">
               ${getCompconIcon('hangar', 'compcon-icon')}
-              <span>HANGAR</span>
+              <span>${localization.t('nav.hangar', 'HANGAR')}</span>
             </a>
           </div>
         </div>
@@ -82,7 +83,7 @@ export class ReviewView {
             </div>
             <div class="metric-info">
               <span class="metric-value">${totalPending}</span>
-              <span class="metric-label">AGUARDANDO AUDITORIA</span>
+              <span class="metric-label">${localization.t('review.pending', 'FICHAS PENDENTES')}</span>
             </div>
           </div>
 
@@ -92,7 +93,7 @@ export class ReviewView {
             </div>
             <div class="metric-info">
               <span class="metric-value">${totalApproved}</span>
-              <span class="metric-label">FICHAS HOMOLOGADAS</span>
+              <span class="metric-label">${localization.t('review.approved', 'HOMOLOGADAS')}</span>
             </div>
           </div>
 
@@ -102,7 +103,7 @@ export class ReviewView {
             </div>
             <div class="metric-info">
               <span class="metric-value">${totalRejected}</span>
-              <span class="metric-label">COM PENDÊNCIAS</span>
+              <span class="metric-label">${localization.t('review.rejected', 'RECUSADAS')}</span>
             </div>
           </div>
         </div>
@@ -111,16 +112,16 @@ export class ReviewView {
         <div class="review-filter-toolbar">
           <div class="review-filter-group">
             <button type="button" class="filter-btn ${this.currentFilter === 'PENDING' ? 'active' : ''}" data-filter="PENDING">
-              PENDENTES <span class="review-filter-badge-count">${totalPending}</span>
+              ${localization.t('review.filter_pending', 'PENDENTES')} <span class="review-filter-badge-count">${totalPending}</span>
             </button>
             <button type="button" class="filter-btn ${this.currentFilter === 'ALL' ? 'active' : ''}" data-filter="ALL">
-              TODAS (${this.pilots.length})
+              ${localization.t('review.filter_all', 'TODAS')} (${this.pilots.length})
             </button>
             <button type="button" class="filter-btn ${this.currentFilter === 'APPROVED' ? 'active' : ''}" data-filter="APPROVED">
-              APROVADAS (${totalApproved})
+              ${localization.t('review.filter_approved', 'APROVADAS')} (${totalApproved})
             </button>
             <button type="button" class="filter-btn ${this.currentFilter === 'REJECTED' ? 'active' : ''}" data-filter="REJECTED">
-              REJEITADAS (${totalRejected})
+              ${localization.t('review.filter_rejected', 'REJEITADAS')} (${totalRejected})
             </button>
           </div>
 
@@ -130,7 +131,7 @@ export class ReviewView {
               <input type="text"
                      id="input-review-search"
                      class="filter-search-input"
-                     placeholder="Buscar piloto, operador, chassi..."
+                     placeholder="${localization.t('missions.search_placeholder', 'Buscar piloto, operador, chassi...')}"
                      value="${this.searchKeyword}" />
             </div>
           </div>
@@ -148,8 +149,8 @@ export class ReviewView {
               <div class="mission-modal-title-group">
                 <i class="mdi mdi-alert-circle-outline mission-modal-icon"></i>
                 <div>
-                  <div class="mission-modal-tag">// AUDITORIA DE REGRAS // RETORNO AO PILOTO</div>
-                  <h3 id="reject-modal-title" class="mission-modal-name">JUSTIFICATIVA DE NÃO-CONFORMIDADE</h3>
+                  <div class="mission-modal-tag">${localization.t('review.reject_modal_tag', '// AUDITORIA DE REGRAS // RETORNO AO PILOTO')}</div>
+                  <h3 id="reject-modal-title" class="mission-modal-name">${localization.t('review.reject_modal_title', 'JUSTIFICATIVA DE NÃO-CONFORMIDADE')}</h3>
                 </div>
               </div>
               <button id="btn-close-reject-modal" class="mission-modal-close" type="button" aria-label="Fechar">
@@ -159,18 +160,18 @@ export class ReviewView {
 
             <form id="reject-form" class="mission-modal-body rejection-form">
               <p class="restricted-desc">
-                Descreva com clareza quais pontos da ficha precisam ser ajustados pelo piloto (ex: excesso de SP, talentos incompatíveis, background em branco).
+                ${localization.t('review.reject_modal_desc', 'Descreva com clareza quais pontos da ficha precisam ser ajustados pelo piloto (ex: excesso de SP, talentos incompatíveis, background em branco).')}
               </p>
               <div class="form-group">
-                <label class="form-label" for="reject-reason-input">MOTIVO DA REJEIÇÃO *</label>
-                <textarea id="reject-reason-input" class="form-textarea rejection-textarea" required placeholder="Ex: A soma dos sistemas instalados ultrapassou os Pontos de Sistema (SP) disponíveis no chassi. Favor rebalancear o loadout."></textarea>
+                <label class="form-label" for="reject-reason-input">${localization.t('review.reject_reason_label', 'MOTIVO DA REJEIÇÃO *')}</label>
+                <textarea id="reject-reason-input" class="form-textarea rejection-textarea" required placeholder="${localization.t('review.reject_reason_placeholder', 'Ex: A soma dos sistemas instalados ultrapassou os Pontos de Sistema (SP) disponíveis no chassi. Favor rebalancear o loadout.')}"></textarea>
               </div>
 
               <div class="form-actions-row">
-                <button type="button" id="btn-cancel-reject" class="btn btn-secondary">CANCELAR</button>
+                <button type="button" id="btn-cancel-reject" class="btn btn-secondary">${localization.t('common.cancel', 'CANCELAR')}</button>
                 <button type="submit" class="btn btn-reject-sheet">
                   <i class="mdi mdi-close-circle-outline"></i>
-                  <span>CONFIRMAR REJEIÇÃO</span>
+                  <span>${localization.t('review.confirm_reject', 'CONFIRMAR REJEIÇÃO')}</span>
                 </button>
               </div>
             </form>
@@ -197,9 +198,9 @@ export class ReviewView {
           <div class="missions-empty-icon">
             <i class="mdi mdi-check-all"></i>
           </div>
-          <h3 class="missions-empty-title">NENHUMA FICHA NESTA CATEGORIA</h3>
+          <h3 class="missions-empty-title">${localization.t('review.empty_title', 'NENHUMA FICHA NESTA CATEGORIA')}</h3>
           <p class="missions-empty-desc">
-            Não há fichas registradas sob o filtro selecionado. O arquivo de auditoria da Omninet está atualizado.
+            ${localization.t('review.empty_desc', 'Não há fichas registradas sob o filtro selecionado. O arquivo de auditoria da Omninet está atualizado.')}
           </p>
         </div>
       `;
@@ -215,7 +216,11 @@ export class ReviewView {
   private renderReviewCard(p: IPilot): string {
     const isPending = p.status === 'PENDING_APPROVAL' || (p.status as string) === 'PENDING';
     const statusClass = isPending ? 'status-pending' : `status-${p.status.toLowerCase()}`;
-    const statusLabel = isPending ? 'AGUARDANDO APROVAÇÃO' : p.status === 'APPROVED' ? 'HOMOLOGADO' : 'REJEITADO';
+    const statusLabel = isPending
+      ? localization.t('sheet.status_pending', 'AGUARDANDO APROVAÇÃO')
+      : p.status === 'APPROVED'
+      ? localization.t('sheet.status_approved', 'HOMOLOGADO')
+      : localization.t('sheet.status_rejected', 'REJEITADO');
 
     const userObj = p.user_id as any;
     const reviewerObj = p.reviewed_by as any;
@@ -246,8 +251,8 @@ export class ReviewView {
                 <span class="telemetry-val highlight-ll">[LL ${p.license_level ?? 0}]</span>
               </h3>
               <div class="review-pilot-user">
-                <span>Nome: <strong>${p.name || '-'}</strong></span>
-                <span> // Operador: <strong>@${userObj?.username || userObj?.name || 'Desconhecido'}</strong></span>
+                <span>${localization.t('review.name', 'Nome')}: <strong>${p.name || '-'}</strong></span>
+                <span> // ${localization.t('review.operator', 'Operador')}: <strong>@${userObj?.username || userObj?.name || 'Desconhecido'}</strong></span>
               </div>
             </div>
           </div>

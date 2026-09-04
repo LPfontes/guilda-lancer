@@ -18,6 +18,10 @@ class AuthService {
   private listeners: Set<AuthListener> = new Set();
   public isInitialized = false;
 
+  get currentSession(): IAuthSession {
+    return this.session;
+  }
+
   get currentUser(): IUser | null {
     return this.session.user;
   }
@@ -107,18 +111,17 @@ class AuthService {
   }
 
   /**
-   * Autenticação simulada para desenvolvimento rápido local.
+   * Autenticação simulada para desenvolvimento rápido local via cookie HttpOnly.
    */
   async devLogin(role: UserRole = 'PILOT', username?: string): Promise<boolean> {
     try {
-      const res = await ApiClient.post<{ user: IUser; message: string; token: string }>('/auth/dev-login', {
+      const res = await ApiClient.post<{ user: IUser; message: string }>('/auth/dev-login', {
         role,
         username
       });
 
-      if (res.token) {
-        localStorage.setItem('omninet_token', res.token);
-      }
+      // Limpeza preventiva caso houvesse token legado no localStorage
+      localStorage.removeItem('omninet_token');
 
       ToastService.success(res.message || `Sessão iniciada como ${role}.`);
       await this.checkAuth();
@@ -130,7 +133,7 @@ class AuthService {
   }
 
   /**
-   * Encerra a sessão ativa do terminal.
+   * Encerra a sessão ativa do terminal limpando o cookie HttpOnly no backend.
    */
   async logout(): Promise<void> {
     try {
@@ -148,23 +151,19 @@ class AuthService {
 
   /**
    * Processa parâmetros de retorno após o redirecionamento OAuth2 do Discord.
+   * O cookie de sessão HttpOnly já foi atribuído no redirecionamento pelo backend.
    */
   async processAuthCallback(): Promise<boolean> {
     const url = new URL(window.location.href);
     const error = url.searchParams.get('error');
-    const token = url.searchParams.get('token');
 
     // Se estiver em formato hash: #/auth/callback?error=...
     const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
     const hashError = hashParams.get('error');
-    const hashToken = hashParams.get('token');
-
     const finalError = error || hashError;
-    const finalToken = token || hashToken;
 
-    if (finalToken) {
-      localStorage.setItem('omninet_token', finalToken);
-    }
+    // Limpeza de segurança de token em localStorage se existente
+    localStorage.removeItem('omninet_token');
 
     if (finalError) {
       ToastService.error(`Erro retornado pelo Discord: ${decodeURIComponent(finalError)}`);
@@ -173,7 +172,7 @@ class AuthService {
       return false;
     }
 
-    if (finalToken || url.pathname.includes('/auth/callback')) {
+    if (url.pathname.includes('/auth/callback') || url.hash.includes('/auth/callback')) {
       ToastService.info('Autenticação confirmada. Carregando registros do hangar...');
       await this.checkAuth();
 
