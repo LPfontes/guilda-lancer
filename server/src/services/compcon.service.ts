@@ -20,8 +20,6 @@ export interface ParsedCompconData {
   portrait?: string;
   share_code?: string;
   raw_data: any;
-  validation_warnings: string[];
-  is_valid: boolean;
 }
 
 export class CompconService {
@@ -251,36 +249,7 @@ export class CompconService {
       providedShareCode || p.share_code || p.shareCode || p.cloud_id || data.share_code || ''
     );
 
-    // 10. Validação de Regras do LANCER
-    const warnings: string[] = [];
-
-    // Verificação de HASE
-    const totalHASE = hull + agility + systems + engineering;
-    const maxAllowedHASE = license_level * 2;
-    if (totalHASE > maxAllowedHASE) {
-      warnings.push(
-        `[HASE_OVERALLOCATION] Pontos de HASE investidos (${totalHASE}) excedem o permitido para LL ${license_level} (máx: ${maxAllowedHASE} pontos).`
-      );
-    }
-
-    if (hull > 6 || agility > 6 || systems > 6 || engineering > 6) {
-      warnings.push('[HASE_STAT_CAP] Nenhum atributo HASE pode exceder 6 pontos no regulamento padrão do LANCER.');
-    }
-
-    // Verificação de Talentos (LL0 = 3 pontos, +1 ponto por LL adicional)
-    const totalTalentRanks = talents.reduce((sum, t) => sum + (t.rank || 1), 0);
-    const maxAllowedTalentRanks = license_level + 3;
-    if (totalTalentRanks > maxAllowedTalentRanks) {
-      warnings.push(
-        `[TALENTS_OVERALLOCATION] Ranks de Talentos alocados (${totalTalentRanks}) excedem o teto para LL ${license_level} (máx: ${maxAllowedTalentRanks} ranks).`
-      );
-    }
-
-    // Verificação se há Mech ativo
-    if (mechs.length === 0) {
-      warnings.push('[NO_MECH_CONFIGURED] O piloto não possui nenhum chassi/mech configurado na ficha.');
-    }
-
+    
     return {
       callsign,
       name,
@@ -299,10 +268,8 @@ export class CompconService {
       active_mech_image,
       portrait,
       share_code: detectedShareCode,
-      raw_data: data,
-      validation_warnings: warnings,
-      is_valid: warnings.length === 0
-    };
+      raw_data: data
+    }
   }
 
   /**
