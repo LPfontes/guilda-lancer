@@ -1,3 +1,4 @@
+import { ApiClient } from './api.js';
 import { IMission } from '../types/mission.types.js';
 
 export interface IMissionFilters {
@@ -19,11 +20,7 @@ export interface IMissionsResponse {
   };
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-
 class MissionService {
-  private baseUrl = `${API_BASE}/api/missions`;
-
   /**
    * Lista missões com filtros opcionais
    */
@@ -37,34 +34,14 @@ class MissionService {
     if (filters.limit) params.set('limit', String(filters.limit));
 
     const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await fetch(`${this.baseUrl}${query}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Falha ao carregar lista de operações da Omninet.');
-    }
-
-    return res.json();
+    return ApiClient.get<IMissionsResponse>(`/missions${query}`);
   }
 
   /**
    * Obtém detalhes completos de uma missão por ID
    */
   async getMissionById(id: string): Promise<IMission> {
-    const res = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Missão não encontrada.');
-    }
-
-    const data = await res.json();
+    const data = await ApiClient.get<any>(`/missions/${id}`);
     return data.mission || data;
   }
 
@@ -72,71 +49,30 @@ class MissionService {
    * Candidatar piloto à missão
    */
   async applyToMission(missionId: string, pilotId?: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${missionId}/apply`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pilotId ? { pilot_id: pilotId } : {})
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao submeter candidatura para a operação.');
-    }
-
-    return data;
+    return ApiClient.post(`/missions/${missionId}/apply`, pilotId ? { pilot_id: pilotId } : {});
   }
 
   /**
    * Cancelar candidatura
    */
   async cancelApplication(missionId: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${missionId}/apply`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao cancelar candidatura na operação.');
-    }
-
-    return data;
+    return ApiClient.delete(`/missions/${missionId}/apply`);
   }
 
   /**
    * Criar nova missão (Apenas GMs e ADMINs)
    */
   async createMission(missionData: Partial<IMission>): Promise<IMission> {
-    const res = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(missionData)
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao criar nova missão.');
-    }
-
-    return data.mission;
+    const data = await ApiClient.post<any>('/missions', missionData);
+    return data.mission || data;
   }
 
   /**
    * Atualizar dados da missão (Apenas GM dono ou ADMIN)
    */
   async updateMission(id: string, missionData: Partial<IMission>): Promise<IMission> {
-    const res = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(missionData)
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao atualizar dados da missão.');
-    }
-
-    return data.mission;
+    const data = await ApiClient.put<any>(`/missions/${id}`, missionData);
+    return data.mission || data;
   }
 
   /**
@@ -146,70 +82,28 @@ class MissionService {
     missionId: string,
     selections: Array<{ pilot_id: string; status: 'SELECTED' | 'WAITLIST' | 'REJECTED' | 'PENDING' }>
   ): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${missionId}/select-pilots`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ selections })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao atualizar escalação do esquadrão.');
-    }
-
-    return data;
+    return ApiClient.post(`/missions/${missionId}/select-pilots`, { selections });
   }
 
   /**
    * Iniciar missão (Muda status para IN_PROGRESS)
    */
   async startMission(id: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${id}/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao iniciar missão.');
-    }
-
-    return data;
+    return ApiClient.post(`/missions/${id}/start`);
   }
 
   /**
    * Concluir missão
    */
   async completeMission(id: string, aar: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${id}/complete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aar })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao concluir missão.');
-    }
-
-    return data;
+    return ApiClient.post(`/missions/${id}/complete`, { aar });
   }
 
   /**
    * Excluir ou cancelar missão
    */
   async deleteMission(id: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Falha ao cancelar missão.');
-    }
-
-    return data;
+    return ApiClient.delete(`/missions/${id}`);
   }
 }
 
