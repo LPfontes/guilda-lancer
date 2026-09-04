@@ -195,8 +195,8 @@ export const AuthController = {
       // Define cookie seguro HttpOnly
       res.cookie('omninet_token', token, getAuthCookieOptions());
 
-      // Redireciona para o frontend com o token na URL (garante login em ambientes cross-domain)
-      return res.redirect(getClientCallbackUrl(`/auth/callback?token=${token}`));
+      // Redireciona para o frontend (autenticação baseada exclusivamente em cookie HttpOnly)
+      return res.redirect(getClientCallbackUrl('/auth/callback'));
     } catch (err: any) {
       console.error('[!] Falha na troca de credenciais do Discord:', err.response?.data || err.message);
       return res.redirect(getClientCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
