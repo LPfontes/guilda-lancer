@@ -5,9 +5,18 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
+const rawClientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+const normalizeUrl = (url: string): string => {
+  let clean = url.trim().replace(/\/$/, '');
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = `https://${clean}`;
+  }
+  return clean;
+};
+
 export const ENV = {
   PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : 3001,
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  CLIENT_URL: normalizeUrl(rawClientUrl),
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID || '',
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET || '',
   DISCORD_REDIRECT_URI: process.env.DISCORD_REDIRECT_URI || 'http://localhost:3001/api/auth/discord/callback',

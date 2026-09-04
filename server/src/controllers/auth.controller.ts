@@ -27,6 +27,16 @@ function createToken(user: IUser): string {
   );
 }
 
+function getClientCallbackUrl(pathAndQuery: string): string {
+  let base = ENV.CLIENT_URL || 'http://localhost:3000';
+  if (!base.startsWith('http://') && !base.startsWith('https://')) {
+    base = `https://${base}`;
+  }
+  base = base.replace(/\/$/, '');
+  const cleanPath = pathAndQuery.startsWith('/') ? pathAndQuery : `/${pathAndQuery}`;
+  return `${base}${cleanPath}`;
+}
+
 export const AuthController = {
   // 1. Gera a URL oficial de autorização do Discord OAuth2
   getDiscordAuthUrl(req: Request, res: Response) {
@@ -54,11 +64,11 @@ export const AuthController = {
 
     if (error) {
       console.error('[!] Erro retornado pelo Discord OAuth2:', error, error_description);
-      return res.redirect(`${ENV.CLIENT_URL}/auth/callback?error=${encodeURIComponent(String(error_description || error))}`);
+      return res.redirect(getClientCallbackUrl(`/auth/callback?error=${encodeURIComponent(String(error_description || error))}`));
     }
 
     if (!code || typeof code !== 'string') {
-      return res.redirect(`${ENV.CLIENT_URL}/auth/callback?error=NO_CODE_PROVIDED`);
+      return res.redirect(getClientCallbackUrl('/auth/callback?error=NO_CODE_PROVIDED'));
     }
 
     try {
@@ -171,10 +181,10 @@ export const AuthController = {
       });
 
       // Redireciona para o frontend com o token
-      return res.redirect(`${ENV.CLIENT_URL}/auth/callback?token=${token}`);
+      return res.redirect(getClientCallbackUrl(`/auth/callback?token=${token}`));
     } catch (err: any) {
       console.error('[!] Falha na troca de credenciais do Discord:', err.response?.data || err.message);
-      return res.redirect(`${ENV.CLIENT_URL}/auth/callback?error=AUTH_EXCHANGE_FAILED`);
+      return res.redirect(getClientCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
     }
   },
 
