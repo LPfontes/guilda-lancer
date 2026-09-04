@@ -111,10 +111,14 @@ class AuthService {
    */
   async devLogin(role: UserRole = 'PILOT', username?: string): Promise<boolean> {
     try {
-      const res = await ApiClient.post<{ user: IUser; message: string }>('/auth/dev-login', {
+      const res = await ApiClient.post<{ user: IUser; message: string; token: string }>('/auth/dev-login', {
         role,
         username
       });
+
+      if (res.token) {
+        localStorage.setItem('omninet_token', res.token);
+      }
 
       ToastService.success(res.message || `Sessão iniciada como ${role}.`);
       await this.checkAuth();

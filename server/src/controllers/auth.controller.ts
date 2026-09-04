@@ -210,10 +210,10 @@ export const AuthController = {
     return res.json({ message: '[+] Sessão de terminal encerrada.' });
   },
 
-  // 5. Autenticação simulada para desenvolvimento local
+  // 5. Autenticação simulada para desenvolvimento e testes
   async devLogin(req: Request, res: Response) {
-    if (ENV.NODE_ENV === 'production') {
-      return res.status(403).json({ error: 'FORBIDDEN_IN_PRODUCTION', message: 'Dev login desabilitado em produção.' });
+    if (process.env.DISABLE_DEV_LOGIN === 'true') {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Dev login desabilitado pelo administrador.' });
     }
 
     const { role = 'PILOT', username } = req.body || {};
@@ -240,10 +240,11 @@ export const AuthController = {
 
     const token = createToken(user);
 
+    const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
     res.cookie('omninet_token', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: ENV.NODE_ENV === 'production',
+      sameSite: isCrossDomain ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
