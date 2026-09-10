@@ -64,13 +64,28 @@ export class MissionsView {
     this.missions = res.missions || [];
   }
 
-  private formatDate(dateStr?: string): string {
-    if (!dateStr) return 'A Definir';
+  private brDateToIso(dateStr: string): string {
+    const clean = (dateStr || '').trim();
+    const slashParts = clean.split('/');
+    if (slashParts.length === 3) {
+      const [day, month, year] = slashParts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return clean;
+  }
+
+  private isoDateToBr(dateStr?: string): string {
+    if (!dateStr) return '';
     const clean = dateStr.trim();
-    const parts = clean.split('-');
-    if (parts.length === 3) {
-      const [year, month, day] = parts;
-      return `${day}/${month}/${year}`;
+    const slashParts = clean.split('/');
+    if (slashParts.length === 3) {
+      const [d, m, y] = slashParts;
+      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+    }
+    const dashParts = clean.split('-');
+    if (dashParts.length === 3 && dashParts[0].length === 4) {
+      const [y, m, d] = dashParts;
+      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
     }
     const d = new Date(clean);
     if (!isNaN(d.getTime())) {
@@ -80,6 +95,46 @@ export class MissionsView {
       return `${day}/${month}/${year}`;
     }
     return clean;
+  }
+
+  private isValidBrDate(str: string): boolean {
+    const match = (str || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return false;
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2200) return false;
+    const testDate = new Date(year, month - 1, day);
+    return (
+      testDate.getFullYear() === year &&
+      testDate.getMonth() === month - 1 &&
+      testDate.getDate() === day
+    );
+  }
+
+  private isValidIsoDate(str: string): boolean {
+    const match = (str || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return false;
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2200) return false;
+    const testDate = new Date(year, month - 1, day);
+    return (
+      testDate.getFullYear() === year &&
+      testDate.getMonth() === month - 1 &&
+      testDate.getDate() === day
+    );
+  }
+
+  private isValidBrTime(str: string): boolean {
+    const match = (str || '').trim().match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    return !!match;
+  }
+
+  private formatDate(dateStr?: string): string {
+    if (!dateStr) return 'A Definir';
+    return this.isoDateToBr(dateStr) || 'A Definir';
   }
 
   private renderDifficultyStars(diff: number | string): string {
@@ -548,12 +603,47 @@ export class MissionsView {
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="mission-start-date-input">DATA DE INÍCIO *</label>
-                <input type="date" id="mission-start-date-input" class="form-input" required />
+                <div class="date-input-wrapper">
+                  <input
+                    type="text"
+                    id="mission-start-date-input"
+                    class="form-input"
+                    placeholder="DD/MM/AAAA"
+                    pattern="^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$"
+                    title="Formato de data brasileiro: DD/MM/AAAA"
+                    maxlength="10"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    required
+                  />
+                  <button type="button" class="date-picker-btn" id="mission-date-picker-trigger" title="Selecionar no calendário">
+                    <i class="mdi mdi-calendar-month-outline"></i>
+                  </button>
+                  <input type="date" id="mission-start-date-native" class="date-native-hidden" tabindex="-1" aria-hidden="true" />
+                </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="mission-start-time-input">HORÁRIO</label>
-                <input type="time" id="mission-start-time-input" class="form-input" required value="19:30" />
+                <label class="form-label" for="mission-start-time-input">HORÁRIO *</label>
+                <div class="date-input-wrapper">
+                  <input
+                    type="text"
+                    id="mission-start-time-input"
+                    class="form-input"
+                    placeholder="HH:MM"
+                    pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                    title="Formato brasileiro de horário (24h): HH:MM (ex: 19:30)"
+                    maxlength="5"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    value="19:30"
+                    required
+                  />
+                  <button type="button" class="date-picker-btn" id="mission-time-picker-trigger" title="Selecionar horário">
+                    <i class="mdi mdi-clock-outline"></i>
+                  </button>
+                  <input type="time" id="mission-start-time-native" class="date-native-hidden" tabindex="-1" aria-hidden="true" />
+                </div>
               </div>
 
               <div class="form-group">
@@ -782,6 +872,118 @@ export class MissionsView {
       this.updateContractorPreview(contractorInput.value);
     }, { signal });
 
+    // 7.2 Máscara e seletor da Data de Início no padrão brasileiro (d/m/a)
+    const startDateInputEl = this.container.querySelector('#mission-start-date-input') as HTMLInputElement;
+    const nativePicker = this.container.querySelector('#mission-start-date-native') as HTMLInputElement;
+    const pickerTrigger = this.container.querySelector('#mission-date-picker-trigger') as HTMLButtonElement;
+
+    if (startDateInputEl) {
+      let isDeleting = false;
+      startDateInputEl.addEventListener('keydown', (e) => {
+        isDeleting = e.key === 'Backspace' || e.key === 'Delete';
+      }, { signal });
+
+      startDateInputEl.addEventListener('input', () => {
+        const val = startDateInputEl.value.trim();
+        if (isDeleting) return;
+
+        // Se colado no formato ISO YYYY-MM-DD, converter diretamente para DD/MM/AAAA
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+          const [y, m, d] = val.split('-');
+          startDateInputEl.value = `${d}/${m}/${y}`;
+          return;
+        }
+
+        const digits = val.replace(/\D/g, '').slice(0, 8);
+        if (digits.length >= 5) {
+          startDateInputEl.value = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+        } else if (digits.length >= 3) {
+          startDateInputEl.value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+        } else {
+          startDateInputEl.value = digits;
+        }
+      }, { signal });
+
+      if (pickerTrigger && nativePicker) {
+        pickerTrigger.addEventListener('click', () => {
+          if (startDateInputEl.value) {
+            const iso = this.brDateToIso(startDateInputEl.value);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+              nativePicker.value = iso;
+            }
+          }
+          if (typeof (nativePicker as any).showPicker === 'function') {
+            try {
+              (nativePicker as any).showPicker();
+            } catch {
+              nativePicker.click();
+            }
+          } else {
+            nativePicker.click();
+          }
+        }, { signal });
+
+        nativePicker.addEventListener('change', () => {
+          if (nativePicker.value) {
+            startDateInputEl.value = this.isoDateToBr(nativePicker.value);
+          }
+        }, { signal });
+      }
+    }
+
+    // 7.3 Máscara e seletor do Horário no padrão brasileiro 24h (HH:MM)
+    const startTimeInputEl = this.container.querySelector('#mission-start-time-input') as HTMLInputElement;
+    const nativeTimePicker = this.container.querySelector('#mission-start-time-native') as HTMLInputElement;
+    const timePickerTrigger = this.container.querySelector('#mission-time-picker-trigger') as HTMLButtonElement;
+
+    if (startTimeInputEl) {
+      let isDeletingTime = false;
+      startTimeInputEl.addEventListener('keydown', (e) => {
+        isDeletingTime = e.key === 'Backspace' || e.key === 'Delete';
+      }, { signal });
+
+      startTimeInputEl.addEventListener('input', () => {
+        const val = startTimeInputEl.value.trim();
+        if (isDeletingTime) return;
+
+        // Se colado no formato com segundos HH:MM:SS, extrair apenas HH:MM
+        if (/^\d{2}:\d{2}(:\d{2})?$/.test(val)) {
+          startTimeInputEl.value = val.slice(0, 5);
+          return;
+        }
+
+        const digits = val.replace(/\D/g, '').slice(0, 4);
+        if (digits.length >= 3) {
+          startTimeInputEl.value = `${digits.slice(0, 2)}:${digits.slice(2)}`;
+        } else {
+          startTimeInputEl.value = digits;
+        }
+      }, { signal });
+
+      if (timePickerTrigger && nativeTimePicker) {
+        timePickerTrigger.addEventListener('click', () => {
+          if (startTimeInputEl.value && this.isValidBrTime(startTimeInputEl.value)) {
+            nativeTimePicker.value = startTimeInputEl.value;
+          }
+          if (typeof (nativeTimePicker as any).showPicker === 'function') {
+            try {
+              (nativeTimePicker as any).showPicker();
+            } catch {
+              nativeTimePicker.click();
+            }
+          } else {
+            nativeTimePicker.click();
+          }
+        }, { signal });
+
+        nativeTimePicker.addEventListener('change', () => {
+          if (nativeTimePicker.value) {
+            startTimeInputEl.value = nativeTimePicker.value.slice(0, 5);
+          }
+        }, { signal });
+      }
+    }
+
     // 8. Fechamento do Modal de Relatório AAR
     const closeAarBtn = this.container.querySelector('#btn-close-aar-modal');
     closeAarBtn?.addEventListener('click', () => this.closeAarModal(), { signal });
@@ -947,6 +1149,21 @@ export class MissionsView {
     const rulesInput = form.querySelector('#mission-rules-input') as HTMLInputElement;
 
     try {
+      const rawDate = startDateInput?.value?.trim() || '';
+      if (!this.isValidBrDate(rawDate) && !this.isValidIsoDate(rawDate)) {
+        ToastService.error('Data de início inválida. Use o formato brasileiro DD/MM/AAAA (ex: 15/09/2026).');
+        startDateInput?.focus();
+        return;
+      }
+      const isoDate = this.brDateToIso(rawDate);
+
+      const rawTime = startTimeInput?.value?.trim() || '';
+      if (!this.isValidBrTime(rawTime)) {
+        ToastService.error('Horário de início inválido. Use o padrão brasileiro de 24h HH:MM (ex: 19:30).');
+        startTimeInput?.focus();
+        return;
+      }
+
       const payload: Partial<IMission> = {
         title: titleInput.value.trim(),
         contractor: contractorInput.value.trim() || 'Union / GMS',
@@ -954,9 +1171,9 @@ export class MissionsView {
         min_ll: Number(minLlInput.value) || 0,
         max_ll: Number(maxLlInput.value) || 12,
         slots_total: Number(slotsInput.value) || 4,
-        start_date: startDateInput.value,
-        start_time: startTimeInput.value,
-        end_date: startDateInput.value,
+        start_date: isoDate,
+        start_time: rawTime,
+        end_date: isoDate,
         platform: platformInput.value.trim() || 'Foundry VTT',
         voice_channel: voiceInput.value.trim() || '#op-bravo-01',
         briefing: briefingInput.value.trim(),
@@ -998,7 +1215,12 @@ export class MissionsView {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateInput = modal.querySelector('#mission-start-date-input') as HTMLInputElement;
     if (dateInput) {
-      dateInput.value = tomorrow.toISOString().split('T')[0];
+      dateInput.value = this.isoDateToBr(tomorrow.toISOString().split('T')[0]);
+    }
+
+    const timeInput = modal.querySelector('#mission-start-time-input') as HTMLInputElement;
+    if (timeInput) {
+      timeInput.value = '19:30';
     }
 
     const contractorInput = modal.querySelector('#mission-contractor-input') as HTMLInputElement;
@@ -1050,10 +1272,9 @@ export class MissionsView {
     if (slotsInput) slotsInput.value = String(mission.slots_total ?? 4);
 
     if (startDateInput) {
-      const d = mission.start_date ? new Date(mission.start_date) : new Date();
-      startDateInput.value = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+      startDateInput.value = this.isoDateToBr(mission.start_date);
     }
-    if (startTimeInput) startTimeInput.value = mission.start_time || '19:30';
+    if (startTimeInput) startTimeInput.value = (mission.start_time || '19:30').slice(0, 5);
     if (platformInput) platformInput.value = mission.platform || 'Foundry VTT';
     if (voiceInput) voiceInput.value = mission.voice_channel || '#op-bravo-01';
     if (briefingInput) briefingInput.value = mission.briefing || '';

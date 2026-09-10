@@ -1,0 +1,29 @@
+name: CI/CD // Deploy Automático na VPS
+
+on:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy na VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Executar comandos de deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            cd guilda-lancer
+            chmod +x deploy.sh
+            ./deploy.sh

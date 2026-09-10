@@ -1132,6 +1132,48 @@
   line-height: 1.5;
 }
 
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.date-input-wrapper .form-input {
+  width: 100%;
+  padding-right: 2.25rem;
+}
+
+.date-picker-btn {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: color 0.15s ease;
+}
+
+.date-picker-btn:hover {
+  color: var(--accent-mint);
+}
+
+.date-native-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
 .form-actions-row {
   display: flex;
   justify-content: flex-end;
