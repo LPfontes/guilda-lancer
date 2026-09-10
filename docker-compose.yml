@@ -6,7 +6,7 @@ services:
     container_name: guilda-lancer-app
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "${APP_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001

@@ -11,7 +11,8 @@ echo "[1/4] Atualizando código fonte com git..."
 git pull origin master
 
 echo "[2/4] Reconstruindo e reiniciando containers..."
-docker compose up -d --build
+docker compose down || true
+docker compose up -d --build --remove-orphans
 
 echo "[3/4] Limpando imagens antigas e dangling..."
 docker image prune -f
