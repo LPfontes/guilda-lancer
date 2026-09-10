@@ -29,7 +29,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     expect(res.body.auth_url).toBeDefined();
     expect(res.body.auth_url).toContain('https://discord.com/oauth2/authorize');
     expect(res.body.auth_url).toContain(ENV.DISCORD_CLIENT_ID);
-    expect(res.body.auth_url).toContain('scope=identify%20guilds.members.read');
+    expect(res.body.auth_url).toContain('scope=identify');
   });
 
   it('GET /api/auth/discord/callback - should redirect with error if Discord reports error', async () => {
@@ -48,31 +48,24 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     const fakeDiscordId = `discord_test_${Date.now()}`;
     const fakeCode = 'valid_discord_oauth_code_123';
 
-    // Mock axios post (token exchange) and get (profile query & guild member query)
+    // Mock axios post (token exchange) and get (profile query)
     const postSpy = vi.spyOn(axios, 'post').mockResolvedValueOnce({
       data: {
         access_token: 'mock_discord_access_token_xyz',
         token_type: 'Bearer',
         expires_in: 604800,
-        scope: 'identify guilds.members.read'
+        scope: 'identify'
       }
     });
 
-    const getSpy = vi.spyOn(axios, 'get')
-      .mockResolvedValueOnce({
-        data: {
-          id: fakeDiscordId,
-          username: 'lancer_pilot_01',
-          global_name: 'Pilot Maverick',
-          avatar: 'mock_avatar_hash_123'
-        }
-      })
-      .mockResolvedValueOnce({
-        data: {
-          roles: [ENV.ROLE_ID_ADMIN], // Has Avaliador role
-          nick: 'Maverick | Avaliador'
-        }
-      });
+    const getSpy = vi.spyOn(axios, 'get').mockResolvedValueOnce({
+      data: {
+        id: fakeDiscordId,
+        username: 'lancer_pilot_01',
+        global_name: 'Pilot Maverick',
+        avatar: 'mock_avatar_hash_123'
+      }
+    });
 
     const res = await request(app).get(`/api/auth/discord/callback?code=${fakeCode}`);
 
@@ -88,12 +81,12 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     expect(cookieHeader).toContain('omninet_token=');
     expect(cookieHeader.toLowerCase()).toContain('httponly');
 
-    // Verify user was registered in MongoDB Atlas with ADMIN role
+    // Verify user was registered in MongoDB Atlas with default PILOT role
     const createdUser = await UserModel.findOne({ discord_id: fakeDiscordId });
     expect(createdUser).toBeDefined();
     expect(createdUser?.name).toBe('Pilot Maverick');
-    expect(createdUser?.role).toBe('ADMIN');
-    expect(createdUser?.nickname).toBe('Maverick | Avaliador');
+    expect(createdUser?.role).toBe('PILOT');
+    expect(createdUser?.roles).toContain('PILOT');
 
     // Restore mocks
     postSpy.mockRestore();

@@ -42,6 +42,9 @@ export class HeaderComponent {
 
     const { user, pilot, pilots } = session;
     const currentLang = localization.getLanguage();
+    const canReview = authService.isReviewerOrAdmin;
+    const isAdmin = authService.isAdmin;
+    const userRoles = user?.roles && user.roles.length > 0 ? user.roles : (user ? [user.role] : []);
 
     this.container.innerHTML = `
       <div class="header-nav-container">
@@ -66,10 +69,26 @@ export class HeaderComponent {
               <i class="mdi mdi-clipboard-text-outline"></i>
               <span>${localization.t('nav.reports', 'RELATÓRIOS')}</span>
             </a>
-            <a href="#/review" id="nav-review" class="header-nav-link">
-              ${getCompconIcon('review', 'compcon-icon')}
-              <span>${localization.t('nav.review', 'AVALIAÇÕES')}</span>
-            </a>
+            ${
+              canReview
+                ? `
+              <a href="#/review" id="nav-review" class="header-nav-link">
+                ${getCompconIcon('review', 'compcon-icon')}
+                <span>${localization.t('nav.review', 'AVALIAÇÕES')}</span>
+              </a>
+            `
+                : ''
+            }
+            ${
+              isAdmin
+                ? `
+              <a href="#/admin" id="nav-admin" class="header-nav-link">
+                <i class="mdi mdi-shield-account-outline"></i>
+                <span>${localization.t('nav.admin', 'ADMINISTRAÇÃO')}</span>
+              </a>
+            `
+                : ''
+            }
           </nav>
         `
             : ''
@@ -93,7 +112,9 @@ export class HeaderComponent {
             <span class="header-operator-name">
               ${pilot ? pilot.callsign : `@${user.username}`}
             </span>
-            <span class="header-role-badge role-${user.role.toLowerCase()}">${user.role}</span>
+            <div class="header-roles-group">
+              ${userRoles.map((r) => `<span class="header-role-badge role-${r.toLowerCase()}">${r}</span>`).join('')}
+            </div>
           </div>
 
           <button id="btn-logout" class="header-logout-btn" title="Encerrar sessão">

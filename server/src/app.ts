@@ -8,6 +8,7 @@ import { authRoutes } from './routes/auth.routes.js';
 import { pilotRoutes } from './routes/pilot.routes.js';
 import { missionRoutes } from './routes/mission.routes.js';
 import { chatRoutes } from './routes/chat.routes.js';
+import { adminRoutes } from './routes/admin.routes.js';
 import { isOriginAllowed } from './config/cors.js';
 
 export const app = express();
@@ -51,6 +52,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/pilots', pilotRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

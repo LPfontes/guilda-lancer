@@ -9,6 +9,7 @@ export const defaultResources = {
         missions: 'MISSÕES',
         reports: 'RELATÓRIOS',
         review: 'AVALIAÇÕES',
+        admin: 'ADMINISTRAÇÃO',
         logout: 'SAIR',
         restricted: 'ACESSO RESTRITO',
         lang_switch: 'Mudar para Inglês (EN)'
@@ -36,7 +37,8 @@ export const defaultResources = {
         unknown: 'DESCONHECIDO',
         yes: 'SIM',
         no: 'NÃO',
-        none: 'NENHUM'
+        none: 'NENHUM',
+        read_more: 'EXIBIR MAIS'
       },
       auth: {
         brand_title: 'GUILDA LANCER',
@@ -146,6 +148,7 @@ export const defaultResources = {
         gear: 'EQUIPAMENTOS',
         history: 'HISTÓRICO OPERACIONAL',
         history_notes: 'HISTÓRICO / NOTAS',
+        history_notes_title: 'DOSSIÊ PESSOAL // HISTÓRICO & NOTAS',
         reset_combat: 'RESETAR COMBATE',
         overcharge: 'SOBRECARGA',
         overcharge_die: 'DADO SOBRECARGA',
@@ -292,6 +295,38 @@ export const defaultResources = {
         heat: 'CALOR',
         repairs: 'REPAROS DE CAMPO',
         core_power: 'PODER DE NÚCLEO'
+      },
+      admin: {
+        tagline: '// TERMINAL DE AUDITORIA & GESTÃO DA GUILDA // COMP/CON V3',
+        title: 'ADMINISTRAÇÃO // DIRETÓRIO DE OPERADORES',
+        subtitle: 'Gestão centralizada de cargos táticos, permissões da Omninet e perfis dos membros da Guilda LANCER.',
+        stat_total: 'TOTAL DE OPERADORES',
+        stat_admins: 'ADMINISTRADORES',
+        stat_gms: 'MESTRES (GM)',
+        stat_avaliadores: 'AVALIADORES',
+        stat_pilots: 'PILOTOS',
+        search_placeholder: 'Buscar por nome, @username, Discord ID ou callsign...',
+        filter_all: 'TODOS',
+        filter_admin: 'ADMINISTRADORES',
+        filter_gm: 'MESTRES (GM)',
+        filter_avaliador: 'AVALIADORES',
+        filter_pilot: 'PILOTOS',
+        th_operator: 'OPERADOR',
+        th_discord_id: 'DISCORD ID',
+        th_roles: 'CARGOS ATIVOS',
+        th_hangar: 'HANGAR / PILOTOS',
+        th_actions: 'AÇÕES TÁTICAS',
+        edit_profile: 'EDITAR PERFIL',
+        delete_user: 'Excluir operador com dupla confirmação',
+        no_pilots: 'Nenhum piloto registrado',
+        save_roles: 'ATUALIZAR CARGOS',
+        roles_updated: 'Cargos atualizados com sucesso!',
+        profile_updated: 'Perfil atualizado com sucesso!',
+        modal_edit_title: 'EDITAR PERFIL DO OPERADOR',
+        modal_name_label: 'NOME DE EXIBIÇÃO',
+        modal_nick_label: 'APELIDO TÁTICO (NICKNAME)',
+        modal_save: 'SALVAR PERFIL',
+        empty: 'Nenhum operador localizado com os filtros selecionados.'
       }
     }
   },
@@ -303,6 +338,7 @@ export const defaultResources = {
         missions: 'MISSIONS',
         reports: 'REPORTS',
         review: 'REVIEWS',
+        admin: 'ADMINISTRATION',
         logout: 'LOGOUT',
         restricted: 'RESTRICTED ACCESS',
         lang_switch: 'Switch to Portuguese (PT)'
@@ -330,7 +366,8 @@ export const defaultResources = {
         unknown: 'UNKNOWN',
         yes: 'YES',
         no: 'NO',
-        none: 'NONE'
+        none: 'NONE',
+        read_more: 'SHOW MORE'
       },
       auth: {
         brand_title: 'LANCER GUILD',
@@ -440,6 +477,7 @@ export const defaultResources = {
         gear: 'PILOT GEAR',
         history: 'OPERATIONAL HISTORY',
         history_notes: 'HISTORY / NOTES',
+        history_notes_title: 'PERSONNEL DOSSIER // HISTORY & NOTES',
         reset_combat: 'RESET COMBAT',
         overcharge: 'OVERCHARGE',
         overcharge_die: 'OVERCHARGE DIE',
@@ -586,6 +624,38 @@ export const defaultResources = {
         heat: 'HEAT',
         repairs: 'REPAIR CAPACITY',
         core_power: 'CORE POWER'
+      },
+      admin: {
+        tagline: '// GUILD AUDIT & MANAGEMENT TERMINAL // COMP/CON V3',
+        title: 'ADMINISTRATION // OPERATOR DIRECTORY',
+        subtitle: 'Centralized management of tactical roles, Omninet permissions, and LANCER Guild operator profiles.',
+        stat_total: 'TOTAL OPERATORS',
+        stat_admins: 'ADMINISTRATORS',
+        stat_gms: 'GAME MASTERS (GM)',
+        stat_avaliadores: 'EVALUATORS',
+        stat_pilots: 'PILOTS',
+        search_placeholder: 'Search by name, @username, Discord ID or callsign...',
+        filter_all: 'ALL',
+        filter_admin: 'ADMINISTRATORS',
+        filter_gm: 'GAME MASTERS (GM)',
+        filter_avaliador: 'EVALUATORS',
+        filter_pilot: 'PILOTS',
+        th_operator: 'OPERATOR',
+        th_discord_id: 'DISCORD ID',
+        th_roles: 'ACTIVE ROLES',
+        th_hangar: 'HANGAR / PILOTS',
+        th_actions: 'TACTICAL ACTIONS',
+        edit_profile: 'EDIT PROFILE',
+        delete_user: 'Delete operator with double confirmation',
+        no_pilots: 'No registered pilots',
+        save_roles: 'UPDATE ROLES',
+        roles_updated: 'Roles updated successfully!',
+        profile_updated: 'Profile updated successfully!',
+        modal_edit_title: 'EDIT OPERATOR PROFILE',
+        modal_name_label: 'DISPLAY NAME',
+        modal_nick_label: 'TACTICAL CALLSIGN (NICKNAME)',
+        modal_save: 'SAVE PROFILE',
+        empty: 'No operators found with selected filters.'
       }
     }
   }

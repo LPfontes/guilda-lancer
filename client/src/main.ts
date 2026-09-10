@@ -8,6 +8,7 @@ import { MechSheetView } from './views/mech-sheet.view.js';
 import { MissionsView } from './views/missions.view.js';
 import { ReviewView } from './views/review.view.js';
 import { ReportsView } from './views/reports.view.js';
+import { AdminView } from './views/admin.view.js';
 import { TerminalBackground } from './components/terminal-background.js';
 import { getCompconIcon } from './components/compcon-icons.js';
 
@@ -85,6 +86,7 @@ class OmninetApp {
     else if (hash.startsWith('#/missions')) targetView = 'missions';
     else if (hash.startsWith('#/review')) targetView = 'review';
     else if (hash.startsWith('#/reports')) targetView = 'reports';
+    else if (hash.startsWith('#/admin')) targetView = 'admin';
 
     if (!authChanged && this.currentView === targetView && targetView !== 'pilot' && targetView !== 'mech') {
       return;
@@ -123,7 +125,7 @@ class OmninetApp {
       return;
     }
 
-    // Rota de Avaliações / Homologação de Fichas (GM / ADMIN)
+    // Rota de Avaliações / Homologação de Fichas (AVALIADOR / ADMIN)
     if (targetView === 'review') {
       const reviewView = new ReviewView(this.contentEl);
       reviewView.render();
@@ -134,6 +136,13 @@ class OmninetApp {
     if (targetView === 'reports') {
       const reportsView = new ReportsView(this.contentEl);
       reportsView.render();
+      return;
+    }
+
+    // Rota de Administração de Operadores & Cargos (ADMIN)
+    if (targetView === 'admin') {
+      const adminView = new AdminView(this.contentEl);
+      adminView.render();
       return;
     }
 

@@ -39,9 +39,29 @@ class AuthService {
     return Boolean(this.session.user);
   }
 
+  hasRole(role: UserRole): boolean {
+    const user = this.session.user;
+    if (!user) return false;
+    if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+      return user.roles.includes(role);
+    }
+    return user.role === role;
+  }
+
+  hasAnyRole(roles: UserRole[]): boolean {
+    return roles.some((r) => this.hasRole(r));
+  }
+
+  get isAdmin(): boolean {
+    return this.hasRole('ADMIN');
+  }
+
   get isGMOrAdmin(): boolean {
-    const role = this.session.user?.role;
-    return role === 'GM' || role === 'ADMIN';
+    return this.hasAnyRole(['GM', 'ADMIN']);
+  }
+
+  get isReviewerOrAdmin(): boolean {
+    return this.hasAnyRole(['AVALIADOR', 'ADMIN']);
   }
 
   subscribe(listener: AuthListener): () => void {

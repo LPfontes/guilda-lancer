@@ -156,13 +156,30 @@
   font-weight: 600;
 }
 
+.header-roles-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
 .header-role-badge {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.75rem;
   padding: 1px 5px;
   border: 1px solid #30363d;
   background: #161b22;
   color: #8b949e;
+}
+
+.header-role-badge.role-pilot {
+  color: #8b949e;
+  border-color: rgba(139, 148, 158, 0.35);
+}
+
+.header-role-badge.role-avaliador {
+  color: #58a6ff;
+  border-color: rgba(88, 166, 255, 0.35);
 }
 
 .header-role-badge.role-gm {

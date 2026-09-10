@@ -46,6 +46,6 @@ pilotRoutes.post('/:id/activate', authenticateJWT, PilotController.setActivePilo
 pilotRoutes.post(
   '/:id/review',
   authenticateJWT,
-  requireRole(['ADMIN']),
+  requireRole(['ADMIN', 'AVALIADOR']),
   PilotController.reviewPilot
 );

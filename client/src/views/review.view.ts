@@ -18,6 +18,11 @@ export class ReviewView {
   }
 
   async render() {
+    if (!authService.isReviewerOrAdmin) {
+      this.renderAccessDenied();
+      return;
+    }
+
     this.container.innerHTML = `
       <div class="sheet-loading-container">
         <div class="sheet-loading-spinner"></div>
@@ -32,6 +37,24 @@ export class ReviewView {
     } catch (err: any) {
       this.renderError(err.message || 'Falha ao carregar fichas de pilotos para avaliação.');
     }
+  }
+
+  private renderAccessDenied() {
+    this.container.innerHTML = `
+      <div class="review-container">
+        <div class="review-empty-state">
+          <i class="mdi mdi-shield-lock-outline review-empty-icon"></i>
+          <h2 class="review-empty-title">${localization.t('nav.restricted', 'ACESSO RESTRITO')}</h2>
+          <p class="review-empty-desc">
+            ${localization.t('review.access_denied', 'Este terminal de homologação de fichas requer credenciais de AVALIADOR ou ADMINISTRADOR.')}
+          </p>
+          <a href="#/hangar" class="review-btn review-btn-back">
+            <i class="mdi mdi-arrow-left"></i>
+            <span>${localization.t('common.back', 'RETORNAR AO HANGAR')}</span>
+          </a>
+        </div>
+      </div>
+    `;
   }
 
   private async loadPilots() {

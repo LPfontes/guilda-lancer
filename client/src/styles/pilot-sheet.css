@@ -562,10 +562,46 @@
   font-size: 1rem;
   color: var(--text-main);
   margin-bottom: 0.4rem;
+  line-height: 1.5;
 }
 
 .pilot-background-tag strong {
   color: var(--text-bright);
+}
+
+.pilot-history-tag {
+  display: block;
+}
+
+.btn-read-more-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.55rem;
+  background: rgba(120, 192, 145, 0.1);
+  border: 1px solid rgba(120, 192, 145, 0.4);
+  color: var(--accent-mint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all var(--transition-fast);
+}
+
+.btn-read-more-history:hover {
+  background: rgba(120, 192, 145, 0.22);
+  border-color: var(--accent-mint);
+  color: var(--text-bright);
+  box-shadow: 0 0 8px rgba(120, 192, 145, 0.3);
+}
+
+.btn-read-more-history i {
+  font-size: 0.85rem;
+  color: var(--accent-mint);
 }
 
 .pilot-mechs-grid {
@@ -877,4 +913,111 @@
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   cursor: default;
+}
+
+/* =======================================================
+   MODAL DE HISTÓRICO E NOTAS DO PILOTO
+   ======================================================= */
+.pilot-history-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1.5rem 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.pilot-history-modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  max-width: 780px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(120, 192, 145, 0.15);
+  overflow: hidden;
+}
+
+.pilot-history-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-dark);
+}
+
+.pilot-history-modal-title {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--accent-mint);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.pilot-history-modal-title i {
+  font-size: 1.1rem;
+}
+
+.pilot-history-modal-subbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: rgba(13, 17, 23, 0.95);
+  border-bottom: 1px solid var(--border-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+
+.pilot-history-subbar-label {
+  color: var(--text-dim);
+}
+
+.pilot-history-subbar-callsign {
+  color: var(--text-bright);
+  font-weight: 700;
+}
+
+.pilot-history-subbar-realname {
+  color: var(--text-muted);
+}
+
+.pilot-history-subbar-bg {
+  color: var(--accent-cyan);
+}
+
+.pilot-history-modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.pilot-history-modal-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-bright);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-muted);
+  padding: 1.25rem;
+}
+
+.pilot-history-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-dark);
 }

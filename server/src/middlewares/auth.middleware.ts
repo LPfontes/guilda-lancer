@@ -8,6 +8,7 @@ export interface AuthenticatedUserPayload {
   discord_id: string;
   name: string;
   role: UserRole;
+  roles?: UserRole[];
 }
 
 declare global {
@@ -100,10 +101,16 @@ export function requireRole(allowedRoles: UserRole[]) {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRoles: UserRole[] = req.user.roles && req.user.roles.length > 0
+      ? req.user.roles
+      : [req.user.role || 'PILOT'];
+
+    const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
+
+    if (!hasRequiredRole) {
       return res.status(403).json({
         error: 'FORBIDDEN',
-        message: `[!] Acesso Negado: Seu nível operacional (${req.user.role}) não possui autorização requerida (${allowedRoles.join(', ')}).`
+        message: `[!] Acesso Negado: Seu nível operacional (${userRoles.join(', ')}) não possui autorização requerida (${allowedRoles.join(', ')}).`
       });
     }
 

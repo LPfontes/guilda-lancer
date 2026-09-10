@@ -2,7 +2,7 @@ import { Request, Response, CookieOptions } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
-import { UserModel, PilotModel, IUser, UserRole } from '../database/db.js';
+import { UserModel, PilotModel, IUser, UserRole, getHighestRole } from '../database/db.js';
 
 export function getAuthCookieOptions(): CookieOptions {
   const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
@@ -25,23 +25,16 @@ export function getClearAuthCookieOptions(): CookieOptions {
   };
 }
 
-function resolveRoleFromDiscord(discordRoles: string[]): UserRole {
-  if (ENV.ROLE_ID_ADMIN && discordRoles.includes(ENV.ROLE_ID_ADMIN)) {
-    return 'ADMIN';
-  }
-  if (ENV.ROLE_ID_GM && discordRoles.includes(ENV.ROLE_ID_GM)) {
-    return 'GM';
-  }
-  return 'PILOT';
-}
 
 function createToken(user: IUser): string {
+  const roles = user.roles && user.roles.length > 0 ? user.roles : [user.role || 'PILOT'];
   return jwt.sign(
     {
       userId: user._id.toString(),
       discord_id: user.discord_id,
       name: user.name,
-      role: user.role
+      role: user.role,
+      roles
     },
     ENV.JWT_SECRET,
     { expiresIn: '7d' }
@@ -68,7 +61,7 @@ export const AuthController = {
       });
     }
 
-    const scope = encodeURIComponent('identify guilds.members.read');
+    const scope = encodeURIComponent('identify');
     const redirectUri = encodeURIComponent(ENV.DISCORD_REDIRECT_URI);
     const authUrl = `https://discord.com/oauth2/authorize?client_id=${ENV.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
 
@@ -128,64 +121,33 @@ export const AuthController = {
         ? `https://cdn.discordapp.com/avatars/${discordId}/${discordUser.avatar}.png`
         : `https://cdn.discordapp.com/embed/avatars/${parseInt(discordUser.discriminator || '0', 10) % 5}.png`;
 
-      // Passo B.2: Consulta os cargos e apelido do operador no servidor da guilda
-      let discordRoles: string[] = [];
-      let nickname: string | undefined;
-
-      if (ENV.DISCORD_GUILD_ID) {
-        try {
-          const memberResponse = await axios.get(
-            `https://discord.com/api/v10/users/@me/guilds/${ENV.DISCORD_GUILD_ID}/member`,
-            {
-              headers: { Authorization: `Bearer ${access_token}` }
-            }
-          );
-          discordRoles = memberResponse.data.roles || [];
-          nickname = memberResponse.data.nick || undefined;
-          console.log(`[+] Cargos do operador @${discordUser.username} na guilda (${ENV.DISCORD_GUILD_ID}):`, discordRoles);
-        } catch (err: any) {
-          console.warn(`[!] Não foi possível ler cargos no servidor ${ENV.DISCORD_GUILD_ID}:`, err.response?.data?.message || err.message);
-        }
-      }
-
       // Passo C: Localiza ou cadastra o usuário no MongoDB Atlas
-      const computedRole = resolveRoleFromDiscord(discordRoles);
       let user = await UserModel.findOne({ discord_id: discordId });
 
       if (!user) {
-        // Primeiro acesso: cadastra com a role mapeada dos cargos do Discord
+        // Primeiro acesso: cadastra com a role padrão PILOT
         user = await UserModel.create({
           discord_id: discordId,
           name: name,
           username: discordUser.username,
-          nickname: nickname,
           avatar: avatarUrl,
-          discord_roles: discordRoles,
-          role: computedRole
+          roles: ['PILOT'],
+          role: 'PILOT',
+          discord_roles: []
         });
-        console.log(`[+] Novo operador cadastrado no MongoDB Atlas: @${user.username} [${user.role}] (ID: ${user.discord_id})`);
+        console.log(`[+] Novo operador cadastrado no MongoDB Atlas: @${user.username} (ID: ${user.discord_id})`);
       } else {
-        // Atualiza avatar, nome, cargos e sincroniza role do Discord
-        let nextRole = user.role;
-        if (computedRole === 'ADMIN' || computedRole === 'GM') {
-          nextRole = computedRole;
-        } else if (user.role !== 'PENDING_GM') {
-          nextRole = computedRole;
-        }
-
+        // Atualiza avatar e nomes; mantém as roles já atribuídas internamente
         user = await UserModel.findByIdAndUpdate(
           user._id,
           {
             name: name,
             username: discordUser.username,
-            nickname: nickname,
-            avatar: avatarUrl,
-            discord_roles: discordRoles,
-            role: nextRole
+            avatar: avatarUrl
           },
           { returnDocument: 'after' }
         );
-        console.log(`[+] Operador sincronizado no MongoDB Atlas: @${user?.username} [${user?.role}]`);
+        console.log(`[+] Operador sincronizado no MongoDB Atlas: @${user?.username} [${(user?.roles || [user?.role]).join(', ')}]`);
       }
 
       // Passo D: Gera o JWT de sessão da aplicação
@@ -234,25 +196,37 @@ export const AuthController = {
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Dev login desabilitado pelo administrador.' });
     }
 
-    const { role = 'PILOT', username } = req.body || {};
-    const validRoles: UserRole[] = ['PILOT', 'GM', 'ADMIN'];
-    const chosenRole: UserRole = validRoles.includes(role) ? role : 'PILOT';
-    const chosenUsername = username || `operador_${chosenRole.toLowerCase()}`;
-    const discordId = `dev_${chosenRole.toLowerCase()}_${Date.now().toString().slice(-4)}`;
+    const { role = 'PILOT', roles, username } = req.body || {};
+    const validRoles: UserRole[] = ['PILOT', 'GM', 'AVALIADOR', 'ADMIN'];
+
+    let chosenRoles: UserRole[];
+    if (Array.isArray(roles) && roles.length > 0) {
+      chosenRoles = roles.filter((r: any) => validRoles.includes(r));
+      if (chosenRoles.length === 0) chosenRoles = ['PILOT'];
+    } else {
+      const singleRole: UserRole = validRoles.includes(role) ? role : 'PILOT';
+      chosenRoles = [singleRole];
+    }
+
+    const primaryRole = getHighestRole(chosenRoles);
+    const chosenUsername = username || `operador_${primaryRole.toLowerCase()}`;
+    const discordId = `dev_${primaryRole.toLowerCase()}_${Date.now().toString().slice(-4)}`;
 
     let user = await UserModel.findOne({ username: chosenUsername });
     if (!user) {
       user = await UserModel.create({
         discord_id: discordId,
         username: chosenUsername,
-        name: `Operador [${chosenRole}]`,
-        role: chosenRole,
+        name: `Operador [${primaryRole}]`,
+        roles: chosenRoles,
+        role: primaryRole,
         avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
         discord_roles: []
       });
-      console.log(`[+] Usuário Dev criado: @${user.username} [${user.role}]`);
-    } else if (user.role !== chosenRole) {
-      user.role = chosenRole;
+      console.log(`[+] Usuário Dev criado: @${user.username} [${user.roles.join(', ')}]`);
+    } else {
+      user.roles = chosenRoles;
+      user.role = primaryRole;
       await user.save();
     }
 
@@ -261,7 +235,7 @@ export const AuthController = {
     res.cookie('omninet_token', token, getAuthCookieOptions());
 
     return res.json({
-      message: `[+] Autenticado via Terminal Dev como @${user.username} [${user.role}].`,
+      message: `[+] Autenticado via Terminal Dev como @${user.username} [${(user.roles || [user.role]).join(', ')}].`,
       user
     });
   }

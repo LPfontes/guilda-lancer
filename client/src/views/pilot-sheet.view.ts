@@ -119,6 +119,9 @@ export class PilotSheetView {
     const background = localization.translateItemName(rawPilot?.background_id, rawBackground);
     const rawHistory = rawPilot?.history || rawPilot?.notes || '';
     const history = rawHistory.replace(/<[^>]*>/g, '').trim();
+    const historyLimit = 220;
+    const isHistoryLong = history.length > historyLimit;
+    const displayedHistory = isHistoryLong ? `${history.slice(0, historyLimit).trim()}...` : history;
     const shareCode = p.share_code || rawPilot?.share_code || rawPilot?.shareCode || '';
     const portrait =
       p.portrait ||
@@ -316,7 +319,26 @@ export class PilotSheetView {
               <h1 class="sheet-mech-title">${callsign}</h1>
               ${realName ? `<div class="pilot-real-name">${localization.t('sheet.real_name', 'NOME CIVIL')}: ${realName}</div>` : ''}
               ${background ? `<div class="pilot-background-tag">${localization.t('sheet.background', 'ANTECEDENTE')}: <strong>${background}</strong></div>` : ''}
-              ${history ? `<div class="pilot-background-tag">${localization.t('sheet.history_notes', 'HISTÓRICO / NOTAS')}: <strong>${history}</strong></div>` : ''}
+              ${
+                history
+                  ? `
+                <div class="pilot-background-tag pilot-history-tag">
+                  <span class="pilot-history-tag-label">${localization.t('sheet.history_notes', 'HISTÓRICO / NOTAS')}:</span>
+                  <strong class="pilot-history-tag-content">${displayedHistory}</strong>
+                  ${
+                    isHistoryLong
+                      ? `
+                    <button type="button" id="btn-open-history-modal" class="btn-read-more-history" title="${localization.t('common.read_more', 'EXIBIR MAIS')}">
+                      <i class="mdi mdi-text-box-search-outline"></i>
+                      <span>${localization.t('common.read_more', 'EXIBIR MAIS')}</span>
+                    </button>
+                  `
+                      : ''
+                  }
+                </div>
+              `
+                  : ''
+              }
 
               <div class="sheet-pilot-dossier-line">
                 <span class="sheet-ll-badge">${localization.t('sheet.license_level', 'NÍVEL DE LICENÇA')}: <strong>LL ${p.license_level}</strong></span>
@@ -834,6 +856,39 @@ export class PilotSheetView {
             </div>
           </div>
         </div>
+
+        <!-- Modal de Histórico e Notas Completas do Piloto -->
+        <div id="pilot-history-modal" class="pilot-history-modal-overlay hidden" role="dialog" aria-modal="true">
+          <div class="pilot-history-modal-box">
+            <div class="pilot-history-modal-header">
+              <div class="pilot-history-modal-title">
+                <i class="mdi mdi-book-open-page-variant-outline"></i>
+                <span>${localization.t('sheet.history_notes_title', 'DOSSIÊ PESSOAL // HISTÓRICO & NOTAS')}</span>
+              </div>
+              <button id="btn-close-history-modal" class="import-modal-close" type="button" aria-label="Fechar">
+                <i class="mdi mdi-close"></i>
+              </button>
+            </div>
+
+            <div class="pilot-history-modal-subbar">
+              <span class="pilot-history-subbar-label">OPERADOR:</span>
+              <strong class="pilot-history-subbar-callsign">${callsign}</strong>
+              ${realName ? `<span class="pilot-history-subbar-realname">(${realName})</span>` : ''}
+              ${background ? `<span class="pilot-history-subbar-bg">• ${background}</span>` : ''}
+            </div>
+
+            <div class="pilot-history-modal-body">
+              <div class="pilot-history-modal-text">${history}</div>
+            </div>
+
+            <div class="pilot-history-modal-footer">
+              <button id="btn-footer-close-history-modal" class="btn btn-secondary" type="button">
+                <i class="mdi mdi-close"></i>
+                <span>${localization.t('common.close', 'FECHAR')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -1029,13 +1084,39 @@ export class PilotSheetView {
       if (e.target === deleteModalOverlay) this.closeDeleteModal();
     });
 
+    // Modal de Histórico Completo
+    const btnOpenHistory = this.container.querySelector('#btn-open-history-modal');
+    btnOpenHistory?.addEventListener('click', () => this.openHistoryModal());
+
+    const btnCloseHistory = this.container.querySelector('#btn-close-history-modal');
+    btnCloseHistory?.addEventListener('click', () => this.closeHistoryModal());
+
+    const btnFooterCloseHistory = this.container.querySelector('#btn-footer-close-history-modal');
+    btnFooterCloseHistory?.addEventListener('click', () => this.closeHistoryModal());
+
+    const historyModalOverlay = this.container.querySelector('#pilot-history-modal');
+    historyModalOverlay?.addEventListener('click', (e) => {
+      if (e.target === historyModalOverlay) this.closeHistoryModal();
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeTalentModal();
         this.closeSyncModal();
         this.closeDeleteModal();
+        this.closeHistoryModal();
       }
     });
+  }
+
+  private openHistoryModal() {
+    const modal = this.container.querySelector('#pilot-history-modal');
+    modal?.classList.remove('hidden');
+  }
+
+  private closeHistoryModal() {
+    const modal = this.container.querySelector('#pilot-history-modal');
+    modal?.classList.add('hidden');
   }
 
   private openSyncModal() {
