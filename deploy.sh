@@ -8,6 +8,7 @@ echo "   GUILDA LANCER // DEPLOY INICIADO      "
 echo "========================================="
 
 echo "[1/4] Atualizando código fonte com git..."
+git reset --hard HEAD
 git pull origin master
 
 echo "[2/4] Compilando Frontend (Client)..."

@@ -25,5 +25,7 @@ jobs:
           script: |
             set -e
             cd guilda-lancer
+            git reset --hard HEAD
+            git pull origin master
             chmod +x deploy.sh
             ./deploy.sh
