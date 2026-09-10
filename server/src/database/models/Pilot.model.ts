@@ -24,6 +24,8 @@ export interface IPilotMech {
   name: string;
   frame: string;
   active: boolean;
+  frameData?: any;
+  loadouts?: any[];
   loadout?: any;
 }
 
@@ -165,6 +167,8 @@ const PilotSchema = new Schema<IPilot>(
           name: { type: String, required: true },
           frame: { type: String, required: true },
           active: { type: Boolean, default: false },
+          frameData: { type: Schema.Types.Mixed },
+          loadouts: { type: Schema.Types.Mixed },
           loadout: { type: Schema.Types.Mixed }
         }
       ],

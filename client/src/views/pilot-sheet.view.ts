@@ -112,18 +112,19 @@ export class PilotSheetView {
     const raw = p.compcon_raw;
 
     // Dados de Identificação Pessoal
-    const callsign = p.callsign || raw?.callsign || 'PILOTO';
-    const realName = p.name || raw?.name || raw?.player_name || '';
-    const rawBackground = raw?.background || '';
-    const background = localization.translateItemName(raw?.background_id, rawBackground);
-    const rawHistory = raw?.history || raw?.notes || '';
+    const rawPilot = raw?.pilot || raw?.data || raw;
+    const callsign = p.callsign || rawPilot?.callsign || 'PILOTO';
+    const realName = p.name || rawPilot?.name || rawPilot?.player_name || '';
+    const rawBackground = rawPilot?.background || '';
+    const background = localization.translateItemName(rawPilot?.background_id, rawBackground);
+    const rawHistory = rawPilot?.history || rawPilot?.notes || '';
     const history = rawHistory.replace(/<[^>]*>/g, '').trim();
-    const shareCode = p.share_code || raw?.share_code || raw?.shareCode || '';
+    const shareCode = p.share_code || rawPilot?.share_code || rawPilot?.shareCode || '';
     const portrait =
       p.portrait ||
-      raw?.cloud_portrait ||
-      raw?.img?.cloud_portrait ||
-      raw?.img?.avatar?.image?.src ||
+      rawPilot?.cloud_portrait ||
+      rawPilot?.img?.cloud_portrait ||
+      rawPilot?.img?.avatar?.image?.src ||
       '';
 
     // Regras oficiais de combate humano de piloto em LANCER (COMP/CON oficial)
@@ -134,14 +135,14 @@ export class PilotSheetView {
     const pilotArmor = 0;
 
     // Lista de Chassis do Piloto
-    const mechsList: any[] = raw?.mechs || p.mechs || [];
+    const mechsList: any[] = rawPilot?.mechs || p.mechs || [];
 
     // Core Bonuses (lidos diretamente do COMP/CON persistido no banco)
-    const rawCoreBonuses: any[] = raw?.core_bonuses || raw?.pilot?.core_bonuses || raw?.data?.core_bonuses || (p as any).core_bonuses || [];
+    const rawCoreBonuses: any[] = rawPilot?.core_bonuses || raw?.core_bonuses || (p as any).core_bonuses || [];
     const coreBonuses = rawCoreBonuses.map((cb) => (typeof cb === 'string' ? { id: cb, name: cb, effect: '', description: '' } : cb));
 
     // Talentos do Piloto (mesclando p.talents com raw.talents para garantir dados de ranks e ações completas)
-    const rawTalents: any[] = raw?.talents || [];
+    const rawTalents: any[] = rawPilot?.talents || [];
     this.resolvedTalents = (p.talents || []).map((pt: any) => {
       const rawMatch = rawTalents.find((rt: any) => rt.id === pt.id) || {};
       return {
@@ -393,12 +394,6 @@ export class PilotSheetView {
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('missions.missions_count', 'MISSÕES').toUpperCase()}</span>
             <span class="matrix-val">${p.total_missions_played || 0}</span>
-          </div>
-          <div class="matrix-box matrix-box-stars" title="Estrelas de mérito tático ganhas nas missões concluídas">
-            <span class="matrix-label">ESTRELAS</span>
-            <span class="matrix-val highlight-gold">
-              <i class="mdi mdi-star"></i> ${p.stars || 0}
-            </span>
           </div>
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('common.status', 'ESTADO')}</span>

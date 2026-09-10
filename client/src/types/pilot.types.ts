@@ -25,6 +25,8 @@ export interface IPilotMech {
   name: string;
   frame: string;
   active: boolean;
+  frameData?: any;
+  loadouts?: any[];
   loadout?: any;
 }
 

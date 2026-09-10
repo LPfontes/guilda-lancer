@@ -160,11 +160,27 @@ export class MechSheetView {
 
     // 1. Identificar o chassi ativo a partir de compcon_raw ou mechs do banco
     const raw = p.compcon_raw;
-    const activeMech =
-      raw?.mechs?.find((m: any) => m.id === raw?.active_mech_id || m.active) ||
-      raw?.mechs?.[0] ||
+    const rawPilot = raw?.pilot || raw?.data || raw;
+    const rawMechs: any[] = Array.isArray(rawPilot?.mechs)
+      ? rawPilot.mechs
+      : Array.isArray(raw?.mechs)
+      ? raw?.mechs
+      : [];
+    const activeMechId = rawPilot?.state?.active_mech_id || rawPilot?.active_mech_id || raw?.active_mech_id;
+
+    let activeMech: any =
+      rawMechs.find((m: any) => (activeMechId ? m.id === activeMechId : m.active || m.is_active)) ||
+      rawMechs[0] ||
       p.mechs?.find((m) => m.active) ||
       p.mechs?.[0];
+
+    // Se encontrou no p.mechs mas o rawMechs tem a versão completa com frameData e loadouts, combina
+    if (activeMech && rawMechs.length > 0) {
+      const matchInRaw = rawMechs.find((m: any) => m.id === activeMech.id || m.name === activeMech.name);
+      if (matchInRaw) {
+        activeMech = { ...matchInRaw, ...activeMech, frameData: matchInRaw.frameData || activeMech.frameData };
+      }
+    }
 
     const frameData = activeMech?.frameData;
     const mechName = activeMech?.name || p.active_mech_name || 'Chassi Não Nomeado';
@@ -201,11 +217,22 @@ export class MechSheetView {
     const gritBonus = p.grit || 0;
 
     // Verificar bônus extra de sistemas (ex: Personalizations +2 HP)
-    const loadout = activeMech?.loadouts?.[0] || activeMech?.loadout;
-    const systemsList: any[] = loadout?.systems || [];
+    let loadout = activeMech?.loadout;
+    if (Array.isArray(loadout)) {
+      const activeIdx = typeof activeMech?.active_loadout_index === 'number' ? activeMech.active_loadout_index : 0;
+      loadout = loadout[activeIdx] || loadout[0] || {};
+    } else if (!loadout && Array.isArray(activeMech?.loadouts)) {
+      const activeIdx = typeof activeMech?.active_loadout_index === 'number' ? activeMech.active_loadout_index : 0;
+      loadout = activeMech.loadouts[activeIdx] || activeMech.loadouts[0] || {};
+    }
+
+    const systemsList: any[] = [
+      ...(loadout?.systems || []),
+      ...(loadout?.integratedSystems || [])
+    ];
     let extraHp = 0;
     for (const s of systemsList) {
-      const bonuses = s.data?.bonuses || [];
+      const bonuses = s.data?.bonuses || s.bonuses || [];
       for (const b of bonuses) {
         if (b.id === 'hp') extraHp += Number(b.val) || 0;
       }
@@ -937,106 +964,183 @@ export class MechSheetView {
   // Extração de armas utilizando compcon-locales pt_BR
   private extractWeapons(loadout: any): IWeaponParsed[] {
     const results: IWeaponParsed[] = [];
-    const mounts = loadout?.mounts;
+    if (!loadout || typeof loadout !== 'object') return results;
 
-    if (Array.isArray(mounts)) {
-      for (const m of mounts) {
-        const rawMountType = m.mount_type || m.type || 'Mount';
-        const mountType = localization.translateMountType(rawMountType).toUpperCase();
-        const slots = m.slots || [];
+    const mounts = Array.isArray(loadout.mounts) ? loadout.mounts : [];
 
-        for (const slot of slots) {
-          const rawSlotSize = slot.size || rawMountType;
-          const slotSize = localization.translateMountType(rawSlotSize);
-          const w = slot.weapon;
-
-          if (w && w.data) {
-            const data = w.data;
-            const weaponId = w.id || data.id;
-            const localizedName = localization.translateItemName(weaponId, data.name);
-            const localizedDesc = localization.translateItemDesc(weaponId, data.description);
-
-            // Tradução do Mod se houver
-            let localizedModName: string | undefined = undefined;
-            if (w.mod) {
-              const modId = w.mod.id || w.mod.data?.id;
-              localizedModName = localization.translateItemName(modId, w.mod.data?.name);
-            }
-
-            // Tradução de Dano
-            const damageStr = Array.isArray(data.damage)
-              ? data.damage
-                  .map((d: any) => `${d.val} ${localization.translateDamageType(d.type)}`)
-                  .join(' + ')
-              : 'N/A';
-            const damageType =
-              Array.isArray(data.damage) && data.damage[0]
-                ? localization.translateDamageType(data.damage[0].type)
-                : 'Cinético';
-
-            // Tradução de Alcance
-            const rangeStr = Array.isArray(data.range)
-              ? data.range
-                  .map((r: any) => `${localization.translateRangeType(r.type)} ${r.val}`)
-                  .join(', ')
-              : '';
-
-            // Tradução das Tags com descrição para o Tooltip
-            const tagsList: Array<{ name: string; description: string }> = [];
-            if (Array.isArray(data.tags)) {
-              for (const t of data.tags) {
-                const tagInfo = localization.translateTagInfo(t.id || t, t.val);
-                if (tagInfo.label) {
-                  tagsList.push({ name: tagInfo.label, description: tagInfo.description });
-                }
-              }
-            }
-            if (w.mod?.data?.added_tags) {
-              for (const t of w.mod.data.added_tags) {
-                const tagInfo = localization.translateTagInfo(t.id || t, t.val);
-                if (tagInfo.label) {
-                  tagsList.push({ name: tagInfo.label, description: tagInfo.description });
-                }
-              }
-            }
-
-            // Tradução do Tipo de Arma
-            const typeMap: Record<string, string> = {
-              launcher: 'Lançador',
-              rifle: 'Fuzil',
-              cqb: 'CQB',
-              cannon: 'Canhão',
-              melee: 'Corpo a Corpo',
-              nexus: 'Nexo'
-            };
-            const rawType = (data.type || '').toLowerCase();
-            const weaponType = typeMap[rawType] || data.type;
-
-            results.push({
-              mountType,
-              slotSize,
-              name: localizedName,
-              modName: localizedModName,
-              weaponType,
-              range: rangeStr,
-              damage: damageStr,
-              damageType,
-              tags: tagsList,
-              description: localizedDesc,
-              isEmpty: false
-            });
-          } else {
-            results.push({
-              mountType,
-              slotSize,
-              name: 'ENCAIXE LIVRE',
-              range: '',
-              damage: '',
-              damageType: '',
-              tags: [],
-              isEmpty: true
-            });
+    for (const m of mounts) {
+      const rawMountType = m.mount_type || m.type || 'Mount';
+      const mountType = localization.translateMountType(rawMountType).toUpperCase();
+      
+      const allSlots = [...(m.slots || [])];
+      if (Array.isArray(m.extra)) {
+        for (const ex of m.extra) {
+          if (ex && ex.weapon) {
+            allSlots.push(ex);
           }
+        }
+      }
+
+      for (const slot of allSlots) {
+        const rawSlotSize = slot.size || rawMountType;
+        const slotSize = localization.translateMountType(rawSlotSize);
+        const w = slot.weapon;
+
+        if (w && (w.data || w.id)) {
+          const data = w.data || w;
+          const weaponId = w.id || data.id;
+          const localizedName = localization.translateItemName(weaponId, data.name || weaponId);
+          const localizedDesc = localization.translateItemDesc(weaponId, data.description || '');
+
+          // Tradução do Mod se houver
+          let localizedModName: string | undefined = undefined;
+          if (w.mod) {
+            const modId = w.mod.id || w.mod.data?.id;
+            localizedModName = localization.translateItemName(modId, w.mod.data?.name || modId);
+          }
+
+          // Tradução de Dano
+          const damageStr = Array.isArray(data.damage)
+            ? data.damage
+                .map((d: any) => `${d.val} ${localization.translateDamageType(d.type)}`)
+                .join(' + ')
+            : 'N/A';
+          const damageType =
+            Array.isArray(data.damage) && data.damage[0]
+              ? localization.translateDamageType(data.damage[0].type)
+              : 'Cinético';
+
+          // Tradução de Alcance
+          const rangeStr = Array.isArray(data.range)
+            ? data.range
+                .map((r: any) => `${localization.translateRangeType(r.type)} ${r.val}`)
+                .join(', ')
+            : '';
+
+          // Tradução das Tags com descrição para o Tooltip
+          const tagsList: Array<{ name: string; description: string }> = [];
+          if (Array.isArray(data.tags)) {
+            for (const t of data.tags) {
+              const tagInfo = localization.translateTagInfo(t.id || t, t.val);
+              if (tagInfo.label) {
+                tagsList.push({ name: tagInfo.label, description: tagInfo.description });
+              }
+            }
+          }
+          if (w.mod?.data?.added_tags) {
+            for (const t of w.mod.data.added_tags) {
+              const tagInfo = localization.translateTagInfo(t.id || t, t.val);
+              if (tagInfo.label) {
+                tagsList.push({ name: tagInfo.label, description: tagInfo.description });
+              }
+            }
+          }
+
+          // Tradução do Tipo de Arma
+          const typeMap: Record<string, string> = {
+            launcher: 'Lançador',
+            rifle: 'Fuzil',
+            cqb: 'CQB',
+            cannon: 'Canhão',
+            melee: 'Corpo a Corpo',
+            nexus: 'Nexo'
+          };
+          const rawType = (data.type || '').toLowerCase();
+          const weaponType = typeMap[rawType] || data.type || 'Arma';
+
+          results.push({
+            mountType,
+            slotSize,
+            name: localizedName,
+            modName: localizedModName,
+            weaponType,
+            range: rangeStr,
+            damage: damageStr,
+            damageType,
+            tags: tagsList,
+            description: localizedDesc,
+            isEmpty: false
+          });
+        } else {
+          results.push({
+            mountType,
+            slotSize,
+            name: 'ENCAIXE LIVRE',
+            range: '',
+            damage: '',
+            damageType: '',
+            tags: [],
+            isEmpty: true
+          });
+        }
+      }
+    }
+
+    // Armas adicionais de bônus de núcleo ou sistemas integrados
+    const extraMounts: any[] = [];
+    if (loadout.improved_armament && Array.isArray(loadout.improved_armament.slots)) {
+      extraMounts.push({ mount_type: 'Melhoria de Armamento', slots: loadout.improved_armament.slots, extra: loadout.improved_armament.extra });
+    }
+    if (Array.isArray(loadout.integratedMounts)) {
+      for (const im of loadout.integratedMounts) extraMounts.push(im);
+    }
+    if (loadout.integratedWeapon && Array.isArray(loadout.integratedWeapon.slots)) {
+      extraMounts.push({ mount_type: 'Arma Integrada', slots: loadout.integratedWeapon.slots, extra: [] });
+    }
+
+    for (const em of extraMounts) {
+      const rawMountType = em.mount_type || 'Integrado';
+      const mountType = localization.translateMountType(rawMountType).toUpperCase();
+      const allSlots = [...(em.slots || [])];
+      if (Array.isArray(em.extra)) {
+        for (const ex of em.extra) {
+          if (ex && ex.weapon) allSlots.push(ex);
+        }
+      }
+
+      for (const slot of allSlots) {
+        const rawSlotSize = slot.size || 'Aux';
+        const slotSize = localization.translateMountType(rawSlotSize);
+        const w = slot.weapon;
+
+        if (w && (w.data || w.id)) {
+          const data = w.data || w;
+          const weaponId = w.id || data.id;
+          const localizedName = localization.translateItemName(weaponId, data.name || weaponId);
+          const localizedDesc = localization.translateItemDesc(weaponId, data.description || '');
+
+          const damageStr = Array.isArray(data.damage)
+            ? data.damage.map((d: any) => `${d.val} ${localization.translateDamageType(d.type)}`).join(' + ')
+            : 'N/A';
+          const damageType =
+            Array.isArray(data.damage) && data.damage[0]
+              ? localization.translateDamageType(data.damage[0].type)
+              : 'Cinético';
+
+          const rangeStr = Array.isArray(data.range)
+            ? data.range.map((r: any) => `${localization.translateRangeType(r.type)} ${r.val}`).join(', ')
+            : '';
+
+          const tagsList: Array<{ name: string; description: string }> = [];
+          if (Array.isArray(data.tags)) {
+            for (const t of data.tags) {
+              const tagInfo = localization.translateTagInfo(t.id || t, t.val);
+              if (tagInfo.label) tagsList.push({ name: tagInfo.label, description: tagInfo.description });
+            }
+          }
+
+          results.push({
+            mountType,
+            slotSize,
+            name: localizedName,
+            weaponType: 'Integrado',
+            range: rangeStr,
+            damage: damageStr,
+            damageType,
+            tags: tagsList,
+            description: localizedDesc,
+            isEmpty: false
+          });
         }
       }
     }
@@ -1059,7 +1163,7 @@ export class MechSheetView {
           results.push({
             name: translated.name,
             sp,
-            type: data.type,
+            type: data.type || (s.talent_item ? 'Talento Integrado' : undefined),
             description: translated.description,
             actions: translated.actions
           });

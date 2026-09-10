@@ -15,5 +15,23 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('compcon-pt-br.json')) {
+            return 'lancer-data';
+          }
+          if (id.includes('node_modules')) {
+            if (id.includes('socket.io-client')) {
+              return 'vendor-socket';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 });

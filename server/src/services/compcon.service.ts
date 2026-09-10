@@ -220,12 +220,24 @@ export class CompconService {
           engineering = Number(m.stats.max.eng) || 0;
         }
 
+        const loadoutsArray: any[] = Array.isArray(m.loadouts)
+          ? m.loadouts
+          : m.loadout && typeof m.loadout === 'object'
+          ? (Array.isArray(m.loadout) ? m.loadout : [m.loadout])
+          : [];
+        const activeLoadoutIdx = typeof m.active_loadout_index === 'number' && m.active_loadout_index >= 0
+          ? m.active_loadout_index
+          : 0;
+        const currentLoadout = loadoutsArray[activeLoadoutIdx] || loadoutsArray[0] || (typeof m.loadout === 'object' ? m.loadout : null);
+
         const mechEntry: IPilotMech = {
           id: mId,
           name: mName,
           frame: mFrame,
           active: isActive,
-          loadout: m.loadouts || m.loadout || null
+          frameData: m.frameData || null,
+          loadouts: loadoutsArray,
+          loadout: currentLoadout
         };
         mechs.push(mechEntry);
 

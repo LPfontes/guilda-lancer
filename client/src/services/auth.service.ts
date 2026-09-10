@@ -2,6 +2,7 @@ import { ApiClient } from './api.js';
 import { IAuthSession, IUser, UserRole } from '../types/user.types.js';
 import { IPilot } from '../types/pilot.types.js';
 import { ToastService } from '../components/toast.js';
+import { pilotService } from './pilot.service.js';
 
 type AuthListener = (session: IAuthSession) => void;
 
@@ -144,7 +145,7 @@ class AuthService {
     } finally {
       localStorage.removeItem('omninet_token');
       this.session = { user: null, pilot: null, pilots: [] };
-      import('./pilot.service.js').then(m => m.pilotService.clearCache());
+      pilotService.clearCache();
       this.notify();
     }
   }

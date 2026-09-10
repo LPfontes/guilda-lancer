@@ -77,14 +77,28 @@ export function buildMissionReportText(pilot?: IPilot | any | null, activeMechDa
     'Superheavy': 'Superpesado'
   };
 
+  let activeLoadout = activeMech?.loadout;
+  if (Array.isArray(activeLoadout)) {
+    const activeIdx = typeof activeMech?.active_loadout_index === 'number' ? activeMech.active_loadout_index : 0;
+    activeLoadout = activeLoadout[activeIdx] || activeLoadout[0];
+  } else if (!activeLoadout && Array.isArray(activeMech?.loadouts)) {
+    const activeIdx = typeof activeMech?.active_loadout_index === 'number' ? activeMech.active_loadout_index : 0;
+    activeLoadout = activeMech.loadouts[activeIdx] || activeMech.loadouts[0];
+  }
+
   const mountsList: string[] = [];
-  const rawMounts = activeMech?.loadouts?.[0]?.mounts || [];
+  const rawMounts = activeLoadout?.mounts || [];
   if (Array.isArray(rawMounts) && rawMounts.length > 0) {
     rawMounts.forEach((m: any, idx: number) => {
       const type = mountTypeTranslations[m.mount_type] || m.mount_type || 'Geral';
-      const slots = m.slots || [];
+      const slots = [...(m.slots || [])];
+      if (Array.isArray(m.extra)) {
+        for (const ex of m.extra) {
+          if (ex && ex.weapon) slots.push(ex);
+        }
+      }
       const weaponNames = slots
-        .map((s: any) => s.weapon?.name || s.name || s.id)
+        .map((s: any) => s.weapon?.data?.name || s.weapon?.name || s.name || s.id)
         .filter(Boolean)
         .join(' / ');
       const state = storedCombat?.weaponsState?.[idx];
@@ -104,10 +118,13 @@ export function buildMissionReportText(pilot?: IPilot | any | null, activeMechDa
 
   // Sistemas
   const systemsList: string[] = [];
-  const rawSystems = activeMech?.loadouts?.[0]?.systems || [];
+  const rawSystems = [
+    ...(activeLoadout?.systems || []),
+    ...(activeLoadout?.integratedSystems || [])
+  ];
   if (Array.isArray(rawSystems) && rawSystems.length > 0) {
     rawSystems.forEach((s: any, idx: number) => {
-      const sysName = s.system?.name || s.name || s.id || 'Sistema';
+      const sysName = s.data?.name || s.system?.name || s.name || s.id || 'Sistema';
       const sysState = storedCombat?.systemsState?.[idx];
       const stateSuffix = sysState === 'DESTROYED' ? ' (DESTRUÍDO)' : '';
       systemsList.push(`[${sysName + stateSuffix} - Usos restantes/Usos totais]`);
