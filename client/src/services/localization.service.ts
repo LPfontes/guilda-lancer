@@ -1,7 +1,7 @@
 import compconLocales from '../locales/compcon-pt-br.json';
 import { i18n } from './i18n.service.js';
 
-const locales: Record<string, string> = compconLocales as Record<string, string>;
+const locales: Record<string, string> = compconLocales as unknown as Record<string, string>;
 
 export type SupportedLang = 'pt' | 'en';
 
@@ -547,7 +547,8 @@ class LocalizationService {
       'Flex': 'Flexível',
       'Heavy': 'Pesado',
       'Main/Aux': 'Principal / Auxiliar',
-      'Integrated': 'Integrado'
+      'Integrated': 'Integrado',
+      'Superheavy': 'Superpesado'
     };
 
     return mountMap[clean] || clean;

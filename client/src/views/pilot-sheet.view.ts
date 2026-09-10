@@ -157,6 +157,13 @@ export class PilotSheetView {
     const isAdmin = currentUser?.role === 'ADMIN';
     const canManage = isOwner || isAdmin;
 
+    const overchargeStorageKey = `lancer_overcharge_${p._id}`;
+    const overchargeSequence = ['1', '1d3', '1d6', '1d6+4'];
+    const storedOvercharge = localStorage.getItem(overchargeStorageKey);
+    const currentOvercharge = (storedOvercharge && overchargeSequence.includes(storedOvercharge)) 
+      ? storedOvercharge 
+      : ((p as any).overcharge_die || '1');
+
     this.container.innerHTML = `
       <div class="sheet-container">
         <!-- Navegação Superior / Breadcrumbs -->
@@ -394,6 +401,10 @@ export class PilotSheetView {
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('missions.missions_count', 'MISSÕES').toUpperCase()}</span>
             <span class="matrix-val">${p.total_missions_played || 0}</span>
+          </div>
+          <div class="matrix-box ${canManage ? 'matrix-box-interactive' : ''}" id="btn-toggle-overcharge" title="${canManage ? 'Dado de Sobrecarga (Clique para alternar: 1 -> 1d3 -> 1d6 -> 1d6+4)' : 'Dado de Sobrecarga (Custo de calor na sobrecarga)'}">
+            <span class="matrix-label">DADO SOBRECARGA</span>
+            <span class="matrix-val highlight-amber" id="overcharge-die-val">${currentOvercharge}</span>
           </div>
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('common.status', 'ESTADO')}</span>
@@ -841,6 +852,23 @@ export class PilotSheetView {
     });
 
     
+
+    // Alternar Dado de Sobrecarga (1 -> 1d3 -> 1d6 -> 1d6+4)
+    const overchargeBtn = this.container.querySelector<HTMLElement>('#btn-toggle-overcharge');
+    if (overchargeBtn && this.pilotData) {
+      const pId = this.pilotData._id;
+      const overchargeKey = `lancer_overcharge_${pId}`;
+      const seq = ['1', '1d3', '1d6', '1d6+4'];
+      overchargeBtn.addEventListener('click', () => {
+        const valEl = this.container.querySelector<HTMLElement>('#overcharge-die-val');
+        const curr = valEl?.textContent?.trim() || '1';
+        const currentIdx = seq.indexOf(curr);
+        const next = seq[(currentIdx + 1) % seq.length];
+        localStorage.setItem(overchargeKey, next);
+        if (valEl) valEl.textContent = next;
+        ToastService.info(`Dado de Sobrecarga atualizado para: ${next}`);
+      });
+    }
 
     const aarBtn = this.container.querySelector('#btn-pilot-aar');
     aarBtn?.addEventListener('click', async () => {
