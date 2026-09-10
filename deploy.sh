@@ -7,8 +7,6 @@ echo "========================================="
 echo "   GUILDA LANCER // DEPLOY INICIADO      "
 echo "========================================="
 
-cd "$APP_DIR"
-
 echo "[1/4] Atualizando código fonte com git..."
 git pull origin master
 
