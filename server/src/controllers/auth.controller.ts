@@ -68,7 +68,7 @@ export const AuthController = {
       });
     }
 
-    const scope = encodeURIComponent('identify email guilds.members.read');
+    const scope = encodeURIComponent('identify guilds.members.read');
     const redirectUri = encodeURIComponent(ENV.DISCORD_REDIRECT_URI);
     const authUrl = `https://discord.com/oauth2/authorize?client_id=${ENV.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
 
@@ -159,7 +159,6 @@ export const AuthController = {
           name: name,
           username: discordUser.username,
           nickname: nickname,
-          email: discordUser.email,
           avatar: avatarUrl,
           discord_roles: discordRoles,
           role: computedRole

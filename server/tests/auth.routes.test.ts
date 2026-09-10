@@ -29,7 +29,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     expect(res.body.auth_url).toBeDefined();
     expect(res.body.auth_url).toContain('https://discord.com/oauth2/authorize');
     expect(res.body.auth_url).toContain(ENV.DISCORD_CLIENT_ID);
-    expect(res.body.auth_url).toContain('scope=identify%20email%20guilds.members.read');
+    expect(res.body.auth_url).toContain('scope=identify%20guilds.members.read');
   });
 
   it('GET /api/auth/discord/callback - should redirect with error if Discord reports error', async () => {
@@ -54,7 +54,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
         access_token: 'mock_discord_access_token_xyz',
         token_type: 'Bearer',
         expires_in: 604800,
-        scope: 'identify email guilds.members.read'
+        scope: 'identify guilds.members.read'
       }
     });
 
@@ -64,8 +64,7 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
           id: fakeDiscordId,
           username: 'lancer_pilot_01',
           global_name: 'Pilot Maverick',
-          avatar: 'mock_avatar_hash_123',
-          email: 'maverick@lancer.net'
+          avatar: 'mock_avatar_hash_123'
         }
       })
       .mockResolvedValueOnce({

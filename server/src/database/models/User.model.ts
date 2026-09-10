@@ -7,7 +7,6 @@ export interface IUser extends Document {
   name: string;
   username: string;
   nickname?: string;
-  email?: string;
   avatar?: string;
   role: UserRole;
   discord_roles: string[];
@@ -34,10 +33,6 @@ const UserSchema = new Schema<IUser>(
       trim: true
     },
     nickname: {
-      type: String,
-      trim: true
-    },
-    email: {
       type: String,
       trim: true
     },
