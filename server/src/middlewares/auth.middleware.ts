@@ -102,10 +102,15 @@ export function requireRole(allowedRoles: UserRole[]) {
     }
 
     const userRoles: UserRole[] = req.user.roles && req.user.roles.length > 0
-      ? req.user.roles
+      ? [...req.user.roles]
       : [req.user.role || 'PILOT'];
 
-    const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
+    if (req.user.role && !userRoles.includes(req.user.role)) {
+      userRoles.push(req.user.role);
+    }
+
+    // ADMIN possui privilégio de superadministrador sobre todas as rotas restritas
+    const hasRequiredRole = userRoles.includes('ADMIN') || allowedRoles.some((role) => userRoles.includes(role));
 
     if (!hasRequiredRole) {
       return res.status(403).json({

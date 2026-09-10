@@ -93,9 +93,10 @@ describe('Discord OAuth2 & Auth Routes with MongoDB Atlas', () => {
     getSpy.mockRestore();
   });
 
-  it('GET /api/auth/me - should return 401 when unauthenticated', async () => {
+  it('GET /api/auth/me - should return null session when unauthenticated', async () => {
     const res = await request(app).get('/api/auth/me');
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    expect(res.body.user).toBeNull();
   });
 
   it('GET /api/auth/me - should return user profile from MongoDB when authenticated with HttpOnly cookie', async () => {

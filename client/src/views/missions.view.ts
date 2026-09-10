@@ -9,6 +9,7 @@ import { buildMissionReportText } from '../services/mission-report.helper.js';
 import { chatService } from '../services/chat.service.js';
 import { localization } from '../services/localization.service.js';
 import { IChatMessage } from '../types/chat.types.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class MissionsView {
   private container: HTMLElement;
@@ -2051,13 +2052,13 @@ export class MissionsView {
     row.innerHTML = `
       <div class="transmission-meta">
         <div class="transmission-author-info">
-          <span class="author-role-badge ${roleBadgeClass}">${msg.author_role}</span>
-          <strong class="transmission-callsign">${msg.pilot_callsign || msg.author_name}</strong>
-          ${msg.pilot_callsign && msg.author_name !== msg.pilot_callsign ? `<span class="transmission-author-username">(@${msg.author_name})</span>` : ''}
+          <span class="author-role-badge ${roleBadgeClass}">${escapeHtml(msg.author_role)}</span>
+          <strong class="transmission-callsign">${escapeHtml(msg.pilot_callsign || msg.author_name)}</strong>
+          ${msg.pilot_callsign && msg.author_name !== msg.pilot_callsign ? `<span class="transmission-author-username">(@${escapeHtml(msg.author_name)})</span>` : ''}
         </div>
-        <span class="transmission-time">${timeFormatted}</span>
+        <span class="transmission-time">${escapeHtml(timeFormatted)}</span>
       </div>
-      <div class="transmission-text">${msg.content}</div>
+      <div class="transmission-text">${escapeHtml(msg.content)}</div>
     `;
 
     messagesArea.appendChild(row);

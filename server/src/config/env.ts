@@ -38,8 +38,16 @@ export function validateEnv() {
   if (!ENV.MONGODB_URI) missing.push('MONGODB_URI');
 
   if (missing.length > 0) {
-    console.warn(`[!] AVISO: As seguintes variáveis do Discord OAuth2 estão ausentes: ${missing.join(', ')}`);
+    console.warn(`[!] AVISO: As seguintes variáveis de ambiente estão ausentes: ${missing.join(', ')}`);
   } else {
     console.log(`[+] Discord OAuth2 configurado com sucesso (Client ID: ${ENV.DISCORD_CLIENT_ID})`);
+  }
+
+  const DEFAULT_DEV_JWT_SECRET = 'chave_secreta_super_segura_omninet';
+  if (ENV.NODE_ENV === 'production') {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_DEV_JWT_SECRET) {
+      console.error('[!] ERRO CRÍTICO DE SEGURANÇA: Em produção, a variável JWT_SECRET deve ser definida com um segredo forte e exclusivo!');
+      process.exit(1);
+    }
   }
 }

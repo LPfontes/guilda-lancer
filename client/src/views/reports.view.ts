@@ -7,6 +7,7 @@ import { localization } from '../services/localization.service.js';
 import { IChatMessage, IReportData } from '../types/chat.types.js';
 import { IPilot } from '../types/pilot.types.js';
 import { IMission } from '../types/mission.types.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class ReportsView {
   private container: HTMLElement;
@@ -253,18 +254,18 @@ export class ReportsView {
           <div class="report-author-block">
             ${
               avatar
-                ? `<img src="${avatar}" alt="${rep.pilot_callsign || rep.author_name}" class="report-author-avatar" />`
+                ? `<img src="${avatar}" alt="${escapeHtml(rep.pilot_callsign || rep.author_name)}" class="report-author-avatar" />`
                 : `<div class="report-author-avatar"><i class="mdi mdi-account-circle"></i></div>`
             }
             <div class="report-author-details">
               <div class="report-author-name-line">
-                <strong class="report-author-callsign">${rep.pilot_callsign || rep.author_name}</strong>
-                ${rd?.pilot_name ? `<span class="report-pilot-civil-name">(${rd.pilot_name})</span>` : ''}
-                <span class="report-mech-badge">// CHASSI: ${rd?.mech_name || 'Mecha'}</span>
+                <strong class="report-author-callsign">${escapeHtml(rep.pilot_callsign || rep.author_name)}</strong>
+                ${rd?.pilot_name ? `<span class="report-pilot-civil-name">(${escapeHtml(rd.pilot_name)})</span>` : ''}
+                <span class="report-mech-badge">// CHASSI: ${escapeHtml(rd?.mech_name || 'Mecha')}</span>
               </div>
               <div class="report-transmission-sub">
                 TRANSMISSÃO: ${dateFormatted} 
-                ${mission ? `— MISSÃO: <strong class="report-mission-highlight">${mission.title}</strong>` : ''}
+                ${mission ? `— MISSÃO: <strong class="report-mission-highlight">${escapeHtml(mission.title)}</strong>` : ''}
               </div>
             </div>
           </div>
@@ -317,17 +318,17 @@ export class ReportsView {
         <div class="report-downtime-section">
           <div class="report-downtime-title">
             <i class="mdi mdi-dice-multiple-outline"></i>
-            <span>${localization.t('reports.downtime_action', 'AÇÃO DE RECESSO:')} ${rd?.downtime_action || 'Não especificada'}</span>
+            <span>${localization.t('reports.downtime_action', 'AÇÃO DE RECESSO:')} ${escapeHtml(rd?.downtime_action || 'Não especificada')}</span>
           </div>
           <div class="report-downtime-content">
             <strong>Resultado:</strong> 
-            <span class="report-downtime-result">${rd?.downtime_result || 'Sem resultado anotado'}</span>
+            <span class="report-downtime-result">${escapeHtml(rd?.downtime_result || 'Sem resultado anotado')}</span>
           </div>
           ${
             rd?.damaged_notes
               ? `
             <div class="report-damaged-notes">
-              <strong>Observações / Avarias:</strong> ${rd.damaged_notes}
+              <strong>Observações / Avarias:</strong> ${escapeHtml(rd.damaged_notes)}
             </div>
           `
               : ''
@@ -340,7 +341,7 @@ export class ReportsView {
             ? `
           <div class="report-gm-dispatch-box">
             <i class="mdi mdi-check-circle-outline"></i> 
-            <strong>${localization.t('reports.gm_dispatch', 'DESPACHO DO MESTRE')} (${rd.validated_by_name || 'GM'}):</strong> ${rd.gm_notes}
+            <strong>${localization.t('reports.gm_dispatch', 'DESPACHO DO MESTRE')} (${escapeHtml(rd.validated_by_name || 'GM')}):</strong> ${escapeHtml(rd.gm_notes)}
           </div>
         `
             : ''
@@ -380,10 +381,10 @@ export class ReportsView {
                         (c) => `
                     <div class="report-comment-item">
                       <div class="report-comment-meta">
-                        <strong class="report-comment-author">${c.pilot_callsign || c.author_name} [${c.author_role}]</strong>
+                        <strong class="report-comment-author">${escapeHtml(c.pilot_callsign || c.author_name)} [${escapeHtml(c.author_role)}]</strong>
                         <span>${new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <div class="report-comment-text">${c.content}</div>
+                      <div class="report-comment-text">${escapeHtml(c.content)}</div>
                     </div>
                   `
                       )

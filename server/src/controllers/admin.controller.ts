@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { UserModel, PilotModel, UserRole, getHighestRole } from '../database/db.js';
+import { escapeRegex } from '../utils/security.utils.js';
 
 export const AdminController = {
   /**
@@ -22,7 +23,7 @@ export const AdminController = {
       }
 
       if (search && typeof search === 'string' && search.trim()) {
-        const regex = { $regex: search.trim(), $options: 'i' };
+        const regex = { $regex: escapeRegex(search.trim()), $options: 'i' };
         const searchOr = [
           { username: regex },
           { name: regex },

@@ -5,6 +5,7 @@ import { ToastService } from '../components/toast.js';
 import { getCompconIcon } from '../components/compcon-icons.js';
 import { localization } from '../services/localization.service.js';
 import { buildMissionReportText } from '../services/mission-report.helper.js';
+import { escapeHtml } from '../utils/security.js';
 
 /**
  * Ficha Completa do Piloto / Operador (Pilot Personnel Dossier).
@@ -316,15 +317,15 @@ export class PilotSheetView {
                 OMNINET // REGISTRO OFICIAL DE PILOTO
               </div>
 
-              <h1 class="sheet-mech-title">${callsign}</h1>
-              ${realName ? `<div class="pilot-real-name">${localization.t('sheet.real_name', 'NOME CIVIL')}: ${realName}</div>` : ''}
-              ${background ? `<div class="pilot-background-tag">${localization.t('sheet.background', 'ANTECEDENTE')}: <strong>${background}</strong></div>` : ''}
+              <h1 class="sheet-mech-title">${escapeHtml(callsign)}</h1>
+              ${realName ? `<div class="pilot-real-name">${localization.t('sheet.real_name', 'NOME CIVIL')}: ${escapeHtml(realName)}</div>` : ''}
+              ${background ? `<div class="pilot-background-tag">${localization.t('sheet.background', 'ANTECEDENTE')}: <strong>${escapeHtml(background)}</strong></div>` : ''}
               ${
                 history
                   ? `
                 <div class="pilot-background-tag pilot-history-tag">
                   <span class="pilot-history-tag-label">${localization.t('sheet.history_notes', 'HISTÓRICO / NOTAS')}:</span>
-                  <strong class="pilot-history-tag-content">${displayedHistory}</strong>
+                  <strong class="pilot-history-tag-content">${escapeHtml(displayedHistory)}</strong>
                   ${
                     isHistoryLong
                       ? `
@@ -872,13 +873,13 @@ export class PilotSheetView {
 
             <div class="pilot-history-modal-subbar">
               <span class="pilot-history-subbar-label">OPERADOR:</span>
-              <strong class="pilot-history-subbar-callsign">${callsign}</strong>
-              ${realName ? `<span class="pilot-history-subbar-realname">(${realName})</span>` : ''}
-              ${background ? `<span class="pilot-history-subbar-bg">• ${background}</span>` : ''}
+              <strong class="pilot-history-subbar-callsign">${escapeHtml(callsign)}</strong>
+              ${realName ? `<span class="pilot-history-subbar-realname">(${escapeHtml(realName)})</span>` : ''}
+              ${background ? `<span class="pilot-history-subbar-bg">• ${escapeHtml(background)}</span>` : ''}
             </div>
 
             <div class="pilot-history-modal-body">
-              <div class="pilot-history-modal-text">${history}</div>
+              <div class="pilot-history-modal-text">${escapeHtml(history)}</div>
             </div>
 
             <div class="pilot-history-modal-footer">

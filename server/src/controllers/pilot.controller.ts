@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { PilotModel } from '../database/models/Pilot.model.js';
 import { CompconService } from '../services/compcon.service.js';
+import { escapeRegex } from '../utils/security.utils.js';
 
 export const PilotController = {
   /**
@@ -252,7 +253,8 @@ export const PilotController = {
 
       return res.json({
         parsed,
-        tactical_summary: summary
+        tactical_summary: summary,
+        is_valid: true
       });
     } catch (err: any) {
       return res.status(400).json({
@@ -328,11 +330,12 @@ export const PilotController = {
       if (max_ll !== undefined) query.license_level.$lte = parseInt(String(max_ll), 10);
     }
 
-    if (search && typeof search === 'string') {
+    if (search && typeof search === 'string' && search.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       query.$or = [
-        { callsign: { $regex: search, $options: 'i' } },
-        { name: { $regex: search, $options: 'i' } },
-        { active_mech_name: { $regex: search, $options: 'i' } }
+        { callsign: { $regex: safeSearch, $options: 'i' } },
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { active_mech_name: { $regex: safeSearch, $options: 'i' } }
       ];
     }
 
@@ -491,7 +494,10 @@ export const PilotController = {
 
     // Permissão: apenas o operador dono ou um ADMIN pode atualizar a ficha
     const isOwner = pilot.user_id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === 'ADMIN';
+    const userRoles = req.user.roles || [req.user.role];
+    const isAdmin = userRoles.includes('ADMIN');
+    const isGm = userRoles.includes('GM');
+    const isStaff = isAdmin || isGm;
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
@@ -523,6 +529,10 @@ export const PilotController = {
     let hasCombatChanges = false;
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
+        if (field === 'stars' && !isStaff) {
+          // Bloqueia auto-atribuição de estrelas de mérito por operadores comuns
+          continue;
+        }
         if (field === 'callsign') {
           pilot.callsign = req.body.callsign.toString().trim().toUpperCase();
         } else {

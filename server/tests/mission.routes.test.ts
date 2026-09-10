@@ -122,9 +122,11 @@ describe('Mission Operations Routes (/api/missions)', () => {
 
     vi.spyOn(MissionModel, 'find').mockReturnValueOnce({
       populate: vi.fn().mockReturnValue({
-        sort: vi.fn().mockReturnValue({
-          skip: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue(mockMissions)
+        populate: vi.fn().mockReturnValue({
+          sort: vi.fn().mockReturnValue({
+            skip: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue(mockMissions)
+            })
           })
         })
       })
@@ -150,6 +152,7 @@ describe('Mission Operations Routes (/api/missions)', () => {
     const missionId = new mongoose.Types.ObjectId();
     const mockMission = {
       _id: missionId,
+      gm_id: new mongoose.Types.ObjectId(),
       title: 'Operation Iron Vanguard',
       status: 'OPEN',
       min_ll: 1,
@@ -191,6 +194,7 @@ describe('Mission Operations Routes (/api/missions)', () => {
     const missionId = new mongoose.Types.ObjectId();
     const mockMission = {
       _id: missionId,
+      gm_id: new mongoose.Types.ObjectId(),
       status: 'OPEN',
       min_ll: 0,
       max_ll: 4,

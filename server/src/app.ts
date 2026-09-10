@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
@@ -12,6 +13,12 @@ import { adminRoutes } from './routes/admin.routes.js';
 import { isOriginAllowed } from './config/cors.js';
 
 export const app = express();
+
+// Hardening de cabeçalhos HTTP com Helmet
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false
+}));
 
 // Middlewares
 app.use(cors({

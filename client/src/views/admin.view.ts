@@ -3,6 +3,7 @@ import { authService } from '../services/auth.service.js';
 import { localization } from '../services/localization.service.js';
 import { ToastService } from '../components/toast.js';
 import { UserRole } from '../types/user.types.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class AdminView {
   private container: HTMLElement;
@@ -654,8 +655,6 @@ export class AdminView {
   }
 
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return escapeHtml(text);
   }
 }

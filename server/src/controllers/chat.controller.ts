@@ -52,11 +52,32 @@ export class ChatController {
         return;
       }
 
-      // Procura se o autor tem um piloto ativo aprovado
+      // Procura se o autor tem um piloto ativo
       const pilot = await PilotModel.findOne({
         user_id: user.id || user._id,
         is_active: true
       });
+
+      // Validação de acesso: apenas o GM da missão, ADMIN ou pilotos inscritos podem falar no canal
+      const currentUserId = (user.id || user._id).toString();
+      const isGm = mission.gm_id.toString() === currentUserId;
+      const userRoles = user.roles || [user.role];
+      const isAdmin = userRoles.includes('ADMIN');
+
+      const userPilots = await PilotModel.find({ user_id: user.id || user._id }, { _id: 1 });
+      const userPilotIds = userPilots.map((p) => p._id.toString());
+      const isParticipant = mission.applications.some((app: any) => {
+        const appPilotId = (app.pilot_id?._id || app.pilot_id)?.toString();
+        return userPilotIds.includes(appPilotId);
+      });
+
+      if (!isGm && !isAdmin && !isParticipant) {
+        res.status(403).json({
+          error: 'FORBIDDEN',
+          message: '[!] Acesso Negado: Apenas o Mestre da operação, Administradores ou pilotos inscritos nesta missão podem transmitir mensagens no canal pré-missão.'
+        });
+        return;
+      }
 
       const newMsg = await ChatMessageModel.create({
         channel_type: 'MISSION',
@@ -200,7 +221,8 @@ export class ChatController {
       const { gm_notes } = req.body;
       const user = (req as any).user;
 
-      if (user.role !== 'GM' && user.role !== 'ADMIN') {
+      const userRoles = user.roles || [user.role];
+      if (!userRoles.includes('GM') && !userRoles.includes('ADMIN')) {
         res.status(403).json({ error: 'Apenas Mestres (GM) e Administradores podem homologar recesso.' });
         return;
       }

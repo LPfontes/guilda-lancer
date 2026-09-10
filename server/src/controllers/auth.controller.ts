@@ -192,8 +192,11 @@ export const AuthController = {
 
   // 5. Autenticação simulada para desenvolvimento e testes
   async devLogin(req: Request, res: Response) {
-    if (process.env.DISABLE_DEV_LOGIN === 'true') {
-      return res.status(403).json({ error: 'FORBIDDEN', message: 'Dev login desabilitado pelo administrador.' });
+    if (ENV.NODE_ENV === 'production' || process.env.DISABLE_DEV_LOGIN === 'true') {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: '[!] Operação Negada: O login de desenvolvimento está estritamente desabilitado neste ambiente.'
+      });
     }
 
     const { role = 'PILOT', roles, username } = req.body || {};

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { MissionModel, IMission } from '../database/models/Mission.model.js';
 import { PilotModel } from '../database/models/Pilot.model.js';
+import { escapeRegex } from '../utils/security.utils.js';
 
 export const MissionController = {
   /**
@@ -100,11 +101,12 @@ export const MissionController = {
       query.gm_id = gm_id;
     }
 
-    if (search && typeof search === 'string') {
+    if (search && typeof search === 'string' && search.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { contractor: { $regex: search, $options: 'i' } },
-        { briefing: { $regex: search, $options: 'i' } }
+        { title: { $regex: safeSearch, $options: 'i' } },
+        { contractor: { $regex: safeSearch, $options: 'i' } },
+        { briefing: { $regex: safeSearch, $options: 'i' } }
       ];
     }
 
@@ -284,7 +286,7 @@ export const MissionController = {
     }
 
     // O Mestre de Jogo não pode se candidatar à sua própria missão
-    if (mission.gm_id.toString() === req.user._id.toString()) {
+    if (mission.gm_id && mission.gm_id.toString() === req.user._id.toString()) {
       return res.status(400).json({
         error: 'GM_CANNOT_APPLY',
         message: '[!] O Mestre da operação não pode se candidatar como piloto na própria missão que criou.'

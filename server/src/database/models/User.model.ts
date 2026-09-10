@@ -82,10 +82,12 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Mantém role sincronizada com o maior privilégio contido em roles
+// Mantém role e roles sincronizados com o maior privilégio
 UserSchema.pre('save', function () {
   if (!this.roles || this.roles.length === 0) {
-    this.roles = ['PILOT'];
+    this.roles = [this.role || 'PILOT'];
+  } else if (this.role && !this.roles.includes(this.role)) {
+    this.roles.push(this.role);
   }
   this.role = getHighestRole(this.roles);
 });
