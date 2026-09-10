@@ -515,7 +515,7 @@ export const PilotController = {
     }
 
     const allowedFields = [
-      'callsign', 'name', 'license_level', 'grit', 'hull', 'agility', 'systems', 'engineering',
+      'callsign', 'name', 'license_level', 'stars', 'grit', 'hull', 'agility', 'systems', 'engineering',
       'heat_dice', 'talents', 'skills', 'licenses', 'mechs', 'active_mech_name', 'active_mech_frame',
       'active_mech_image', 'portrait'
     ];

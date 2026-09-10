@@ -302,9 +302,10 @@ export class MechSheetView {
             ${
               p.share_code
                 ? `
-              <button id="btn-copy-sharecode" class="btn btn-secondary sheet-action-btn" title="Copiar Share Code">
-                <i class="mdi mdi-share-variant"></i>
-                <span>SHARE: ${p.share_code}</span>
+              <button id="btn-copy-sharecode" class="btn btn-secondary sheet-action-btn" title="Copiar Código COMP/CON">
+                <i class="mdi mdi-cloud-tags"></i>
+                <span>COMP/CON: <strong>${p.share_code}</strong></span>
+                <i class="mdi mdi-content-copy"></i>
               </button>
             `
                 : ''

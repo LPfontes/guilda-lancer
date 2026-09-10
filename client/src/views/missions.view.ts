@@ -215,6 +215,19 @@ export class MissionsView {
     });
   }
 
+  private updateActiveLlPreset(modal: Element, minVal: string, maxVal: string) {
+    const presets = modal.querySelectorAll('.btn-ll-preset');
+    presets.forEach((btn) => {
+      const bMin = btn.getAttribute('data-min');
+      const bMax = btn.getAttribute('data-max');
+      if (bMin === minVal && bMax === maxVal) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
   private renderContent() {
     const user = authService.currentUser;
     const isGmOrAdmin = user?.role === 'GM' || user?.role === 'ADMIN';
@@ -395,7 +408,7 @@ export class MissionsView {
           <div class="mission-telemetry-strip">
             <div class="telemetry-cell">
               <span class="telemetry-label">${localization.t('missions.license_level', 'NÍVEL LICENÇA')}</span>
-              <span class="telemetry-val highlight-ll">LL ${m.min_ll} - ${m.max_ll}</span>
+              <span class="telemetry-val highlight-ll">${m.min_ll === m.max_ll ? `NL ${m.min_ll}` : `NL ${m.min_ll} - ${m.max_ll}`}</span>
             </div>
             <div class="telemetry-cell">
               <span class="telemetry-label">${localization.t('missions.difficulty', 'DIFICULDADE')}</span>
@@ -585,18 +598,30 @@ export class MissionsView {
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="mission-min-ll-input">LN MÍNIMO</label>
+                <label class="form-label" for="mission-min-ll-input">NL MÍNIMO</label>
                 <input type="number" id="mission-min-ll-input" class="form-input" min="0" max="12" value="0" />
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="mission-max-ll-input">LN MÁXIMO</label>
-                <input type="number" id="mission-max-ll-input" class="form-input" min="0" max="12" value="3" />
+                <label class="form-label" for="mission-max-ll-input">NL MÁXIMO</label>
+                <input type="number" id="mission-max-ll-input" class="form-input" min="0" max="12" value="0" />
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="mission-slots-input">VAGAS DO ESQUADRÃO</label>
                 <input type="number" id="mission-slots-input" class="form-input" min="1" max="12" value="4" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">PRESETS RÁPIDOS DE NL</label>
+              <div class="ll-presets-bar">
+                <button type="button" class="btn-ll-preset active" data-min="0" data-max="0" title="Apenas Recrutas (NL 0)">APENAS NL 0</button>
+                <button type="button" class="btn-ll-preset" data-min="1" data-max="1" title="Apenas Pilotos NL 1">APENAS NL 1</button>
+                <button type="button" class="btn-ll-preset" data-min="2" data-max="2" title="Apenas Pilotos NL 2">APENAS NL 2</button>
+                <button type="button" class="btn-ll-preset" data-min="3" data-max="3" title="Apenas Pilotos NL 3">APENAS NL 3</button>
+                <button type="button" class="btn-ll-preset" data-min="0" data-max="2" title="Intervalo NL 0 a 2">NL 0 A 2</button>
+                <button type="button" class="btn-ll-preset" data-min="0" data-max="3" title="Intervalo NL 0 a 3">NL 0 A 3</button>
               </div>
             </div>
 
@@ -870,6 +895,52 @@ export class MissionsView {
 
     contractorInput?.addEventListener('input', () => {
       this.updateContractorPreview(contractorInput.value);
+    }, { signal });
+
+    // 7.1.1 Presets rápidos e sincronização de NL (Nível de Licença)
+    const llPresets = this.container.querySelectorAll('.btn-ll-preset');
+    const minLlInputEl = this.container.querySelector('#mission-min-ll-input') as HTMLInputElement;
+    const maxLlInputEl = this.container.querySelector('#mission-max-ll-input') as HTMLInputElement;
+
+    llPresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const minVal = btn.getAttribute('data-min');
+        const maxVal = btn.getAttribute('data-max');
+        if (minVal !== null && minLlInputEl) minLlInputEl.value = minVal;
+        if (maxVal !== null && maxLlInputEl) maxLlInputEl.value = maxVal;
+        llPresets.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }, { signal });
+    });
+
+    const syncLlPresets = () => {
+      const min = minLlInputEl?.value;
+      const max = maxLlInputEl?.value;
+      llPresets.forEach(b => {
+        if (b.getAttribute('data-min') === min && b.getAttribute('data-max') === max) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    };
+
+    minLlInputEl?.addEventListener('input', () => {
+      const min = parseInt(minLlInputEl.value, 10);
+      const max = parseInt(maxLlInputEl.value, 10);
+      if (!isNaN(min) && !isNaN(max) && min > max) {
+        maxLlInputEl.value = String(min);
+      }
+      syncLlPresets();
+    }, { signal });
+
+    maxLlInputEl?.addEventListener('input', () => {
+      const min = parseInt(minLlInputEl.value, 10);
+      const max = parseInt(maxLlInputEl.value, 10);
+      if (!isNaN(min) && !isNaN(max) && max < min) {
+        minLlInputEl.value = String(max);
+      }
+      syncLlPresets();
     }, { signal });
 
     // 7.2 Máscara e seletor da Data de Início no padrão brasileiro (d/m/a)
@@ -1164,12 +1235,17 @@ export class MissionsView {
         return;
       }
 
+      const minLlRaw = minLlInput?.value !== '' ? parseInt(minLlInput.value, 10) : 0;
+      const maxLlRaw = maxLlInput?.value !== '' ? parseInt(maxLlInput.value, 10) : minLlRaw;
+      const minLlNum = Math.max(0, Math.min(12, isNaN(minLlRaw) ? 0 : minLlRaw));
+      const maxLlNum = Math.max(minLlNum, Math.min(12, isNaN(maxLlRaw) ? minLlNum : maxLlRaw));
+
       const payload: Partial<IMission> = {
         title: titleInput.value.trim(),
         contractor: contractorInput.value.trim() || 'Union / GMS',
         difficulty: difficultyInput.value,
-        min_ll: Number(minLlInput.value) || 0,
-        max_ll: Number(maxLlInput.value) || 12,
+        min_ll: minLlNum,
+        max_ll: maxLlNum,
         slots_total: Number(slotsInput.value) || 4,
         start_date: isoDate,
         start_time: rawTime,
@@ -1229,6 +1305,12 @@ export class MissionsView {
     }
     this.updateContractorPreview('Union / GMS');
 
+    const minLlInput = modal.querySelector('#mission-min-ll-input') as HTMLInputElement;
+    const maxLlInput = modal.querySelector('#mission-max-ll-input') as HTMLInputElement;
+    if (minLlInput) minLlInput.value = '0';
+    if (maxLlInput) maxLlInput.value = '0';
+    this.updateActiveLlPreset(modal, '0', '0');
+
     modal.classList.remove('hidden');
   }
 
@@ -1267,8 +1349,11 @@ export class MissionsView {
       const numDiff = Math.max(1, Math.min(3, Number(mission.difficulty) || 1));
       difficultyInput.value = String(numDiff);
     }
-    if (minLlInput) minLlInput.value = String(mission.min_ll ?? 0);
-    if (maxLlInput) maxLlInput.value = String(mission.max_ll ?? 12);
+    const minVal = String(mission.min_ll ?? 0);
+    const maxVal = String(mission.max_ll ?? mission.min_ll ?? 0);
+    if (minLlInput) minLlInput.value = minVal;
+    if (maxLlInput) maxLlInput.value = maxVal;
+    this.updateActiveLlPreset(modal, minVal, maxVal);
     if (slotsInput) slotsInput.value = String(mission.slots_total ?? 4);
 
     if (startDateInput) {
@@ -1333,7 +1418,7 @@ export class MissionsView {
         <div class="mission-telemetry-strip modal-telemetry-strip">
           <div class="telemetry-cell">
             <span class="telemetry-label">FAIXA DE LICENÇA</span>
-            <span class="telemetry-val highlight-ll">LL ${mission.min_ll} até LL ${mission.max_ll}</span>
+            <span class="telemetry-val highlight-ll">${mission.min_ll === mission.max_ll ? `Apenas NL ${mission.min_ll}` : `NL ${mission.min_ll} até NL ${mission.max_ll}`}</span>
           </div>
           <div class="telemetry-cell">
             <span class="telemetry-label">DIFICULDADE</span>

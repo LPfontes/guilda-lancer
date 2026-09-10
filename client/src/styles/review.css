@@ -273,6 +273,65 @@
   border: 1px solid var(--accent-crimson);
 }
 
+.review-header-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.review-sharecode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.review-sharecode-badge:hover {
+  border-color: var(--accent-mint);
+  background: rgba(120, 192, 145, 0.1);
+  color: var(--accent-mint);
+}
+
+.review-sharecode-prefix {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.review-sharecode-code {
+  font-weight: bold;
+  color: var(--accent-mint);
+}
+
+.review-sharecode-copy {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.review-sharecode-badge:hover .review-sharecode-copy {
+  color: var(--accent-mint);
+}
+
+.review-sharecode-badge.empty {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.review-sharecode-badge.empty:hover {
+  border-color: var(--border-default);
+  background: var(--bg-panel);
+  color: var(--text-bright);
+}
+
 /* Corpo do Card */
 .review-card-body {
   padding: 1.25rem;

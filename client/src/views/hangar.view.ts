@@ -376,6 +376,7 @@ export class HangarView {
                 <div class="mech-pilot-line">
                   OPERADOR: <span class="mech-pilot-callsign">${pilot.callsign}</span>
                   <span class="mech-ll-tag">[LL ${pilot.license_level}]</span>
+                  <span class="mech-stars-tag" title="Estrelas de mérito em missões"><i class="mdi mdi-star"></i> ${pilot.stars || 0}</span>
                 </div>
               </div>
 

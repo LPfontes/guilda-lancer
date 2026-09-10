@@ -293,6 +293,21 @@
   margin-left: 4px;
 }
 
+.mech-stars-tag {
+  color: var(--accent-gold);
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mech-stars-tag i {
+  color: var(--accent-amber);
+  font-size: 0.85rem;
+}
+
 .mech-status-badges {
   display: flex;
   flex-direction: column;

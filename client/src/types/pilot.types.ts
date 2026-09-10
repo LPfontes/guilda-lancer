@@ -34,6 +34,7 @@ export interface IPilot {
   callsign: string;
   name?: string;
   license_level: number;
+  stars?: number;
   grit: number;
   hull: number;
   agility: number;

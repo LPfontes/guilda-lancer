@@ -43,8 +43,10 @@ export const MissionController = {
       return res.status(400).json({ error: 'BRIEFING_REQUIRED', message: '[!] O briefing da missão é obrigatório.' });
     }
 
-    const minLlNum = Math.max(0, Math.min(12, Number(min_ll) || 0));
-    const maxLlNum = Math.max(minLlNum, Math.min(12, Number(max_ll) || 12));
+    const minVal = min_ll !== undefined && min_ll !== null && String(min_ll).trim() !== '' ? Number(min_ll) : 0;
+    const maxVal = max_ll !== undefined && max_ll !== null && String(max_ll).trim() !== '' ? Number(max_ll) : minVal;
+    const minLlNum = Math.max(0, Math.min(12, isNaN(minVal) ? 0 : minVal));
+    const maxLlNum = Math.max(minLlNum, Math.min(12, isNaN(maxVal) ? minLlNum : maxVal));
     const slotsNum = Math.max(1, Math.min(12, Number(slots_total) || 4));
 
     const mission = await MissionModel.create({
@@ -323,9 +325,12 @@ export const MissionController = {
 
     // Validação de Nível de Licença (min_ll e max_ll)
     if (pilot.license_level < mission.min_ll || pilot.license_level > mission.max_ll) {
+      const llReqText = mission.min_ll === mission.max_ll
+        ? `exclusivamente NL ${mission.min_ll}`
+        : `NL ${mission.min_ll} a ${mission.max_ll}`;
       return res.status(400).json({
         error: 'LL_MISMATCH',
-        message: `[!] O nível de licença do piloto (LL ${pilot.license_level}) é incompatível com esta missão (Requer LL ${mission.min_ll} a ${mission.max_ll}).`
+        message: `[!] O nível de licença do piloto (NL ${pilot.license_level}) é incompatível com esta missão (Requer ${llReqText}).`
       });
     }
 
@@ -559,16 +564,17 @@ export const MissionController = {
       });
     }
 
-    // Desvincula pilotos e atualiza estatísticas de missões jogadas
+    // Desvincula pilotos e atualiza estatísticas de missões jogadas e estrelas ganhas
     const selectedPilots = mission.applications.filter((a: any) => a.status === 'SELECTED');
     const selectedPilotIds = selectedPilots.map((a: any) => a.pilot_id);
+    const missionStars = Math.max(1, Math.min(3, Number(mission.difficulty) || 1));
 
     await PilotModel.updateMany(
       { _id: { $in: selectedPilotIds } },
       {
         active_mission_id: null,
         last_mission_date: new Date(),
-        $inc: { total_missions_played: 1 }
+        $inc: { total_missions_played: 1, stars: missionStars }
       }
     );
 

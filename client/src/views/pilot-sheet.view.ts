@@ -118,6 +118,7 @@ export class PilotSheetView {
     const background = localization.translateItemName(raw?.background_id, rawBackground);
     const rawHistory = raw?.history || raw?.notes || '';
     const history = rawHistory.replace(/<[^>]*>/g, '').trim();
+    const shareCode = p.share_code || raw?.share_code || raw?.shareCode || '';
     const portrait =
       p.portrait ||
       raw?.cloud_portrait ||
@@ -174,14 +175,20 @@ export class PilotSheetView {
               <span>${localization.t('sheet.mech_sheet', 'FICHA DO MECHA')}</span>
             </a>
             ${
-              p.share_code
+              shareCode
                 ? `
-              <button id="btn-copy-sharecode" class="btn btn-secondary sheet-action-btn" title="Copiar Código de Compartilhamento">
-                <i class="mdi mdi-share-variant"></i>
-                <span>CÓDIGO: ${p.share_code}</span>
+              <button id="btn-copy-sharecode" class="btn btn-secondary sheet-action-btn" title="Copiar Código de Compartilhamento COMP/CON" data-share-code="${shareCode}">
+                <i class="mdi mdi-cloud-tags"></i>
+                <span>COMP/CON: <strong>${shareCode}</strong></span>
+                <i class="mdi mdi-content-copy"></i>
               </button>
             `
-                : ''
+                : `
+              <div class="sheet-sharecode-empty" title="Ficha importada diretamente via JSON">
+                <i class="mdi mdi-code-json"></i>
+                <span>COMP/CON: JSON</span>
+              </div>
+            `
             }
            
             <button id="btn-pilot-aar" class="btn btn-secondary sheet-action-btn" title="Copiar Modelo Oficial de Relatório de Missão">
@@ -227,6 +234,17 @@ export class PilotSheetView {
                     : localization.t('sheet.status_pending', 'AGUARDANDO HOMOLOGAÇÃO')
                 }</span>
               </span>
+              ${
+                shareCode
+                  ? `
+                <button type="button" class="sheet-compcon-badge btn-copy-hero-sharecode" data-share-code="${shareCode}" title="Copiar código COMP/CON">
+                  <i class="mdi mdi-cloud-tags"></i>
+                  <span>COMP/CON: <strong>${shareCode}</strong></span>
+                  <i class="mdi mdi-content-copy"></i>
+                </button>
+              `
+                  : ''
+              }
               ${
                 p.status === 'REJECTED' && p.rejection_reason
                   ? `<span class="sheet-audit-reason">// PENDÊNCIA: ${p.rejection_reason}</span>`
@@ -295,6 +313,25 @@ export class PilotSheetView {
               <div class="sheet-pilot-dossier-line">
                 <span class="sheet-ll-badge">${localization.t('sheet.license_level', 'NÍVEL DE LICENÇA')}: <strong>LL ${p.license_level}</strong></span>
                 <span class="sheet-grit-badge">${localization.t('sheet.grit', 'BRIO').toUpperCase()}: <strong>+${p.grit}</strong></span>
+                <span class="sheet-stars-badge" title="Estrelas de mérito tático conquistadas em missões">
+                  <i class="mdi mdi-star"></i> <strong>${p.stars || 0}</strong> ESTRELAS
+                </span>
+                ${
+                  shareCode
+                    ? `
+                  <button type="button" class="sheet-compcon-badge btn-copy-hero-sharecode" data-share-code="${shareCode}" title="Código COMP/CON (Clique para copiar)">
+                    <i class="mdi mdi-cloud-tags"></i>
+                    <span>COMP/CON: <strong>${shareCode}</strong></span>
+                    <i class="mdi mdi-content-copy"></i>
+                  </button>
+                `
+                    : `
+                  <span class="sheet-compcon-badge empty" title="Importado diretamente via arquivo JSON">
+                    <i class="mdi mdi-code-json"></i>
+                    <span>COMP/CON: JSON</span>
+                  </span>
+                `
+                }
                 <span class="sheet-status-pill status-${p.status.toLowerCase().replace('_', '-')}">
                   ${p.status === 'APPROVED' ? localization.t('sheet.status_approved', 'APROVADO // COMBATE') : p.status === 'REJECTED' ? localization.t('sheet.status_rejected', 'REJEITADO') : localization.t('sheet.status_pending', 'PENDENTE // AVALIAÇÃO')}
                 </span>
@@ -356,6 +393,12 @@ export class PilotSheetView {
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('missions.missions_count', 'MISSÕES').toUpperCase()}</span>
             <span class="matrix-val">${p.total_missions_played || 0}</span>
+          </div>
+          <div class="matrix-box matrix-box-stars" title="Estrelas de mérito tático ganhas nas missões concluídas">
+            <span class="matrix-label">ESTRELAS</span>
+            <span class="matrix-val highlight-gold">
+              <i class="mdi mdi-star"></i> ${p.stars || 0}
+            </span>
           </div>
           <div class="matrix-box">
             <span class="matrix-label">${localization.t('common.status', 'ESTADO')}</span>
@@ -790,12 +833,16 @@ export class PilotSheetView {
   }
 
   private bindEvents() {
-    const copyBtn = this.container.querySelector('#btn-copy-sharecode');
-    copyBtn?.addEventListener('click', async () => {
-      if (this.pilotData?.share_code) {
-        await navigator.clipboard.writeText(this.pilotData.share_code);
-        ToastService.success(`Código de Compartilhamento "${this.pilotData.share_code}" copiado!`);
-      }
+    const copyBtns = this.container.querySelectorAll('#btn-copy-sharecode, .btn-copy-hero-sharecode');
+    copyBtns.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const raw = this.pilotData?.compcon_raw;
+        const code = btn.getAttribute('data-share-code') || this.pilotData?.share_code || raw?.share_code || raw?.shareCode;
+        if (code) {
+          await navigator.clipboard.writeText(code);
+          ToastService.success(`Código de Compartilhamento COMP/CON "${code}" copiado!`);
+        }
+      });
     });
 
     

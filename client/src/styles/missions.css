@@ -377,6 +377,38 @@
   letter-spacing: 0.05em;
 }
 
+.ll-presets-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.btn-ll-preset {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all var(--transition-fast);
+}
+
+.btn-ll-preset:hover {
+  background: var(--bg-panel);
+  border-color: var(--border-hover);
+  color: var(--text-bright);
+}
+
+.btn-ll-preset.active {
+  background: rgba(120, 192, 145, 0.15);
+  border-color: var(--accent-mint);
+  color: var(--accent-mint);
+  font-weight: 700;
+}
+
 .modal-contractor-header-row {
   display: flex;
   align-items: center;

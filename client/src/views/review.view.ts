@@ -234,6 +234,8 @@ export class ReviewView {
       (p.compcon_raw as any)?.img?.avatar?.image?.src ||
       '';
 
+    const shareCode = p.share_code || (p.compcon_raw as any)?.share_code || (p.compcon_raw as any)?.shareCode || '';
+
     return `
       <div class="review-card ${statusClass}">
         <div class="review-card-header">
@@ -257,16 +259,37 @@ export class ReviewView {
             </div>
           </div>
 
-          <span class="review-status-pill ${statusClass}">
-            <i class="mdi ${
-              isPending
-                ? 'mdi-clock-outline'
-                : p.status === 'APPROVED'
-                ? 'mdi-check-decagram'
-                : 'mdi-alert-octagon-outline'
-            }"></i>
-            <span>${statusLabel}</span>
-          </span>
+          <div class="review-header-side">
+            ${
+              shareCode
+                ? `
+              <div class="review-sharecode-badge" data-share-code="${shareCode}" title="Código COMP/CON (Clique para copiar)">
+                <i class="mdi mdi-cloud-tags"></i>
+                <span class="review-sharecode-prefix">COMP/CON:</span>
+                <span class="review-sharecode-code">${shareCode}</span>
+                <i class="mdi mdi-content-copy review-sharecode-copy"></i>
+              </div>
+            `
+                : `
+              <div class="review-sharecode-badge empty" title="Importado diretamente via JSON bruto">
+                <i class="mdi mdi-code-json"></i>
+                <span class="review-sharecode-prefix">COMP/CON:</span>
+                <span class="review-sharecode-code">JSON</span>
+              </div>
+            `
+            }
+
+            <span class="review-status-pill ${statusClass}">
+              <i class="mdi ${
+                isPending
+                  ? 'mdi-clock-outline'
+                  : p.status === 'APPROVED'
+                  ? 'mdi-check-decagram'
+                  : 'mdi-alert-octagon-outline'
+              }"></i>
+              <span>${statusLabel}</span>
+            </span>
+          </div>
         </div>
 
         <div class="review-card-body">
@@ -417,6 +440,16 @@ export class ReviewView {
     // 3. Clique unificado para ações
     this.container.addEventListener('click', async (e) => {
       const target = e.target as HTMLElement;
+
+      const shareCodeBadge = target.closest('.review-sharecode-badge[data-share-code]') as HTMLElement;
+      if (shareCodeBadge) {
+        const code = shareCodeBadge.getAttribute('data-share-code');
+        if (code) {
+          await navigator.clipboard.writeText(code);
+          ToastService.success(`Código COMP/CON "${code}" copiado para a área de transferência!`);
+        }
+        return;
+      }
 
       const approveBtn = target.closest('.btn-approve-sheet') as HTMLElement;
       if (approveBtn) {
