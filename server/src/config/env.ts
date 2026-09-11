@@ -6,6 +6,8 @@ dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const rawClientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || '';
+
 const normalizeUrl = (url: string): string => {
   let clean = url.trim().replace(/\/$/, '');
   if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
@@ -14,9 +16,24 @@ const normalizeUrl = (url: string): string => {
   return clean;
 };
 
+const parseOrigins = (raw: string): string[] => {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((item) => item.trim().replace(/\/$/, ''))
+    .filter(Boolean)
+    .map((url) => {
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        return `https://${url}`;
+      }
+      return url;
+    });
+};
+
 export const ENV = {
   PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : 3001,
-  CLIENT_URL: normalizeUrl(rawClientUrl),
+  CLIENT_URL: normalizeUrl(rawClientUrl.split(',')[0]),
+  ALLOWED_ORIGINS: parseOrigins(rawAllowedOrigins),
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID || '',
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET || '',
   DISCORD_REDIRECT_URI: process.env.DISCORD_REDIRECT_URI || 'http://localhost:3001/api/auth/discord/callback',

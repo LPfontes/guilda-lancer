@@ -1,28 +1,33 @@
 import { ENV } from './env.js';
 
 /**
- * Validador dinâmico de origens permitidas via CORS e WebSockets.
- * Suporta explicitamente o domínio configurado em ENV.CLIENT_URL,
- * qualquer deploy/preview da Vercel (*.vercel.app) e desenvolvimento local.
+ * Validador de origens permitidas via CORS e WebSockets.
+ * Utiliza exclusivamente as variáveis de ambiente (ENV.ALLOWED_ORIGINS / ENV.CLIENT_URL)
+ * e autoriza o ambiente local apenas durante o desenvolvimento.
  */
 export const isOriginAllowed = (origin?: string): boolean => {
   // Requisições sem origem (same-origin, ferramentas CLI, server-to-server)
   if (!origin) return true;
 
-  // 1. Origem principal configurada no CLIENT_URL
-  if (ENV.CLIENT_URL) {
-    if (origin === ENV.CLIENT_URL) return true;
-    if (ENV.CLIENT_URL.includes(',')) {
-      const allowedList = ENV.CLIENT_URL.split(',').map((u) => u.trim());
-      if (allowedList.includes(origin)) return true;
-    }
+  const cleanOrigin = origin.trim().replace(/\/$/, '');
+
+  // 1. Origens explicitamente permitidas definidas nas variáveis de ambiente (.env)
+  if (ENV.ALLOWED_ORIGINS && ENV.ALLOWED_ORIGINS.length > 0) {
+    if (ENV.ALLOWED_ORIGINS.includes(cleanOrigin)) return true;
   }
 
-  // 2. Ambiente de Desenvolvimento: permite apenas localhost e 127.0.0.1 com portas numéricas
+  // 2. Fallback direto para ENV.CLIENT_URL
+  if (ENV.CLIENT_URL && cleanOrigin === ENV.CLIENT_URL) {
+    return true;
+  }
+
+  // 3. Ambiente de Desenvolvimento local (apenas quando não em produção)
   if (ENV.NODE_ENV !== 'production') {
-    const isSafeLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    const isSafeLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin);
     if (isSafeLocalhost) return true;
   }
 
   return false;
 };
+
+

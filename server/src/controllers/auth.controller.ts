@@ -5,10 +5,10 @@ import { ENV } from '../config/env.js';
 import { UserModel, PilotModel, IUser, UserRole, getHighestRole } from '../database/db.js';
 
 export function getAuthCookieOptions(): CookieOptions {
-  const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
+  const isCrossDomain = ENV.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure: ENV.NODE_ENV === 'production',
+    secure: isCrossDomain,
     sameSite: isCrossDomain ? 'none' : 'lax',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000
@@ -16,10 +16,10 @@ export function getAuthCookieOptions(): CookieOptions {
 }
 
 export function getClearAuthCookieOptions(): CookieOptions {
-  const isCrossDomain = ENV.NODE_ENV === 'production' && !ENV.CLIENT_URL.includes('localhost');
+  const isCrossDomain = ENV.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure: ENV.NODE_ENV === 'production',
+    secure: isCrossDomain,
     sameSite: isCrossDomain ? 'none' : 'lax',
     path: '/'
   };
@@ -42,7 +42,10 @@ function createToken(user: IUser): string {
 }
 
 function getClientCallbackUrl(pathAndQuery: string): string {
-  let base = ENV.CLIENT_URL || 'http://localhost:3000';
+  let base = ENV.CLIENT_URL || 'https://guilda-lancer-kappa.vercel.app';
+  if (base.includes(',')) {
+    base = base.split(',')[0].trim();
+  }
   if (!base.startsWith('http://') && !base.startsWith('https://')) {
     base = `https://${base}`;
   }

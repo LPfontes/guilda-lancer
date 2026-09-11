@@ -77,8 +77,8 @@ const localPublicPath = path.resolve(process.cwd(), 'public');
 const distPath = fs.existsSync(localPublicPath)
   ? localPublicPath
   : fs.existsSync(clientDistPath)
-  ? clientDistPath
-  : null;
+    ? clientDistPath
+    : null;
 
 if (distPath) {
   app.use(express.static(distPath));
