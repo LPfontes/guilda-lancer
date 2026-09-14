@@ -102,6 +102,18 @@ export class PilotService {
   }
 
   /**
+   * Define qual mecha é o ativo na ficha do piloto.
+   */
+  async setActiveMech(pilotId: string, mechId: string): Promise<{ message: string; pilot: IPilot; active_mech_id: string }> {
+    const res = await ApiClient.post<{ message: string; pilot: IPilot; active_mech_id: string }>(
+      `/pilots/${pilotId}/active-mech`,
+      { mech_id: mechId }
+    );
+    this.clearCache();
+    return res;
+  }
+
+  /**
    * Remove uma ficha de piloto do hangar do operador.
    */
   async deletePilot(id: string): Promise<void> {

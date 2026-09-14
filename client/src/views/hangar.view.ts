@@ -436,6 +436,47 @@ export class HangarView {
                 <div class="mech-meta-content">${talentsList}</div>
               </div>
 
+              <!-- Chassis Registrados do Piloto -->
+              ${
+                pilot.mechs && pilot.mechs.length > 1
+                  ? `
+                <div class="mech-meta-section">
+                  <div class="mech-meta-label">${localizationService.t('hangar.registered_mechs', 'CHASSIS REGISTRADOS')} (${pilot.mechs.length}):</div>
+                  <div class="hangar-submechs-container">
+                    ${pilot.mechs
+                      .map((m) => {
+                        const isSubActive = m.active;
+                        return `
+                      <div class="hangar-submech-chip ${isSubActive ? 'chip-active' : ''}">
+                        <div class="hangar-submech-info">
+                          <span class="submech-frame">${m.frame || 'Chassi'}</span>
+                          <strong class="submech-name">${m.name || 'Sem Nome'}</strong>
+                        </div>
+                        <div class="hangar-submech-actions">
+                          ${
+                            isSubActive
+                              ? `<span class="submech-badge-active"><i class="mdi mdi-check"></i> ATIVO</span>`
+                              : `
+                            <button type="button" class="btn btn-secondary btn-hangar-activate-mech" data-pilot-id="${pilot._id}" data-mech-id="${m.id}" title="Definir este mecha como o ativo do piloto">
+                              <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                              <span>ATIVAR</span>
+                            </button>
+                          `
+                          }
+                          <a href="#/mech?id=${pilot._id}&mechId=${m.id}" class="submech-link-inspect" title="Ver ficha deste mecha">
+                            <i class="mdi mdi-open-in-new"></i>
+                          </a>
+                        </div>
+                      </div>
+                    `;
+                      })
+                      .join('')}
+                  </div>
+                </div>
+              `
+                  : ''
+              }
+
               <!-- Rodapé de Ações do Chassi -->
               <div class="mech-card-footer">
                 <div class="mech-card-actions-left">
@@ -487,6 +528,25 @@ export class HangarView {
       btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id;
         if (id) await this.handleActivatePilot(id);
+      });
+    });
+
+    contentArea.querySelectorAll('.btn-hangar-activate-mech').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const pilotId = target.dataset.pilotId;
+        const mechId = target.dataset.mechId;
+        if (pilotId && mechId) {
+          try {
+            target.setAttribute('disabled', 'true');
+            const res = await pilotService.setActiveMech(pilotId, mechId);
+            ToastService.success(res.message || 'Chassi ativo alterado com sucesso!');
+            await this.loadPilots();
+          } catch (err: any) {
+            ToastService.error(err.message || 'Falha ao ativar chassi.');
+            target.removeAttribute('disabled');
+          }
+        }
       });
     });
 

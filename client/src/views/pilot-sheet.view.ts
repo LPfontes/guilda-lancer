@@ -471,7 +471,17 @@ export class PilotSheetView {
                     <h3 class="assigned-mech-title">${mName}</h3>
                   </div>
                   <div class="assigned-mech-action">
-                    <a href="#/mech?id=${p._id}" class="btn btn-primary">
+                    ${
+                      !isMechActive && canManage
+                        ? `
+                      <button type="button" class="btn btn-secondary btn-set-active-mech" data-mech-id="${m.id}" title="${localization.t('sheet.activate_mech_tooltip', 'Definir este chassi como o mecha ativo do piloto')}">
+                        <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                        <span>${localization.t('sheet.set_active_mech', 'DEFINIR COMO ATIVO')}</span>
+                      </button>
+                    `
+                        : ''
+                    }
+                    <a href="#/mech?id=${p._id}&mechId=${m.id}" class="btn btn-primary" title="${localization.t('sheet.open_mech_sheet_tooltip', 'Abrir ficha técnica de combate deste mecha')}">
                       <i class="mdi mdi-card-bulleted-settings-outline"></i>
                       <span>${localization.t('sheet.open_mech_sheet', 'ABRIR FICHA DO MECHA')}</span>
                     </a>
@@ -933,6 +943,26 @@ export class PilotSheetView {
         await navigator.clipboard.writeText(text);
         ToastService.success('Relatório de Missão do Piloto copiado para a área de transferência!');
       }
+    });
+
+    // Ativação de Chassi Registrado
+    const activateMechBtns = this.container.querySelectorAll<HTMLButtonElement>('.btn-set-active-mech');
+    activateMechBtns.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const mechId = btn.getAttribute('data-mech-id');
+        if (!mechId || !this.pilotData) return;
+        try {
+          btn.disabled = true;
+          const res = await pilotService.setActiveMech(this.pilotData._id, mechId);
+          ToastService.success(res.message || 'Chassi ativo alterado com sucesso!');
+          await this.loadData();
+          this.renderContent();
+          this.bindEvents();
+        } catch (err: any) {
+          ToastService.error(err.message || 'Falha ao definir chassi ativo.');
+          btn.disabled = false;
+        }
+      });
     });
 
     // Eventos de Homologação do Administrador

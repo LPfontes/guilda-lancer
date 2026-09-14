@@ -259,6 +259,53 @@ export class ReviewView {
 
     const shareCode = p.share_code || (p.compcon_raw as any)?.share_code || (p.compcon_raw as any)?.shareCode || '';
 
+    const raw = p.compcon_raw;
+    const rawPilot = raw?.pilot || raw?.data || raw;
+    const rawMechs: any[] = Array.isArray(rawPilot?.mechs)
+      ? rawPilot.mechs
+      : Array.isArray(raw?.mechs)
+      ? raw?.mechs
+      : [];
+    const pilotMechs: any[] = p.mechs || [];
+
+    const allMechs: any[] = [];
+    const seenIds = new Set<string>();
+
+    for (const rm of rawMechs) {
+      if (rm && rm.id && !seenIds.has(rm.id)) {
+        seenIds.add(rm.id);
+        const dbMatch = pilotMechs.find((m) => m.id === rm.id);
+        allMechs.push({
+          ...rm,
+          id: rm.id,
+          name: rm.name || dbMatch?.name || 'Chassi',
+          frame: rm.frameData?.name || rm.frame || dbMatch?.frame || 'GMS Everest',
+          active: dbMatch ? dbMatch.active : Boolean(rm.active || rm.is_active)
+        });
+      }
+    }
+
+    for (const pm of pilotMechs) {
+      if (pm && pm.id && !seenIds.has(pm.id)) {
+        seenIds.add(pm.id);
+        allMechs.push({
+          ...pm,
+          name: pm.name || 'Chassi',
+          frame: pm.frame || 'GMS Everest',
+          active: Boolean(pm.active)
+        });
+      }
+    }
+
+    if (allMechs.length === 0) {
+      allMechs.push({
+        id: 'default',
+        name: p.active_mech_name || 'GMS Everest Padrão',
+        frame: p.active_mech_frame || 'GMS Standard Pattern I Everest',
+        active: true
+      });
+    }
+
     return `
       <div class="review-card ${statusClass}">
         <div class="review-card-header">
@@ -318,12 +365,12 @@ export class ReviewView {
         <div class="review-card-body">
           <div class="review-telemetry-grid">
             <div class="review-telemetry-item">
-              <span class="review-telemetry-lbl">Nome</span>
-              <span class="review-telemetry-val">${p.active_mech_name || 'N/A'}</span>
+              <span class="review-telemetry-lbl">Chassi Ativo</span>
+              <span class="review-telemetry-val">${p.active_mech_name || 'N/A'} [${p.active_mech_frame || 'Everest'}]</span>
             </div>
             <div class="review-telemetry-item">
-              <span class="review-telemetry-lbl">Chassi</span>
-              <span class="review-telemetry-val">${p.active_mech_frame || 'GMS Everest'}</span>
+              <span class="review-telemetry-lbl">Total Chassis</span>
+              <span class="review-telemetry-val highlight-mint">${allMechs.length}</span>
             </div>
             <div class="review-telemetry-item">
               <span class="review-telemetry-lbl">Atributos</span>
@@ -332,6 +379,39 @@ export class ReviewView {
             <div class="review-telemetry-item">
               <span class="review-telemetry-lbl">Talentos</span>
               <span class="review-telemetry-val">${(p.talents || []).length}</span>
+            </div>
+          </div>
+
+          <!-- Auditoria de Todos os Chassis Registrados -->
+          <div class="review-mechs-section">
+            <div class="review-mechs-header">
+              ${getCompconIcon('mech', 'compcon-icon-sm')}
+              <span>CHASSIS REGISTRADOS PARA AUDITORIA (${allMechs.length})</span>
+            </div>
+            <div class="review-mechs-grid">
+              ${allMechs
+                .map((m) => {
+                  const isMechActive = m.active || (allMechs.length === 1);
+                  return `
+                <div class="review-mech-item ${isMechActive ? 'review-mech-item-active' : ''}">
+                  <div class="review-mech-info">
+                    <div class="review-mech-title-line">
+                      <span class="review-mech-frame">${m.frame || 'Chassi'}</span>
+                      <span class="review-mech-status-badge ${isMechActive ? 'badge-active' : 'badge-reserve'}">
+                        <i class="mdi ${isMechActive ? 'mdi-radio-tower' : 'mdi-garage'}"></i>
+                        ${isMechActive ? 'ATIVO' : 'RESERVA'}
+                      </span>
+                    </div>
+                    <strong class="review-mech-name">${m.name || 'Sem Nome'}</strong>
+                  </div>
+                  <a href="#/mech?id=${p._id}&mechId=${m.id}" class="btn btn-secondary review-btn-inspect" title="Auditar loadout, sistemas e armas deste chassi">
+                    <i class="mdi mdi-clipboard-search-outline"></i>
+                    <span>AVALIAR CHASSI</span>
+                  </a>
+                </div>
+              `;
+                })
+                .join('')}
             </div>
           </div>
 

@@ -113,7 +113,8 @@ class OmninetApp {
     if (targetView === 'mech') {
       const searchParams = new URLSearchParams(hash.split('?')[1] || '');
       const pilotId = searchParams.get('id') || null;
-      const mechView = new MechSheetView(this.contentEl, pilotId);
+      const mechId = searchParams.get('mechId') || null;
+      const mechView = new MechSheetView(this.contentEl, pilotId, mechId);
       mechView.render();
       return;
     }

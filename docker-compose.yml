@@ -11,7 +11,8 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - MONGODB_URI=mongodb://mongo:27017/guilda-lancer
-      - CLIENT_URL=http://localhost:3001
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:3001}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
       - JWT_SECRET=${JWT_SECRET:-chave_secreta_super_segura_omninet}
       # Discord OAuth2 (opcional ou preenchido via .env)
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}

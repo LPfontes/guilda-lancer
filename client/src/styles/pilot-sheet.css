@@ -553,6 +553,30 @@
 
 .assigned-mech-action {
   flex-shrink: 0;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-set-active-mech {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--accent-mint);
+  border-color: rgba(38, 166, 154, 0.4);
+  background: rgba(38, 166, 154, 0.08);
+  transition: all 0.15s ease;
+}
+
+.btn-set-active-mech:hover:not(:disabled) {
+  background: rgba(38, 166, 154, 0.2);
+  border-color: var(--accent-mint);
+  color: #ffffff;
 }
 
 /* Traços do Chassi */

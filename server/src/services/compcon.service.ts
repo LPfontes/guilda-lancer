@@ -369,9 +369,14 @@ export class CompconService {
     status: string;
     talents?: IPilotTalent[];
     skills?: IPilotSkill[];
+    mechs?: IPilotMech[];
   }): string {
     const talentsStr = (pilot.talents || []).map((t) => `${t.name} (R${t.rank})`).join(', ') || 'NENHUM';
     const skillsStr = (pilot.skills || []).map((s) => `${s.name} (+${s.bonus})`).join(', ') || 'PADRÃO';
+    const mechsCount = pilot.mechs && pilot.mechs.length > 0 ? pilot.mechs.length : 1;
+    const mechsLines = (pilot.mechs && pilot.mechs.length > 0)
+      ? pilot.mechs.map((m) => `  * ${m.name} [${m.frame}]${m.active ? ' [ATIVO]' : ' [RESERVA]'}`).join('\n')
+      : `  * ${pilot.active_mech_name || 'N/D'} [${pilot.active_mech_frame || 'N/D'}] [ATIVO]`;
 
     return [
       `=============================================================`,
@@ -382,6 +387,7 @@ export class CompconService {
       `NÍVEL DE LICENÇA (LL): ${pilot.license_level} | DETERMINAÇÃO (GRIT): +${pilot.grit}`,
       `ATRIBUTOS HASE       : CASCO:${pilot.hull} | AGI:${pilot.agility} | SIS:${pilot.systems} | ENG:${pilot.engineering}`,
       `MECH ATIVO           : ${pilot.active_mech_name || 'N/D'} [CHASSI: ${pilot.active_mech_frame || 'N/D'}]`,
+      `ROSTER DE CHASSIS (${mechsCount}):\n${mechsLines}`,
       `TALENTOS             : ${talentsStr}`,
       `GATILHOS DE PERÍCIA  : ${skillsStr}`,
       `=============================================================`

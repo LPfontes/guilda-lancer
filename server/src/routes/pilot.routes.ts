@@ -42,6 +42,9 @@ pilotRoutes.delete('/:id', authenticateJWT, PilotController.deleteMyPilot);
 // Ativar piloto no hangar do operador
 pilotRoutes.post('/:id/activate', authenticateJWT, PilotController.setActivePilot);
 
+// Ativar mecha específico de um piloto
+pilotRoutes.post('/:id/active-mech', authenticateJWT, PilotController.setActiveMech);
+
 // Avaliação da ficha por Administradores / Avaliadores (GM não aprova ficha)
 pilotRoutes.post(
   '/:id/review',

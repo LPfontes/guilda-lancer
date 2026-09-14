@@ -59,6 +59,7 @@ interface ICoreSystemParsed {
 export class MechSheetView {
   private container: HTMLElement;
   private pilotId: string | null = null;
+  private selectedMechId: string | null = null;
   private pilotData: IPilot | null = null;
   private combatState: IMechCombatState | null = null;
   private maxHp: number = 10;
@@ -69,9 +70,10 @@ export class MechSheetView {
   private systemsListCached: ISystemParsed[] = [];
   private canEdit: boolean = false;
 
-  constructor(container: HTMLElement, pilotId: string | null = null) {
+  constructor(container: HTMLElement, pilotId: string | null = null, selectedMechId: string | null = null) {
     this.container = container;
     this.pilotId = pilotId;
+    this.selectedMechId = selectedMechId;
   }
 
   async render() {
@@ -158,7 +160,7 @@ export class MechSheetView {
     if (!this.pilotData) return;
     const p = this.pilotData;
 
-    // 1. Identificar o chassi ativo a partir de compcon_raw ou mechs do banco
+    // 1. Identificar todos os chassis registrados e o chassi visualizado
     const raw = p.compcon_raw;
     const rawPilot = raw?.pilot || raw?.data || raw;
     const rawMechs: any[] = Array.isArray(rawPilot?.mechs)
@@ -166,13 +168,58 @@ export class MechSheetView {
       : Array.isArray(raw?.mechs)
       ? raw?.mechs
       : [];
-    const activeMechId = rawPilot?.state?.active_mech_id || rawPilot?.active_mech_id || raw?.active_mech_id;
+    const pilotMechs: any[] = p.mechs || [];
 
-    let activeMech: any =
-      rawMechs.find((m: any) => (activeMechId ? m.id === activeMechId : m.active || m.is_active)) ||
-      rawMechs[0] ||
-      p.mechs?.find((m) => m.active) ||
-      p.mechs?.[0];
+    // Consolida lista unificada de todos os chassis registrados da ficha
+    const allMechs: any[] = [];
+    const seenIds = new Set<string>();
+
+    for (const rm of rawMechs) {
+      if (rm && rm.id && !seenIds.has(rm.id)) {
+        seenIds.add(rm.id);
+        const dbMatch = pilotMechs.find((m) => m.id === rm.id);
+        allMechs.push({
+          ...rm,
+          active: dbMatch ? dbMatch.active : Boolean(rm.active || rm.is_active),
+          frameData: rm.frameData || dbMatch?.frameData
+        });
+      }
+    }
+
+    for (const pm of pilotMechs) {
+      if (pm && pm.id && !seenIds.has(pm.id)) {
+        seenIds.add(pm.id);
+        allMechs.push(pm);
+      }
+    }
+
+    const activeMechId =
+      pilotMechs.find((m) => m.active)?.id ||
+      rawPilot?.state?.active_mech_id ||
+      rawPilot?.active_mech_id ||
+      raw?.active_mech_id ||
+      allMechs.find((m) => m.active)?.id ||
+      allMechs[0]?.id;
+
+    let activeMech: any = null;
+    if (this.selectedMechId) {
+      activeMech = allMechs.find((m: any) => m.id === this.selectedMechId);
+    }
+    if (!activeMech) {
+      activeMech =
+        allMechs.find((m: any) => (activeMechId ? m.id === activeMechId : m.active)) ||
+        allMechs[0];
+    }
+
+    if (!activeMech) {
+      activeMech = {
+        id: 'default_mech',
+        name: p.active_mech_name || 'GMS Everest Padrão',
+        frame: p.active_mech_frame || 'GMS Standard Pattern I Everest',
+        active: true
+      };
+      allMechs.push(activeMech);
+    }
 
     // Se encontrou no p.mechs mas o rawMechs tem a versão completa com frameData e loadouts, combina
     if (activeMech && rawMechs.length > 0) {
@@ -181,6 +228,8 @@ export class MechSheetView {
         activeMech = { ...matchInRaw, ...activeMech, frameData: matchInRaw.frameData || activeMech.frameData };
       }
     }
+
+    const isCurrentMechActive = Boolean(activeMech?.id ? (activeMech.id === activeMechId || activeMech.active) : true);
 
     const frameData = activeMech?.frameData;
     const mechName = activeMech?.name || p.active_mech_name || 'Chassi Não Nomeado';
@@ -286,7 +335,7 @@ export class MechSheetView {
     this.canEdit = Boolean(isAdmin || isOwner);
 
     if (!this.combatState) {
-      this.combatState = getStoredCombatState(p._id, {
+      this.combatState = getStoredCombatState(`${p._id}_${activeMech.id || 'primary'}`, {
         maxHp: totalHp,
         maxRepairs: totalRepairs
       });
@@ -345,6 +394,55 @@ export class MechSheetView {
           </div>
         </div>
 
+        <!-- Barra Seletora de Chassis Registrados -->
+        <div class="sheet-mech-selector-bar">
+          <div class="sheet-mech-selector-left">
+            <span class="sheet-mech-selector-label">
+              ${getCompconIcon('mech', 'compcon-icon-sm')}
+              <span>${localization.t('sheet.registered_chassis_select', 'CHASSIS DA FICHA')} (${allMechs.length}):</span>
+            </span>
+            <select id="sheet-mech-select" class="sheet-mech-dropdown" title="${localization.t('sheet.switch_chassis_tooltip', 'Alternar chassi em visualização')}">
+              ${allMechs
+                .map((m: any) => {
+                  const mName = m.name || 'Chassi';
+                  const rawF = m.frameData?.name || m.frame || 'Everest';
+                  const mFrame = localization.translateItemName(m.frameData?.id, rawF);
+                  const isCurrent = m.id === activeMech.id;
+                  const isActive = m.id === activeMechId || m.active;
+                  return `<option value="${m.id}" ${isCurrent ? 'selected' : ''}>
+                    ${mName} [${mFrame}] ${isActive ? `★ [${localization.t('common.active', 'ATIVO')}]` : `[${localization.t('common.reserve', 'RESERVA')}]`}
+                  </option>`;
+                })
+                .join('')}
+            </select>
+          </div>
+
+          <div class="sheet-mech-selector-right">
+            ${
+              isCurrentMechActive
+                ? `
+              <span class="sheet-mech-active-indicator" title="Este chassi é o mecha atualmente mobilizado para missões">
+                <i class="mdi mdi-radio-tower"></i>
+                <span>${localization.t('sheet.active_mech_label', 'CHASSI ATIVO MOBILIZADO')}</span>
+              </span>
+            `
+                : this.canEdit
+                ? `
+              <button type="button" id="btn-activate-current-mech" class="btn btn-primary sheet-action-btn" data-mech-id="${activeMech.id}" title="Definir este chassi como o mecha ativo do piloto para missões">
+                <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                <span>${localization.t('sheet.set_as_active_mech', 'DEFINIR COMO CHASSI ATIVO')}</span>
+              </button>
+            `
+                : `
+              <span class="sheet-mech-reserve-indicator" title="Chassi em reserva técnica no hangar">
+                <i class="mdi mdi-garage"></i>
+                <span>${localization.t('common.reserve', 'CHASSI EM RESERVA')}</span>
+              </span>
+            `
+            }
+          </div>
+        </div>
+
         <!-- Barra de Homologação do Administrador (Aprovação / Rejeição) -->
         ${
           authService.currentUser?.role === 'ADMIN'
@@ -367,6 +465,7 @@ export class MechSheetView {
                     : localization.t('sheet.status_pending', 'AGUARDANDO HOMOLOGAÇÃO')
                 }</span>
               </span>
+              <span class="sheet-audit-chassis-tag">// AUDITANDO CHASSI: <strong>${mechName}</strong> [${frameName}]</span>
               ${
                 p.status === 'REJECTED' && p.rejection_reason
                   ? `<span class="sheet-audit-reason">// PENDÊNCIA: ${p.rejection_reason}</span>`
@@ -1247,6 +1346,36 @@ export class MechSheetView {
         const text = buildMissionReportText(this.pilotData);
         await navigator.clipboard.writeText(text);
         ToastService.success('Relatório de Missão do Mecha copiado para a área de transferência!');
+      }
+    }, { signal });
+
+    // 0. Seletor de Chassi do Piloto (para qualquer operador ou avaliador/admin)
+    const mechSelect = this.container.querySelector<HTMLSelectElement>('#sheet-mech-select');
+    mechSelect?.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      const targetMechId = target.value;
+      if (targetMechId && targetMechId !== this.selectedMechId) {
+        this.selectedMechId = targetMechId;
+        this.combatState = null;
+        window.location.hash = `#/mech?id=${this.pilotData?._id}&mechId=${targetMechId}`;
+      }
+    }, { signal });
+
+    // 0.1 Botão Definir como Chassi Ativo
+    const btnActivateMech = this.container.querySelector<HTMLButtonElement>('#btn-activate-current-mech');
+    btnActivateMech?.addEventListener('click', async () => {
+      const mechId = btnActivateMech.getAttribute('data-mech-id');
+      if (!mechId || !this.pilotData) return;
+      try {
+        btnActivateMech.disabled = true;
+        const res = await pilotService.setActiveMech(this.pilotData._id, mechId);
+        ToastService.success(res.message || 'Chassi ativo alterado com sucesso!');
+        await this.loadData();
+        this.renderContent();
+        this.bindEvents();
+      } catch (err: any) {
+        ToastService.error(err.message || 'Falha ao definir chassi como ativo.');
+        btnActivateMech.disabled = false;
       }
     }, { signal });
 

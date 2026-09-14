@@ -475,6 +475,147 @@ export const PilotController = {
   },
 
   /**
+   * 8. Seleciona qual mecha é o ativo na ficha do piloto (POST /api/pilots/:id/active-mech).
+   */
+  async setActiveMech(req: Request, res: Response) {
+    if (!req.user) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: '[!] Autenticação obrigatória.' });
+    }
+
+    const { id } = req.params;
+    const { mech_id } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'INVALID_ID', message: '[!] ID de piloto inválido.' });
+    }
+
+    if (!mech_id || typeof mech_id !== 'string') {
+      return res.status(400).json({
+        error: 'MECH_ID_REQUIRED',
+        message: '[!] O identificador do mecha (mech_id) é obrigatório.'
+      });
+    }
+
+    const pilot = await PilotModel.findById(id);
+    if (!pilot) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: '[!] Piloto não localizado no registro da guilda.' });
+    }
+
+    const isOwner = pilot.user_id.toString() === req.user._id.toString();
+    const userRoles = req.user.roles || [req.user.role];
+    const isAdmin = userRoles.includes('ADMIN');
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: '[!] Você não possui autorização para alterar o chassi de outro operador.'
+      });
+    }
+
+    // Se o piloto estiver em missão ativa, bloqueia alteração de chassi
+    if (pilot.active_mission_id) {
+      return res.status(400).json({
+        error: 'PILOT_IN_ACTIVE_MISSION',
+        message: '[!] Não é permitido alterar o chassi de um piloto em serviço ativo numa missão.'
+      });
+    }
+
+    // Localiza o mecha alvo na lista do piloto ou no compcon_raw
+    const rawPilot = pilot.compcon_raw?.pilot || pilot.compcon_raw?.data || pilot.compcon_raw;
+    const rawMechs: any[] = Array.isArray(rawPilot?.mechs)
+      ? rawPilot.mechs
+      : Array.isArray(pilot.compcon_raw?.mechs)
+      ? pilot.compcon_raw.mechs
+      : [];
+
+    let targetMech: any = (pilot.mechs || []).find((m: any) => m.id === mech_id);
+    const targetRawMech = rawMechs.find((m: any) => m.id === mech_id);
+
+    if (!targetMech && !targetRawMech) {
+      return res.status(404).json({
+        error: 'MECH_NOT_FOUND',
+        message: '[!] O chassi/mecha especificado não foi localizado na ficha deste piloto.'
+      });
+    }
+
+    // Se não estiver na lista pilot.mechs mas estiver em rawMechs, adiciona
+    if (!targetMech && targetRawMech) {
+      targetMech = {
+        id: targetRawMech.id,
+        name: targetRawMech.name || 'GMS Everest Padrão',
+        frame: targetRawMech.frameData?.name || targetRawMech.frame || 'GMS Standard Pattern I Everest',
+        active: true,
+        frameData: targetRawMech.frameData || null,
+        loadouts: targetRawMech.loadouts || [],
+        loadout: targetRawMech.loadout || null
+      };
+      pilot.mechs.push(targetMech);
+    }
+
+    // Atualiza o estado ativo em pilot.mechs
+    for (const m of pilot.mechs) {
+      m.active = (m.id === mech_id);
+    }
+    pilot.markModified('mechs');
+
+    // Extrai atributos do mecha selecionado
+    const mName = targetMech.name || targetRawMech?.name || 'GMS Everest Padrão';
+    const mFrame = targetRawMech?.frameData?.name || targetMech.frameData?.name || targetMech.frame || targetRawMech?.frame || 'GMS Standard Pattern I Everest';
+    const mImage = (
+      targetMech.cloud_portrait ||
+      targetRawMech?.cloud_portrait ||
+      targetMech.img?.cloud_portrait ||
+      targetRawMech?.img?.cloud_portrait ||
+      targetMech.frameData?.image_url ||
+      targetRawMech?.frameData?.image_url ||
+      targetMech.portrait ||
+      targetRawMech?.portrait ||
+      ''
+    ).toString().trim();
+
+    pilot.active_mech_name = mName;
+    pilot.active_mech_frame = mFrame;
+    if (mImage) {
+      pilot.active_mech_image = mImage;
+    }
+
+    // Sincroniza compcon_raw
+    if (pilot.compcon_raw) {
+      if (pilot.compcon_raw.state) {
+        pilot.compcon_raw.state.active_mech_id = mech_id;
+      }
+      if (pilot.compcon_raw.pilot) {
+        pilot.compcon_raw.pilot.state = pilot.compcon_raw.pilot.state || {};
+        pilot.compcon_raw.pilot.state.active_mech_id = mech_id;
+        if (Array.isArray(pilot.compcon_raw.pilot.mechs)) {
+          for (const rm of pilot.compcon_raw.pilot.mechs) {
+            rm.active = (rm.id === mech_id);
+            rm.is_active = (rm.id === mech_id);
+          }
+        }
+      }
+      if (Array.isArray(pilot.compcon_raw.mechs)) {
+        for (const rm of pilot.compcon_raw.mechs) {
+          rm.active = (rm.id === mech_id);
+          rm.is_active = (rm.id === mech_id);
+        }
+      }
+      pilot.markModified('compcon_raw');
+    }
+
+    await pilot.save();
+
+    console.log(`[+] Operador @${req.user.username} ativou o mecha "${mName}" [${mFrame}] para o piloto "${pilot.callsign}".`);
+
+    return res.json({
+      message: `[+] Chassi "${mName}" [${mFrame}] mobilizado como ativo para o piloto "${pilot.callsign}".`,
+      pilot,
+      active_mech_id: mech_id,
+      tactical_summary: CompconService.generateTacticalSummary(pilot)
+    });
+  },
+
+  /**
    * 8. Atualizar dados de um piloto existente (PUT /api/pilots/:id ou PATCH /api/pilots/:id).
    */
   async updatePilot(req: Request, res: Response) {
@@ -541,6 +682,20 @@ export const PilotController = {
         if (['license_level', 'hull', 'agility', 'systems', 'engineering', 'talents', 'skills', 'mechs'].includes(field)) {
           hasCombatChanges = true;
         }
+      }
+    }
+
+    // Se especificou active_mech_id, atualiza o chassi ativo do piloto
+    if (req.body.active_mech_id && typeof req.body.active_mech_id === 'string') {
+      const targetMech = (pilot.mechs || []).find((m: any) => m.id === req.body.active_mech_id);
+      if (targetMech) {
+        for (const m of pilot.mechs) {
+          m.active = (m.id === targetMech.id);
+        }
+        pilot.active_mech_name = targetMech.name;
+        pilot.active_mech_frame = targetMech.frameData?.name || targetMech.frame;
+        pilot.active_mech_image = targetMech.cloud_portrait || targetMech.frameData?.image_url || pilot.active_mech_image || '';
+        pilot.markModified('mechs');
       }
     }
 

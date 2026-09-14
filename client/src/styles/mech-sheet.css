@@ -1276,3 +1276,107 @@ button.core-power-pip.depleted:hover {
   box-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
   color: var(--text-bright);
 }
+
+/* Barra Seletora de Chassis da Ficha */
+.sheet-mech-selector-bar {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent-mint);
+  padding: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.sheet-mech-selector-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sheet-mech-selector-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--accent-mint);
+}
+
+.sheet-mech-dropdown {
+  background: var(--bg-dark);
+  color: var(--text-bright);
+  border: 1px solid var(--border-default);
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  min-width: 240px;
+  transition: border-color var(--transition-fast);
+}
+
+.sheet-mech-dropdown:focus {
+  border-color: var(--accent-mint);
+  box-shadow: 0 0 0 1px var(--accent-mint);
+}
+
+.sheet-mech-selector-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sheet-mech-active-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-mint);
+  background: rgba(38, 166, 154, 0.12);
+  border: 1px solid rgba(38, 166, 154, 0.35);
+  padding: 0.35rem 0.75rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.sheet-mech-reserve-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-default);
+  padding: 0.35rem 0.75rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+#btn-activate-current-mech {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: #0d1117;
+  background: var(--accent-mint);
+  border: 1px solid var(--accent-mint);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#btn-activate-current-mech:hover:not(:disabled) {
+  background: #2dd4bf;
+  box-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
+}

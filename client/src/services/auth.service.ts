@@ -3,6 +3,7 @@ import { IAuthSession, IUser, UserRole } from '../types/user.types.js';
 import { IPilot } from '../types/pilot.types.js';
 import { ToastService } from '../components/toast.js';
 import { pilotService } from './pilot.service.js';
+import { areCookiesEnabled } from '../utils/cookie-check.js';
 
 type AuthListener = (session: IAuthSession) => void;
 
@@ -116,15 +117,21 @@ class AuthService {
    * Redireciona o navegador para o fluxo oficial de autorização do Discord OAuth2.
    */
   async initiateDiscordLogin(): Promise<void> {
+    if (!areCookiesEnabled()) {
+      ToastService.error('Cookies desativados no navegador. Habilite os cookies para conseguir fazer login.');
+      return;
+    }
+
     try {
-      // Solicita a URL gerada pelo servidor
-      const res = await ApiClient.get<{ auth_url: string }>('/auth/discord/login');
+      const currentOrigin = window.location.origin;
+      // Solicita a URL gerada pelo servidor informando a origem atual
+      const res = await ApiClient.get<{ auth_url: string }>(`/auth/discord/login?origin=${encodeURIComponent(currentOrigin)}`);
       if (res?.auth_url) {
         window.location.href = res.auth_url;
       } else {
         // Fallback direto com redirect
         const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-        window.location.href = `${apiBase}/api/auth/discord/login?redirect=true`;
+        window.location.href = `${apiBase}/api/auth/discord/login?redirect=true&origin=${encodeURIComponent(currentOrigin)}`;
       }
     } catch (err: any) {
       ToastService.error(`Falha ao conectar com o gateway Discord: ${err.message}`);
@@ -196,6 +203,15 @@ class AuthService {
     if (url.pathname.includes('/auth/callback') || url.hash.includes('/auth/callback')) {
       ToastService.info('Autenticação confirmada. Carregando registros do hangar...');
       await this.checkAuth();
+
+      if (!this.isAuthenticated) {
+        if (!areCookiesEnabled()) {
+          ToastService.error('Falha de sessão: Os cookies estão desativados no navegador. Habilite os cookies para acessar o terminal.');
+        } else {
+          ToastService.error('Falha ao registrar a sessão: O navegador pode estar bloqueando cookies entre domínios (Third-Party Cookies). Permita cookies para este site.');
+        }
+        return false;
+      }
 
       // Limpa query params e hash de callback
       window.history.replaceState({}, document.title, '/');

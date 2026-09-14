@@ -3,6 +3,7 @@ import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/env.js';
 import { UserModel, PilotModel, IUser, UserRole, getHighestRole } from '../database/db.js';
+import { isOriginAllowed } from '../config/cors.js';
 
 export function getAuthCookieOptions(): CookieOptions {
   const isCrossDomain = ENV.NODE_ENV === 'production';
@@ -66,7 +67,24 @@ export const AuthController = {
 
     const scope = encodeURIComponent('identify');
     const redirectUri = encodeURIComponent(ENV.DISCORD_REDIRECT_URI);
-    const authUrl = `https://discord.com/oauth2/authorize?client_id=${ENV.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
+
+    // Identifica e valida a origem do cliente para retorno seguro após OAuth
+    let originParam = (req.query.origin as string) || '';
+    if (!originParam && req.headers.referer) {
+      try {
+        originParam = new URL(req.headers.referer).origin;
+      } catch {}
+    }
+    if (!originParam && req.headers.origin) {
+      originParam = req.headers.origin as string;
+    }
+    const validReturnTo = originParam && isOriginAllowed(originParam) ? originParam : '';
+    const state = validReturnTo ? Buffer.from(JSON.stringify({ returnTo: validReturnTo })).toString('base64url') : '';
+
+    let authUrl = `https://discord.com/oauth2/authorize?client_id=${ENV.DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
+    if (state) {
+      authUrl += `&state=${encodeURIComponent(state)}`;
+    }
 
     if (req.query.redirect === 'true') {
       return res.redirect(authUrl);
@@ -77,15 +95,34 @@ export const AuthController = {
 
   // 2. Processa o retorno do Discord (Callback) com o código de autorização
   async handleDiscordCallback(req: Request, res: Response) {
-    const { code, error, error_description } = req.query;
+    const { code, error, error_description, state } = req.query;
+
+    let targetOrigin = '';
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64url').toString('utf-8'));
+        if (decoded.returnTo && isOriginAllowed(decoded.returnTo)) {
+          targetOrigin = decoded.returnTo;
+        }
+      } catch (e) {}
+    }
+
+    const resolveCallbackUrl = (pathAndQuery: string) => {
+      if (targetOrigin) {
+        const cleanBase = targetOrigin.replace(/\/$/, '');
+        const cleanPath = pathAndQuery.startsWith('/') ? pathAndQuery : `/${pathAndQuery}`;
+        return `${cleanBase}${cleanPath}`;
+      }
+      return getClientCallbackUrl(pathAndQuery);
+    };
 
     if (error) {
       console.error('[!] Erro retornado pelo Discord OAuth2:', error, error_description);
-      return res.redirect(getClientCallbackUrl(`/auth/callback?error=${encodeURIComponent(String(error_description || error))}`));
+      return res.redirect(resolveCallbackUrl(`/auth/callback?error=${encodeURIComponent(String(error_description || error))}`));
     }
 
     if (!code || typeof code !== 'string') {
-      return res.redirect(getClientCallbackUrl('/auth/callback?error=NO_CODE_PROVIDED'));
+      return res.redirect(resolveCallbackUrl('/auth/callback?error=NO_CODE_PROVIDED'));
     }
 
     try {
@@ -160,10 +197,10 @@ export const AuthController = {
       res.cookie('omninet_token', token, getAuthCookieOptions());
 
       // Redireciona para o frontend (autenticação baseada exclusivamente em cookie HttpOnly)
-      return res.redirect(getClientCallbackUrl('/auth/callback'));
+      return res.redirect(resolveCallbackUrl('/auth/callback'));
     } catch (err: any) {
       console.error('[!] Falha na troca de credenciais do Discord:', err.response?.data || err.message);
-      return res.redirect(getClientCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
+      return res.redirect(resolveCallbackUrl('/auth/callback?error=AUTH_EXCHANGE_FAILED'));
     }
   },
 
