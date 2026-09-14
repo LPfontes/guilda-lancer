@@ -2,10 +2,12 @@ import mongoose from 'mongoose';
 import dns from 'dns';
 import { ENV } from '../config/env.js';
 
-// Configure DNS servers on Windows if SRV lookup fails
+// Configure DNS servers on Windows only if using MongoDB Atlas SRV lookup
 try {
-  dns.setDefaultResultOrder('ipv4first');
-  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+  if (ENV.MONGODB_URI?.startsWith('mongodb+srv://')) {
+    dns.setDefaultResultOrder('ipv4first');
+    dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+  }
 } catch (e) {
   // Ignore in environments where setServers is restricted
 }
@@ -28,20 +30,20 @@ export async function connectMongoDB(): Promise<typeof mongoose> {
     });
 
     isConnected = true;
-    console.log(`[+] MongoDB Atlas Conectado com Sucesso [Cluster: ${conn.connection.host} // DB: ${conn.connection.name}]`);
+    console.log(`[+] MongoDB Conectado com Sucesso [Host: ${conn.connection.host} // DB: ${conn.connection.name}]`);
 
     mongoose.connection.on('error', (err) => {
-      console.error('[!] Erro na conexão com o MongoDB Atlas:', err);
+      console.error('[!] Erro na conexão com o MongoDB:', err);
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.warn('[!] Conexão com o MongoDB Atlas perdida. Tentando reconectar...');
+      console.warn('[!] Conexão com o MongoDB perdida. Tentando reconectar...');
       isConnected = false;
     });
 
     return conn;
   } catch (err: any) {
-    console.error('[!] Falha crítica ao conectar no MongoDB Atlas:', err.message);
+    console.error('[!] Falha crítica ao conectar no MongoDB:', err.message);
     throw err;
   }
 }

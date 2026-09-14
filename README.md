@@ -1,205 +1,135 @@
-# Guilda LANCER — Terminal Tático Omninet
+# Guilda LANCER // Terminal Tático Omninet
 
-Sistema web completo para gerenciamento de guildas e campanhas *West Marches* do RPG de mesa de ficção científica **LANCER** (Massif Press).
-
-A plataforma conecta operadores e mestres através do Discord, integra fichas de pilotos e mechs diretamente da nuvem oficial do **COMP/CON v3**, gerencia hangares individuais e automatiza o quadro de missões táticas com algoritmo de prioridade de escalamento.
+Hub tático web para gerenciamento de campanhas *West Marches* do RPG de ficção científica **LANCER** (Massif Press). Integração direta com a nuvem oficial do **COMP/CON v3**, hangares multi-chassi, escalonamento automatizado de esquadrões e autenticação via Discord.
 
 ---
 
-## Visão Geral da Arquitetura
+## Foco do Projeto
 
-O projeto é estruturado em arquitetura modular full-stack em **TypeScript**:
-
-```text
-guilda-lancer/
-├── client/                  # Frontend SPA (HTML5, CSS3 Moderno, TypeScript, Vite)
-│   ├── src/
-│   │   ├── components/      # Componentes visuais (TerminalBackground em Canvas 2D)
-│   │   ├── services/        # Cliente HTTP de API com sessão por cookie HttpOnly
-│   │   ├── styles/          # Design system (variables.css e global.css)
-│   │   ├── types/           # Tipagens TypeScript compartilhadas
-│   │   └── main.ts          # Inicialização da SPA e roteamento de visualizações
-│   ├── index.html           # Ponto de entrada com scanlines CRT e canvas tático
-│   ├── vite.config.ts       # Servidor Vite com proxy reverso /api -> porta 5000
-│   └── package.json
-│
-├── server/                  # Backend REST API (Node.js, Express, TypeScript, Mongoose)
-│   ├── src/
-│   │   ├── config/          # Variáveis de ambiente com validação Zod
-│   │   ├── controllers/     # Controladores de rotas (Auth, Pilot, Mission)
-│   │   ├── database/        # Conexão MongoDB e Schemas Mongoose (User, Pilot, Mission)
-│   │   ├── middlewares/     # Validação JWT HttpOnly e controle de acesso RBAC
-│   │   ├── routes/          # Definições das rotas da API REST
-│   │   ├── services/        # Integração AWS com API COMP/CON v3 e regras LANCER
-│   │   ├── app.ts           # Configuração Express e CORS
-│   │   ├── server.ts        # Inicialização do servidor HTTP
-│   │   └── index.ts         # Bootstrap com conexão com banco de dados
-│   ├── tests/               # 25 testes automatizados de integração com Vitest
-│   └── package.json
-│
-├── .env                     # Variáveis de ambiente locais
-└── README.md                # Documentação central do projeto
-```
+1. **Sincronização com COMP/CON v3**: Importação instantânea de fichas via Share Code de 12 dígitos ou payload JSON oficial da Massif Press.
+2. **Hangar Tático & Multi-Chassi**:
+   - Gestão de múltiplos pilotos por operador (1:N).
+   - Suporte a múltiplos chassis de mecha por ficha com troca rápida de chassi ativo.
+   - Telemetria de combate em tempo real (HP, Estrutura, Stress, Calor, Overcharge).
+   - Fluxo de auditoria e homologação de fichas por GMs e Administradores.
+3. **Quadro de Missões & Escalonamento Justo**:
+   - Criação de briefings de missões táticas com restrições de License Level (LL).
+   - Algoritmo de prioridade de escalamento baseado em inatividade temporal e assiduidade.
+   - Confirmação de esquadrões e submissão de Relatórios Pós-Ação (*After Action Reports - AAR*).
+4. **Autenticação Segura & Múltiplos Domínios**:
+   - Discord OAuth2 com controle de acesso por cargos (*RBAC*: `PILOT`, `GM`, `ADMIN`).
+   - Sessão segura por cookies `HttpOnly` com diagnóstico preventivo no navegador.
+   - Suporte nativo a múltiplos frontends em simultâneo (ex: Vercel + Domínio Próprio).
 
 ---
 
-## Funcionalidades Principais
+## Stack Tecnológica
 
-### 1. Autenticação e Gestão de Operadores (Discord OAuth2)
-- Fluxo de login oficial do Discord OAuth2 com troca segura de tokens no backend.
-- Sessão persistida via cookies seguros `HttpOnly` com assinatura JWT.
-- Controle de acesso baseado em papéis (*RBAC*): `PILOT`, `GM` e `ADMIN`.
-- Modo de desenvolvimento com autenticação mock para testes locais sem credenciais externas.
-
-### 2. Integração Nativa com COMP/CON v3 Cloud
-- **Importação por Share Code**: Resolução de códigos públicos de 12 caracteres diretamente nos gateways da Amazon AWS S3 / CloudFront da Massif Press.
-- **Importação por JSON Bruto**: Suporte a upload ou payload direto do arquivo de exportação oficial do COMP/CON.
-- **Extração Completa de Ficha**:
-  - HASE (Hull, Agility, Systems, Engineering), Grit, Licenças e Talentos.
-  - Chassi de mech ativo, loadouts montados, armamentos e sistemas.
-  - Armazenamento de artes oficiais e retratos (`portrait` e `active_mech_image`).
-
-### 3. Hangar Virtual de Pilotos (1:N)
-- Cada operador pode possuir múltiplos pilotos cadastrados no banco de dados.
-- Mecanismo de piloto ativo (`POST /api/pilots/:id/activate`) para operações e candidaturas.
-- Sincronização e atualização de fichas com preservação de histórico.
-
-### 4. Mural de Missões West Marches & Algoritmo de Prioridade
-- Abertura de operações por Mestres (GM) e Administradores com requisitos de LL (License Level).
-- Candidatura de pilotos ativos com cálculo automático de pontuação de prioridade:
-  - Fator temporal (dias desde a última missão jogada).
-  - Participação acumulada no ciclo de campanha.
-- Confirmação de esquadrão escalado e publicação de relatórios pós-ação (*After Action Reports - AAR*).
-
-### 5. Interface Tática Terminal Omninet
-- Estética militar futurista com paleta oficial:
-  - **Carmim Profundo (`#802932`)**: Ações primárias, botões operacionais e alertas críticos.
-  - **Verde Menta Fosforescente (`#78C091`)**: Linhas de terminal, cursor em bloco (`█`), dados de telemetria e bordas ativas.
-- Canvas 2D de alta performance com fluxo contínuo de logs da Omninet.
-- Animação de rolagem vertical suave com subida contínua e fade-out superior ao cruzar a borda da janela.
-- Efeito óptico de aberração cromática com projeção de cor para a frente nas transmissões paracausais e mensagens enigmáticas da entidade UNKNOWN.
+- **Frontend (`client/`)**: TypeScript, Vite, Vanilla CSS3 (Design System militar/industrial COMP/CON, zero CSS inline), Canvas 2D Telemetry e WebSockets.
+- **Backend (`server/`)**: Node.js, Express, TypeScript, Mongoose ODM, JWT, Cookie-Parser e Vitest.
+- **Banco de Dados**: MongoDB (Local ou Atlas).
 
 ---
 
-## Pilha de Tecnologias
+## Configuração do Ambiente (`.env`)
 
-### Frontend (`client/`)
-- **Linguagem:** TypeScript
-- **Estilização:** CSS3 puro moderno (CSS Variables, Flexbox, Grid, keyframes, scanlines CRT)
-- **Tipografia:** Orbitron (display sci-fi), JetBrains Mono (terminal) e Inter (corpo)
-- **Build Tool:** Vite (com proxy reverso integrado na porta 3000)
-
-### Backend (`server/`)
-- **Runtime:** Node.js (ES Modules) com TypeScript
-- **Framework:** Express.js
-- **Banco de Dados:** MongoDB via Mongoose ODM
-- **Validação:** Zod
-- **Segurança:** Cookie-Parser, CORS, JWT
-- **Testes:** Vitest e Supertest
-
----
-
-## Configuração do Ambiente (.env)
-
-Crie ou edite o arquivo `.env` na raiz do projeto com as seguintes variáveis:
+Crie um arquivo `.env` na raiz do projeto (o backend o carrega automaticamente):
 
 ```env
-# Servidor HTTP
-PORT=5000
+# Servidor HTTP & Ambiente
+PORT=3001
 NODE_ENV=development
-CLIENT_URL=http://localhost:3000
 
-# Conexão MongoDB Atlas ou Local
-MONGODB_URI=mongodb+srv://<USUARIO>:<SENHA>@<CLUSTER>.mongodb.net/guilda-lancer?retryWrites=true&w=majority
+# Frontend & Múltiplas Origens Permitidas (CORS / WebSockets / OAuth2)
+CLIENT_URL="https://guilda.vttserver.com.br"
+ALLOWED_ORIGINS="https://guilda.vttserver.com.br,https://guilda-lancer-kappa.vercel.app,http://localhost:3000"
 
-# Chave Secreta JWT
-JWT_SECRET=super_secret_omninet_jwt_key_lancer
+# Banco de Dados MongoDB (Local ou Nuvem)
+MONGODB_URI="mongodb://127.0.0.1:27017/guilda_lancer"
+# MONGODB_URI="mongodb+srv://<USER>:<PASS>@<CLUSTER>.mongodb.net/guilda_lancer?retryWrites=true&w=majority"
+
+# Chave JWT
+JWT_SECRET="chave_super_segura_omninet"
 
 # Discord Developer Portal (OAuth2)
-DISCORD_CLIENT_ID=seu_client_id_aqui
-DISCORD_CLIENT_SECRET=seu_client_secret_aqui
-DISCORD_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
+DISCORD_CLIENT_ID="seu_client_id"
+DISCORD_CLIENT_SECRET="seu_client_secret"
+DISCORD_REDIRECT_URI="http://localhost:3001/api/auth/discord/callback"
+
+# Mapeamento de Cargos do Servidor Discord
+DISCORD_GUILD_ID="seu_guild_id"
+ROLE_ID_ADMIN="id_cargo_admin"
+ROLE_ID_GM="id_cargo_mestre"
+ROLE_ID_PILOT="id_cargo_piloto"
 ```
 
 ---
 
-## Instalação e Execução
+## Como Executar
 
 ### Pré-requisitos
-- Node.js versão 18 ou superior.
-- Instância do MongoDB (MongoDB Atlas ou serviço local).
+- Node.js 18+
+- MongoDB rodando localmente (porta `27017`) ou cluster MongoDB Atlas
 
-### 1. Inicializar o Backend (Servidor)
+### 1. Execução em Desenvolvimento (Recomendado)
+
 ```bash
+# Terminal 1 — Backend (Porta 3001)
 cd server
 npm install
 npm run dev
-```
-O servidor iniciará em `http://localhost:5000` com hot-reload ativo via `tsx watch`.
 
-### 2. Inicializar o Frontend (Cliente)
-Em outro terminal:
-```bash
+# Terminal 2 — Frontend (Porta 3000)
 cd client
 npm install
 npm run dev
 ```
-A interface do terminal estará disponível no navegador em `http://localhost:3000`.
+
+Acesse a interface no navegador em **`http://localhost:3000`**.
+
+### 2. Execução com Docker Compose
+
+Para subir o stack completo com MongoDB local em container:
+
+```bash
+docker compose up -d
+```
 
 ---
 
 ## Testes Automatizados
 
-A suíte de testes de integração e validação cobre regras de negócio, autenticação e comunicação com a nuvem do COMP/CON:
+O backend conta com cobertura de testes unitários e de integração para regras de negócio, cálculo de prioridade e seleção de chassis:
 
 ```bash
 cd server
 npm test
 ```
 
-Para executar os testes com relatório de cobertura de código:
-```bash
-cd server
-npm run test:coverage
-```
+---
+
+## Principais Rotas da API REST
+
+| Módulo | Método | Endpoint | Acesso | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **Auth** | `GET` | `/api/auth/discord/login` | Público | Inicia autorização OAuth2 com retorno dinâmico |
+| **Auth** | `GET` | `/api/auth/discord/callback`| Público | Processa retorno do Discord e emite cookie HttpOnly |
+| **Auth** | `GET` | `/api/auth/me` | Autenticado | Retorna usuário ativo, cargos e pilotos |
+| **Pilotos** | `POST` | `/api/pilots/import/share-code` | Autenticado | Importa ficha por Share Code COMP/CON |
+| **Pilotos** | `POST` | `/api/pilots/import/json` | Autenticado | Importa ficha por payload JSON bruto |
+| **Pilotos** | `POST` | `/api/pilots/:id/activate` | Autenticado | Define o piloto ativo no hangar do operador |
+| **Pilotos** | `POST` | `/api/pilots/:id/active-mech` | Autenticado | Alterna qual mecha está ativo na ficha do piloto |
+| **Pilotos** | `POST` | `/api/pilots/:id/review` | GM / Admin | Homologa ou solicita ajustes na ficha |
+| **Missões** | `GET` | `/api/missions` | Autenticado | Lista operações abertas e em andamento |
+| **Missões** | `POST` | `/api/missions` | GM / Admin | Cria um novo contrato de missão |
+| **Missões** | `POST` | `/api/missions/:id/apply` | Autenticado | Candidata piloto ativo com cálculo de prioridade |
+| **Missões** | `POST` | `/api/missions/:id/start` | GM / Admin | Escala o esquadrão e inicia a operação |
+| **Missões** | `POST` | `/api/missions/:id/complete` | GM / Admin | Conclui missão e registra Relatório Pós-Ação (AAR) |
 
 ---
 
-## Referência das Rotas da API
+## Diretrizes e Licença
 
-### Autenticação (`/api/auth`)
-| Método | Endpoint | Acesso | Descrição |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/auth/discord` | Público | Redireciona para o login do Discord OAuth2 |
-| `GET` | `/api/auth/discord/callback` | Público | Callback de autorização do Discord e emissão de cookie JWT |
-| `GET` | `/api/auth/me` | Autenticado | Retorna dados do operador, piloto ativo e lista do hangar |
-| `POST` | `/api/auth/dev-login` | Dev | Autenticação mock para desenvolvimento local |
-| `POST` | `/api/auth/logout` | Autenticado | Revoga a sessão e limpa o cookie HttpOnly |
-
-### Hangar de Pilotos (`/api/pilots`)
-| Método | Endpoint | Acesso | Descrição |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/pilots/import/share-code` | Autenticado | Importa piloto via Share Code de 12 dígitos do COMP/CON |
-| `POST` | `/api/pilots/import/json` | Autenticado | Importa piloto via payload JSON bruto do COMP/CON |
-| `GET` | `/api/pilots/my` | Autenticado | Lista todos os pilotos pertencentes ao operador logado |
-| `GET` | `/api/pilots/:id` | Autenticado | Retorna detalhes completos da ficha de um piloto |
-| `POST` | `/api/pilots/:id/activate` | Autenticado | Define o piloto como o chassi ativo do operador |
-| `DELETE` | `/api/pilots/:id` | Autenticado | Remove um piloto do hangar do operador |
-
-### Mural de Missões (`/api/missions`)
-| Método | Endpoint | Acesso | Descrição |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/missions` | Autenticado | Lista missões operacionais abertas |
-| `POST` | `/api/missions` | GM / Admin | Cria um novo contrato operacional de missão |
-| `GET` | `/api/missions/:id` | Autenticado | Retorna briefing e lista de pilotos inscritos |
-| `POST` | `/api/missions/:id/apply` | Autenticado | Inscreve o piloto ativo com pontuação de prioridade |
-| `POST` | `/api/missions/:id/select-squad` | GM / Admin | Confirma o esquadrão escalado para a missão |
-| `POST` | `/api/missions/:id/aar` | GM / Admin | Conclui a missão e registra o Relatório Pós-Ação (AAR) |
-
----
-
-## Licenças e Direitos Autorais
-
-- O jogo de RPG de mesa **LANCER** é propriedade intelectual de **Massif Press**.
-- As fichas, layouts e regras são compatíveis com a ferramenta oficial **COMP/CON**.
-- Este software é distribuído sob licença livre para fins comunitários e de mesas de jogo.
+- **Regra Estrita de Estilo**: Proibido CSS Inline (`style="..."`). Todos os estilos residem em `client/src/styles/` respeitando o design system industrial do COMP/CON.
+- **LANCER RPG** é propriedade intelectual de **Massif Press**.
+- Software livre desenvolvido para apoio comunitário à Guilda e mesas de jogo.
