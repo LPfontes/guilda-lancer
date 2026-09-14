@@ -51,27 +51,39 @@ export class AuthHeroView {
               )}
             </p>
 
-            ${
-              !cookiesActive
-                ? `
-              <!-- Painel de Alerta de Cookies Desativados -->
-              <div class="cookie-alert-panel" id="cookie-alert-panel">
-                <div class="cookie-alert-header">
-                  <i class="mdi mdi-cookie-alert cookie-alert-icon"></i>
-                  <div class="cookie-alert-title-wrap">
-                    <span class="cookie-alert-tag">// FALHA DE TELEMETRIA LOCAL</span>
-                    <h3 class="cookie-alert-title">${localization.t(
-                      'auth.cookies_required_title',
-                      'COOKIES DESATIVADOS NO NAVEGADOR'
-                    )}</h3>
-                  </div>
+            <!-- Painel de Alerta de Cookies (Sempre Visível) -->
+            <div class="cookie-alert-panel ${cookiesActive ? 'cookie-panel-ok' : 'cookie-panel-error'}" id="cookie-alert-panel">
+              <div class="cookie-alert-header">
+                <i class="mdi ${cookiesActive ? 'mdi-cookie-check-outline' : 'mdi-cookie-alert'} cookie-alert-icon"></i>
+                <div class="cookie-alert-title-wrap">
+                  <span class="cookie-alert-tag">${cookiesActive ? '// TELEMETRIA OMNINET: SESSÃO DE COOKIES' : '// FALHA DE TELEMETRIA LOCAL'}</span>
+                  <h3 class="cookie-alert-title">${
+                    cookiesActive
+                      ? localization.t('auth.cookies_active_title', 'REQUISITO DE SESSÃO: COOKIES HABILITADOS')
+                      : localization.t('auth.cookies_required_title', 'COOKIES DESATIVADOS NO NAVEGADOR')
+                  }</h3>
                 </div>
-                <p class="cookie-alert-desc">
-                  ${localization.t(
-                    'auth.cookies_required_desc',
-                    'O Terminal requer cookies ativos para armazenar a sua chave de sessão segura (HttpOnly). Sem cookies habilitados, o login com o Discord não poderá ser concluído.'
-                  )}
-                </p>
+                <span class="cookie-alert-status-badge ${cookiesActive ? 'ok' : 'error'}">
+                  <i class="mdi ${cookiesActive ? 'mdi-check-circle' : 'mdi-alert-circle'}"></i>
+                  <span>${cookiesActive ? localization.t('auth.cookies_status_ok', 'COOKIES_ATIVOS') : localization.t('auth.cookies_status_blocked', 'BLOQUEADO')}</span>
+                </span>
+              </div>
+              <p class="cookie-alert-desc">
+                ${
+                  cookiesActive
+                    ? localization.t(
+                        'auth.cookies_active_desc',
+                        'O Terminal da Guilda requer cookies ativos (HttpOnly) para autenticação segura. Seu navegador está com a gravação de cookies liberada.'
+                      )
+                    : localization.t(
+                        'auth.cookies_required_desc',
+                        'O Terminal requer cookies ativos para armazenar a sua chave de sessão segura (HttpOnly). Sem cookies habilitados, o login com o Discord não poderá ser concluído.'
+                      )
+                }
+              </p>
+              ${
+                !cookiesActive
+                  ? `
                 <div class="cookie-instructions">
                   <div class="cookie-inst-step">
                     <span class="cookie-step-badge">01</span>
@@ -95,16 +107,21 @@ export class AuthHeroView {
                     )}</span>
                   </div>
                 </div>
-                <div class="cookie-alert-actions">
-                  <button type="button" id="btn-recheck-cookies" class="cookie-recheck-btn">
-                    <i class="mdi mdi-refresh"></i>
-                    <span>${localization.t('auth.cookie_recheck', 'REVERIFICAR & ATUALIZAR')}</span>
-                  </button>
+              `
+                  : `
+                <div class="cookie-ok-note">
+                  <i class="mdi mdi-information-outline"></i>
+                  <span>${localization.t('auth.cookie_ok_note', 'Caso acesse por domínio alternativo (ex: Vercel), lembre-se de manter cookies entre origens permitidos.')}</span>
                 </div>
+              `
+              }
+              <div class="cookie-alert-actions">
+                <button type="button" id="btn-recheck-cookies" class="cookie-recheck-btn" title="Verificar status dos cookies no navegador">
+                  <i class="mdi mdi-refresh"></i>
+                  <span>${cookiesActive ? localization.t('auth.recheck_cookie_status', 'REVALIDAR TELEMETRIA') : localization.t('auth.cookie_recheck', 'REVERIFICAR & ATUALIZAR')}</span>
+                </button>
               </div>
-            `
-                : ''
-            }
+            </div>
 
             <!-- Ação Principal de Login -->
             <div class="terminal-action-area">
@@ -137,7 +154,7 @@ export class AuthHeroView {
     recheckBtn?.addEventListener('click', () => {
       const activeNow = areCookiesEnabled();
       if (activeNow) {
-        ToastService.success('Cookies ativos detectados! Terminal desbloqueado para autenticação.');
+        ToastService.success('Telemetria confirmada: Cookies 100% ativos e funcionais.');
         this.render();
       } else {
         ToastService.error('Cookies continuam desativados ou bloqueados pelo navegador.');

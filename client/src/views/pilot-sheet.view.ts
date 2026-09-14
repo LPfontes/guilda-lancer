@@ -446,11 +446,24 @@ export class PilotSheetView {
             mechsList.length > 0
               ? mechsList
                   .map((m: any) => {
-                    const isMechActive = m.active || m.id === raw?.active_mech_id || (mechsList.length === 1);
-                    const mName = m.name || p.active_mech_name || 'Chassi';
-                    const rawFrameName = m.frameData?.name || m.frame || p.active_mech_frame || 'Everest';
+                    const activeMechId =
+                      p.mechs?.find((item: any) => item.active)?.id ||
+                      raw?.state?.active_mech_id ||
+                      raw?.active_mech_id ||
+                      rawPilot?.state?.active_mech_id ||
+                      rawPilot?.active_mech_id;
+
+                    const isMechActive = Boolean(
+                      m.active === true ||
+                      (activeMechId && m.id === activeMechId) ||
+                      (p.active_mech_name && m.name === p.active_mech_name) ||
+                      (mechsList.length === 1)
+                    );
+
+                    const mName = m.name || (isMechActive ? p.active_mech_name : 'Chassi') || 'Chassi';
+                    const rawFrameName = m.frameData?.name || m.frame || (isMechActive ? p.active_mech_frame : 'Everest') || 'Everest';
                     const mFrame = localization.translateItemName(m.frameData?.id, rawFrameName);
-                    const mImg = m.cloud_portrait || m.frameData?.image_url || p.active_mech_image || '';
+                    const mImg = m.cloud_portrait || m.frameData?.image_url || (isMechActive ? p.active_mech_image : '') || '';
 
                     return `
               <div class="card pilot-assigned-mech-card ${isMechActive ? 'mech-card-active' : ''}">
@@ -466,13 +479,24 @@ export class PilotSheetView {
                     <div class="mech-frame-tag">
                       ${getCompconIcon('mech', 'compcon-icon-sm')}
                       <span>${mFrame}</span>
-                      ${isMechActive ? `<span class="mech-badge-active">${localization.t('common.active', 'ATIVO')}</span>` : ''}
+                      ${
+                        isMechActive
+                          ? `<span class="pilot-mech-active-tag"><i class="mdi mdi-checkbox-marked-circle"></i> ${localization.t('common.active', 'ATIVO')}</span>`
+                          : ''
+                      }
                     </div>
                     <h3 class="assigned-mech-title">${mName}</h3>
                   </div>
                   <div class="assigned-mech-action">
                     ${
-                      !isMechActive && canManage
+                      isMechActive
+                        ? `
+                      <span class="pilot-mech-active-badge">
+                        <i class="mdi mdi-checkbox-marked-circle"></i>
+                        <span>${localization.t('sheet.active_chassis', 'CHASSI ATIVO')}</span>
+                      </span>
+                    `
+                        : canManage
                         ? `
                       <button type="button" class="btn btn-secondary btn-set-active-mech" data-mech-id="${m.id}" title="${localization.t('sheet.activate_mech_tooltip', 'Definir este chassi como o mecha ativo do piloto')}">
                         <i class="mdi mdi-checkbox-marked-circle-outline"></i>

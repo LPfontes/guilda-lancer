@@ -382,39 +382,6 @@ export class ReviewView {
             </div>
           </div>
 
-          <!-- Auditoria de Todos os Chassis Registrados -->
-          <div class="review-mechs-section">
-            <div class="review-mechs-header">
-              ${getCompconIcon('mech', 'compcon-icon-sm')}
-              <span>CHASSIS REGISTRADOS PARA AUDITORIA (${allMechs.length})</span>
-            </div>
-            <div class="review-mechs-grid">
-              ${allMechs
-                .map((m) => {
-                  const isMechActive = m.active || (allMechs.length === 1);
-                  return `
-                <div class="review-mech-item ${isMechActive ? 'review-mech-item-active' : ''}">
-                  <div class="review-mech-info">
-                    <div class="review-mech-title-line">
-                      <span class="review-mech-frame">${m.frame || 'Chassi'}</span>
-                      <span class="review-mech-status-badge ${isMechActive ? 'badge-active' : 'badge-reserve'}">
-                        <i class="mdi ${isMechActive ? 'mdi-radio-tower' : 'mdi-garage'}"></i>
-                        ${isMechActive ? 'ATIVO' : 'RESERVA'}
-                      </span>
-                    </div>
-                    <strong class="review-mech-name">${m.name || 'Sem Nome'}</strong>
-                  </div>
-                  <a href="#/mech?id=${p._id}&mechId=${m.id}" class="btn btn-secondary review-btn-inspect" title="Auditar loadout, sistemas e armas deste chassi">
-                    <i class="mdi mdi-clipboard-search-outline"></i>
-                    <span>AVALIAR CHASSI</span>
-                  </a>
-                </div>
-              `;
-                })
-                .join('')}
-            </div>
-          </div>
-
           ${
             p.status === 'REJECTED' && p.rejection_reason
               ? `

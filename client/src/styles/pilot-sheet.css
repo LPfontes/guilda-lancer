@@ -505,6 +505,44 @@
   border: 1px solid var(--border-default);
   padding: 1rem 1rem;
   margin-bottom: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.pilot-assigned-mech-card.mech-card-active {
+  border-color: var(--accent-mint);
+  background: linear-gradient(135deg, rgba(38, 166, 154, 0.08) 0%, rgba(22, 27, 34, 0.95) 100%);
+  box-shadow: 0 0 14px rgba(38, 166, 154, 0.15);
+}
+
+.pilot-mech-active-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent-mint);
+  background: rgba(38, 166, 154, 0.15);
+  border: 1px solid var(--accent-mint);
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+}
+
+.pilot-mech-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--accent-mint);
+  background: rgba(38, 166, 154, 0.12);
+  border: 1px solid rgba(38, 166, 154, 0.4);
+  text-transform: uppercase;
 }
 
 .assigned-mech-layout {
